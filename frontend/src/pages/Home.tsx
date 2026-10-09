@@ -1,12 +1,26 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { HiChevronLeft, HiChevronRight } from 'react-icons/hi2';
 
 const MOCK_CATEGORIES = [
   { id: 1, name: "Skincare Essentials", image: "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=600&auto=format&fit=crop" },
   { id: 2, name: "Luxury Serums", image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=600&auto=format&fit=crop" },
   { id: 3, name: "Natural Cleansers", image: "https://images.unsplash.com/photo-1556228720-192a6af4e865?q=80&w=600&auto=format&fit=crop" },
+  { id: 4, name: "Face Oils & Creams", image: "https://images.unsplash.com/photo-1608248597266-c89a9f243003?q=80&w=600&auto=format&fit=crop" },
+  { id: 5, name: "Sun Protection", image: "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?q=80&w=600&auto=format&fit=crop" },
+  { id: 6, name: "Body & Bath Care", image: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=80&w=600&auto=format&fit=crop" },
 ];
 
 export default function Home() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = direction === 'left' ? -380 : 380;
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       
@@ -41,19 +55,44 @@ export default function Home() {
 
       {/* Categories Section */}
       <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-heading font-bold text-gray-900 mb-4">
-            Shop by Category
-          </h2>
-          <div className="w-24 h-1 bg-brand-primary mx-auto rounded-full"></div>
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-heading font-bold text-gray-900 mb-3">
+              Shop by Category
+            </h2>
+            <div className="w-24 h-1 bg-brand-primary rounded-full"></div>
+          </div>
+
+          {/* Category Navigation Arrows */}
+          <div className="flex items-center gap-3 mt-6 md:mt-0">
+            <button 
+              onClick={() => scroll('left')}
+              className="p-3 rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-brand-primary hover:text-white hover:border-brand-primary transition-all shadow-sm hover:shadow active:scale-95"
+              aria-label="Scroll left"
+            >
+              <HiChevronLeft className="w-6 h-6" />
+            </button>
+            <button 
+              onClick={() => scroll('right')}
+              className="p-3 rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-brand-primary hover:text-white hover:border-brand-primary transition-all shadow-sm hover:shadow active:scale-95"
+              aria-label="Scroll right"
+            >
+              <HiChevronRight className="w-6 h-6" />
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* Scrollable Categories List */}
+        <div 
+          ref={scrollRef}
+          className="flex gap-6 overflow-x-auto scroll-smooth pb-4 no-scrollbar"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
           {MOCK_CATEGORIES.map((category) => (
             <Link 
               key={category.id} 
               to={`/products?category=${category.id}`}
-              className="group relative h-96 rounded-2xl overflow-hidden shadow-lg cursor-pointer block"
+              className="group relative min-w-[280px] sm:min-w-[320px] md:min-w-[360px] h-[420px] rounded-2xl overflow-hidden shadow-lg cursor-pointer flex-shrink-0 block"
             >
               <img 
                 src={category.image} 
