@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   HiOutlineShoppingBag, 
@@ -10,17 +10,37 @@ import {
   HiChevronDown
 } from 'react-icons/hi2';
 
-const CATEGORIES = [
-  { id: 1, name: "Skincare Essentials", slug: "skincare-essentials" },
-  { id: 2, name: "Luxury Serums", slug: "luxury-serums" },
-  { id: 3, name: "Natural Cleansers", slug: "natural-cleansers" },
-  { id: 4, name: "Face Oils & Creams", slug: "face-oils-creams" },
-  { id: 5, name: "Sun Protection", slug: "sun-protection" }
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  image_url?: string;
+}
+
+const DEFAULT_CATEGORIES: Category[] = [
+  { id: '65018a4c-8456-4399-a027-105b131ecb5e', name: "Category 1", slug: "category-1" },
+  { id: '1bb7edde-0b65-46db-8d7d-bd072b84cbc2', name: "Category 2", slug: "category-2" },
+  { id: 'd9905f89-cf66-4365-bab9-e4fc425310cc', name: "Category 3", slug: "category-3" },
+  { id: '7b8eb027-a4f4-4208-9f76-6a57f229c0d8', name: "Category 4", slug: "category-4" },
+  { id: '35cfac92-76d3-45e2-99cf-cb0a62c84dab', name: "Category 5", slug: "category-5" }
 ];
 
 export default function Navbar() {
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    fetch('http://localhost:5001/api/categories')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setCategories(data.data);
+        }
+      })
+      .catch((err) => console.log('Using default categories. API error:', err));
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-brand-light/95 backdrop-blur-md shadow-sm border-b border-gray-100">
@@ -67,7 +87,7 @@ export default function Navbar() {
                   <div className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-50">
                     Product Categories
                   </div>
-                  {CATEGORIES.map((cat) => (
+                  {categories.map((cat) => (
                     <Link
                       key={cat.id}
                       to={`/products?category=${cat.id}`}
@@ -131,7 +151,7 @@ export default function Navbar() {
       {/* Quick Category Bar (Sub-Nav) for Desktop */}
       <div className="hidden md:block bg-brand-primary/5 border-t border-gray-100 py-2">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-center gap-8 text-xs font-medium tracking-wide uppercase text-gray-600">
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <Link 
               key={cat.id} 
               to={`/products?category=${cat.id}`}
@@ -151,7 +171,7 @@ export default function Navbar() {
           
           <div className="pt-2 border-t border-gray-100">
             <span className="block text-xs font-bold text-gray-400 uppercase mb-2">Categories</span>
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <Link 
                 key={cat.id} 
                 to={`/products?category=${cat.id}`} 

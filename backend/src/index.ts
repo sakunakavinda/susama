@@ -9,7 +9,7 @@ import { pool } from './config/db'; // Initializes DB connection
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
@@ -35,10 +35,15 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+import categoryRoutes from './routes/categoryRoutes';
+
 // Routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'SUSAMA Backend is running!' });
 });
+
+// Category API Routes
+app.use('/api/categories', categoryRoutes);
 
 // Example Product Image Upload Route
 app.post('/api/upload', upload.single('image'), (req, res) => {

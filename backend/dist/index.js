@@ -11,7 +11,7 @@ const multer_1 = __importDefault(require("multer"));
 const fs_1 = __importDefault(require("fs"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 // Middleware
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
@@ -33,10 +33,13 @@ const storage = multer_1.default.diskStorage({
     }
 });
 const upload = (0, multer_1.default)({ storage });
+const categoryRoutes_1 = __importDefault(require("./routes/categoryRoutes"));
 // Routes
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'SUSAMA Backend is running!' });
 });
+// Category API Routes
+app.use('/api/categories', categoryRoutes_1.default);
 // Example Product Image Upload Route
 app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) {
