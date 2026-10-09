@@ -20,9 +20,16 @@ export default function Home() {
         />
         
         <div className="relative z-20 text-center px-4 animate-fade-in">
-          <h1 className="text-5xl md:text-7xl font-heading font-bold text-brand-light mb-6">
-            SUSAMA
-          </h1>
+          <div className="flex flex-col items-center justify-center mb-6">
+            <img 
+              src="/logo-emblem.png" 
+              alt="SUSÁMÁ Logo Emblem" 
+              className="h-24 sm:h-28 md:h-32 w-auto object-contain drop-shadow-lg mb-4"
+            />
+            <h1 className="text-5xl md:text-7xl font-heading font-bold text-brand-light">
+              SUSAMA
+            </h1>
+          </div>
           <p className="text-xl md:text-2xl text-white/90 font-light mb-8 max-w-2xl mx-auto">
             Natural Care. Timeless Beauty
             </p>
