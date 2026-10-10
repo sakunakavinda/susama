@@ -49,8 +49,8 @@ export default function Navbar() {
   }, [location]);
 
   return (
-    <header className="absolute top-0 left-0 right-0 w-full z-50 pt-4 sm:pt-6 md:pt-8 px-4 sm:px-6 md:px-10 lg:px-16">
-      <div className="max-w-7xl mx-auto relative flex items-center justify-between h-16 sm:h-20">
+    <header className="absolute top-0 left-0 right-0 w-full z-50 pt-4 sm:pt-6 md:pt-8 px-4 sm:px-6 md:px-8 lg:px-12">
+      <div className="w-full max-w-7xl mx-auto relative flex items-center justify-between h-16 sm:h-20">
         
         {/* Left: Brand Logo */}
         <div className="flex items-center">
@@ -137,7 +137,7 @@ export default function Navbar() {
             <HiOutlineMagnifyingGlass className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
 
-          {/* Favourites Icon (hidden on smallest screens < sm to prevent crowding, accessible in menu) */}
+          {/* Favourites Icon */}
           <Link 
             to="/wishlist" 
             className="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 items-center justify-center text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all relative drop-shadow" 
@@ -145,12 +145,12 @@ export default function Navbar() {
             aria-label="Wishlist"
           >
             <HiOutlineHeart className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-brand-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-md">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-md leading-none">
               0
             </span>
           </Link>
 
-          {/* Profile Icon (hidden on < md to keep nav uncluttered) */}
+          {/* Profile Icon */}
           <Link 
             to="/profile" 
             className="hidden md:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 items-center justify-center text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all drop-shadow" 
@@ -167,7 +167,7 @@ export default function Navbar() {
             aria-label="Shopping Cart"
           >
             <HiOutlineShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-white text-gray-900 text-[10px] font-extrabold rounded-full flex items-center justify-center shadow">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-white text-gray-900 text-[10px] font-extrabold rounded-full flex items-center justify-center shadow leading-none">
               0
             </span>
           </button>
