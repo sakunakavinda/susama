@@ -34,12 +34,15 @@ const storage = multer_1.default.diskStorage({
 });
 const upload = (0, multer_1.default)({ storage });
 const categoryRoutes_1 = __importDefault(require("./routes/categoryRoutes"));
+const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
 // Routes
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'SUSAMA Backend is running!' });
 });
 // Category API Routes
 app.use('/api/categories', categoryRoutes_1.default);
+// Product API Routes
+app.use('/api/products', productRoutes_1.default);
 // Example Product Image Upload Route
 app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) {

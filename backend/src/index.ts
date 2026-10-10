@@ -36,6 +36,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 import categoryRoutes from './routes/categoryRoutes';
+import productRoutes from './routes/productRoutes';
 
 // Routes
 app.get('/api/health', (req, res) => {
@@ -44,6 +45,9 @@ app.get('/api/health', (req, res) => {
 
 // Category API Routes
 app.use('/api/categories', categoryRoutes);
+
+// Product API Routes
+app.use('/api/products', productRoutes);
 
 // Example Product Image Upload Route
 app.post('/api/upload', upload.single('image'), (req, res) => {

@@ -1,46 +1,45 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const db_js_1 = require("../config/db.js");
-const crypto_1 = require("crypto");
 const categoriesToInsert = [
     {
-        id: (0, crypto_1.randomUUID)(),
-        name: 'Category 1',
-        slug: 'category-1',
-        description: 'Skincare Essentials - Category 1',
-        image_url: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=600&auto=format&fit=crop',
+        id: 'c1000000-0000-4000-8000-000000000001',
+        name: 'Shampoos & Cleansers',
+        slug: 'shampoos',
+        description: 'Gentle, sulfate-free botanical cleansers crafted to purify scalp and nourish hair textures.',
+        image_url: 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop',
         sort_order: 1
     },
     {
-        id: (0, crypto_1.randomUUID)(),
-        name: 'Category 2',
-        slug: 'category-2',
-        description: 'Luxury Serums - Category 2',
-        image_url: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=600&auto=format&fit=crop',
+        id: 'c1000000-0000-4000-8000-000000000002',
+        name: 'Nourishing Conditioners',
+        slug: 'conditioners',
+        description: 'Rich, hydrating and detangling formulas for silkiness, curl bounce, and lasting softness.',
+        image_url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=800&auto=format&fit=crop',
         sort_order: 2
     },
     {
-        id: (0, crypto_1.randomUUID)(),
-        name: 'Category 3',
-        slug: 'category-3',
-        description: 'Natural Cleansers - Category 3',
-        image_url: 'https://images.unsplash.com/photo-1556228720-192a6af4e865?q=80&w=600&auto=format&fit=crop',
+        id: 'c1000000-0000-4000-8000-000000000003',
+        name: 'Hair Treatments & Oils',
+        slug: 'hair-treatments',
+        description: 'Restorative keratin elixirs, antioxidant oils, and intensive repair rituals.',
+        image_url: 'https://images.unsplash.com/photo-1608248597266-c89a9f243003?q=80&w=800&auto=format&fit=crop',
         sort_order: 3
     },
     {
-        id: (0, crypto_1.randomUUID)(),
-        name: 'Category 4',
-        slug: 'category-4',
-        description: 'Face Oils & Creams - Category 4',
-        image_url: 'https://images.unsplash.com/photo-1608248597266-c89a9f243003?q=80&w=600&auto=format&fit=crop',
+        id: 'c1000000-0000-4000-8000-000000000004',
+        name: 'Curl Care & Styling',
+        slug: 'curl-care-styling',
+        description: 'Miracle curling creams and definition stylers that activate bounce and tame frizz.',
+        image_url: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?q=80&w=800&auto=format&fit=crop',
         sort_order: 4
     },
     {
-        id: (0, crypto_1.randomUUID)(),
-        name: 'Category 5',
-        slug: 'category-5',
-        description: 'Sun Protection - Category 5',
-        image_url: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?q=80&w=600&auto=format&fit=crop',
+        id: 'c1000000-0000-4000-8000-000000000005',
+        name: 'Hair Perfumes & Mists',
+        slug: 'hair-perfumes',
+        description: 'Long-lasting luxury hair mists infused with sandalwood and damask rose botanical essences.',
+        image_url: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop',
         sort_order: 5
     }
 ];
