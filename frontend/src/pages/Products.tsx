@@ -163,7 +163,7 @@ const FALLBACK_PRODUCTS: Product[] = [
     is_in_stock: true,
     is_featured: true,
     is_new_arrival: false,
-    primary_image: 'https://images.unsplash.com/photo-1608248597266-c89a9f243003?q=80&w=800&auto=format&fit=crop',
+    primary_image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=800&auto=format&fit=crop',
     tag: 'HERO PRODUCT',
     rating: 5.0,
     reviews: 52

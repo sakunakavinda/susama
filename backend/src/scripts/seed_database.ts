@@ -51,7 +51,7 @@ export const CATEGORIES_SEED: CategorySeed[] = [
     name: 'Hair Treatments & Oils',
     slug: 'hair-treatments',
     description: 'Restorative keratin elixirs, antioxidant oils, and intensive repair rituals.',
-    image_url: 'https://images.unsplash.com/photo-1608248597266-c89a9f243003?q=80&w=800&auto=format&fit=crop',
+    image_url: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=800&auto=format&fit=crop',
     sort_order: 3
   },
   {
@@ -166,7 +166,7 @@ export const PRODUCTS_SEED: ProductSeed[] = [
     is_featured: true,
     is_new_arrival: false,
     is_active: true,
-    image_url: 'https://images.unsplash.com/photo-1608248597266-c89a9f243003?q=80&w=800&auto=format&fit=crop'
+    image_url: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=800&auto=format&fit=crop'
   },
   {
     id: 'p1000000-0000-4000-8000-000000000006',

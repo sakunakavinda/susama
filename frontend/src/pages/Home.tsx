@@ -1,8 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  HiChevronLeft, 
-  HiChevronRight, 
   HiStar, 
   HiShoppingBag, 
   HiSparkles,
@@ -47,7 +45,7 @@ const CATEGORY_META_FALLBACK: Record<string, { title: string; tag: string; image
     title: "Shampoos & Cleansers", 
     tag: "🧴 GENTLE CLEANSING", 
     image: "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop",
-    description: "Sulfate-free, gentle cleansers for sleek silkiness and curl preservation."
+    description: "Sulfate-free botanical cleansers for silky smoothness and curl preservation."
   },
   'conditioners': { 
     title: "Nourishing Conditioners", 
@@ -58,8 +56,8 @@ const CATEGORY_META_FALLBACK: Record<string, { title: string; tag: string; image
   'hair-treatments': { 
     title: "Hair Treatments & Oils", 
     tag: "✨ INTENSIVE REPAIR", 
-    image: "https://images.unsplash.com/photo-1608248597266-c89a9f243003?q=80&w=800&auto=format&fit=crop",
-    description: "Restorative keratin oil that repairs damage and seals split ends."
+    image: "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=800&auto=format&fit=crop",
+    description: "Restorative keratin oil that reconstructs fibers and repairs damage."
   },
   'curl-care-styling': { 
     title: "Curl Care & Styling", 
@@ -76,11 +74,36 @@ const CATEGORY_META_FALLBACK: Record<string, { title: string; tag: string; image
 };
 
 const DEFAULT_CATEGORIES: CategoryItem[] = [
-  { id: 'c1000000-0000-4000-8000-000000000001', name: "Shampoos & Cleansers", slug: "shampoos" },
-  { id: 'c1000000-0000-4000-8000-000000000002', name: "Nourishing Conditioners", slug: "conditioners" },
-  { id: 'c1000000-0000-4000-8000-000000000003', name: "Hair Treatments & Oils", slug: "hair-treatments" },
-  { id: 'c1000000-0000-4000-8000-000000000004', name: "Curl Care & Styling", slug: "curl-care-styling" },
-  { id: 'c1000000-0000-4000-8000-000000000005', name: "Hair Perfumes & Mists", slug: "hair-perfumes" },
+  { 
+    id: 'c1000000-0000-4000-8000-000000000001', 
+    name: "Shampoos & Cleansers", 
+    slug: "shampoos",
+    image_url: "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop" 
+  },
+  { 
+    id: 'c1000000-0000-4000-8000-000000000002', 
+    name: "Nourishing Conditioners", 
+    slug: "conditioners",
+    image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=800&auto=format&fit=crop" 
+  },
+  { 
+    id: 'c1000000-0000-4000-8000-000000000003', 
+    name: "Hair Treatments & Oils", 
+    slug: "hair-treatments",
+    image_url: "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=800&auto=format&fit=crop" 
+  },
+  { 
+    id: 'c1000000-0000-4000-8000-000000000004', 
+    name: "Curl Care & Styling", 
+    slug: "curl-care-styling",
+    image_url: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?q=80&w=800&auto=format&fit=crop" 
+  },
+  { 
+    id: 'c1000000-0000-4000-8000-000000000005', 
+    name: "Hair Perfumes & Mists", 
+    slug: "hair-perfumes",
+    image_url: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop" 
+  },
 ];
 
 const INITIAL_PRODUCTS: ProductItem[] = [
@@ -177,7 +200,7 @@ const INITIAL_PRODUCTS: ProductItem[] = [
     sale_price: 4200,
     rating: 5.0,
     reviews: 52,
-    image: 'https://images.unsplash.com/photo-1608248597266-c89a9f243003?q=80&w=800&auto=format&fit=crop',
+    image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=800&auto=format&fit=crop',
     tag: 'HERO PRODUCT',
     short_description: 'Intensive keratin elixir that seals split ends, protects against heat styling up to 230°C, and restores lustrous hair vitality.',
     full_description: 'SUSÁMÁ Keratin Oil is a salon-strength restorative elixir formulated with bioactive keratin proteins, pure argan oil, and macadamia seed oil. It deeply penetrates damaged hair fibers, seals split ends, repairs heat damage, and leaves hair visibly smoother with a luminous glass-hair finish.',
@@ -252,10 +275,9 @@ export default function Home() {
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Fetch categories
+    // Fetch categories from API
     fetch('http://localhost:5001/api/categories')
       .then((res) => res.json())
       .then((data) => {
@@ -265,7 +287,7 @@ export default function Home() {
       })
       .catch((err) => console.log('Using default categories. API error:', err));
 
-    // Fetch products
+    // Fetch products from API
     fetch('http://localhost:5001/api/products')
       .then((res) => res.json())
       .then((data) => {
@@ -288,13 +310,6 @@ export default function Home() {
       })
       .catch((err) => console.log('Using default products. API error:', err));
   }, []);
-
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollRef.current) {
-      const scrollAmount = direction === 'left' ? -340 : 340;
-      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
 
   const filteredProducts = products.filter((prod) => {
     if (selectedFilter === 'all') return true;
@@ -379,73 +394,65 @@ export default function Home() {
       </section>
 
       {/* ─────────────────────────────────────────────────────
-          2. TRUST & VALUES BAR — Overlapping responsive card
+          2. TRUST & VALUES BAR — Full-width flex banner
       ───────────────────────────────────────────────────── */}
-      <section className="relative z-30 -mt-8 sm:-mt-10 md:-mt-12 w-full px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto bg-white/95 backdrop-blur-2xl rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 py-5 sm:py-7 px-3 sm:px-6 md:px-8 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 text-center">
-          <div className="flex flex-col items-center p-2 sm:p-3">
-            <span className="text-xl sm:text-2xl mb-1 sm:mb-2">🌿</span>
-            <h4 className="font-heading text-xs sm:text-sm font-bold text-gray-900 mb-0.5">Sulfate & Paraben Free</h4>
-            <p className="text-[10px] sm:text-xs text-gray-500 font-light leading-relaxed">Gentle on scalp and cuticles</p>
-          </div>
-          <div className="flex flex-col items-center p-2 sm:p-3">
-            <span className="text-xl sm:text-2xl mb-1 sm:mb-2">✨</span>
-            <h4 className="font-heading text-xs sm:text-sm font-bold text-gray-900 mb-0.5">Keratin Enriched</h4>
-            <p className="text-[10px] sm:text-xs text-gray-500 font-light leading-relaxed">Restores strength & shine</p>
-          </div>
-          <div className="flex flex-col items-center p-2 sm:p-3">
-            <span className="text-xl sm:text-2xl mb-1 sm:mb-2">🌀</span>
-            <h4 className="font-heading text-xs sm:text-sm font-bold text-gray-900 mb-0.5">Silky & Curly Care</h4>
-            <p className="text-[10px] sm:text-xs text-gray-500 font-light leading-relaxed">Customized for every hair texture</p>
-          </div>
-          <div className="flex flex-col items-center p-2 sm:p-3">
-            <span className="text-xl sm:text-2xl mb-1 sm:mb-2">🚚</span>
-            <h4 className="font-heading text-xs sm:text-sm font-bold text-gray-900 mb-0.5">Islandwide Delivery</h4>
-            <p className="text-[10px] sm:text-xs text-gray-500 font-light leading-relaxed">Fast & secure shipping in Sri Lanka</p>
+      <section className="relative z-30 -mt-6 sm:-mt-8 md:-mt-10 w-full bg-white/95 backdrop-blur-2xl border-y border-gray-100 shadow-lg py-6 sm:py-8">
+        <div className="w-full px-4 sm:px-8 md:px-12 lg:px-16">
+          <div className="w-full flex flex-wrap md:flex-nowrap items-center justify-between gap-4 sm:gap-6 text-center">
+            
+            <div className="flex-1 min-w-[140px] flex flex-col items-center p-2 sm:p-3">
+              <span className="text-2xl sm:text-3xl mb-1 sm:mb-2">🌿</span>
+              <h4 className="font-heading text-xs sm:text-sm font-bold text-gray-900 mb-0.5">Sulfate & Paraben Free</h4>
+              <p className="text-[10px] sm:text-xs text-gray-500 font-light leading-relaxed">Gentle on scalp and cuticles</p>
+            </div>
+
+            <div className="hidden md:block w-px h-12 bg-gray-200/80" />
+
+            <div className="flex-1 min-w-[140px] flex flex-col items-center p-2 sm:p-3">
+              <span className="text-2xl sm:text-3xl mb-1 sm:mb-2">✨</span>
+              <h4 className="font-heading text-xs sm:text-sm font-bold text-gray-900 mb-0.5">Keratin Enriched</h4>
+              <p className="text-[10px] sm:text-xs text-gray-500 font-light leading-relaxed">Restores strength & shine</p>
+            </div>
+
+            <div className="hidden md:block w-px h-12 bg-gray-200/80" />
+
+            <div className="flex-1 min-w-[140px] flex flex-col items-center p-2 sm:p-3">
+              <span className="text-2xl sm:text-3xl mb-1 sm:mb-2">🌀</span>
+              <h4 className="font-heading text-xs sm:text-sm font-bold text-gray-900 mb-0.5">Silky & Curly Care</h4>
+              <p className="text-[10px] sm:text-xs text-gray-500 font-light leading-relaxed">Customized for every hair texture</p>
+            </div>
+
+            <div className="hidden md:block w-px h-12 bg-gray-200/80" />
+
+            <div className="flex-1 min-w-[140px] flex flex-col items-center p-2 sm:p-3">
+              <span className="text-2xl sm:text-3xl mb-1 sm:mb-2">🚚</span>
+              <h4 className="font-heading text-xs sm:text-sm font-bold text-gray-900 mb-0.5">Islandwide Delivery</h4>
+              <p className="text-[10px] sm:text-xs text-gray-500 font-light leading-relaxed">Fast & secure shipping in Sri Lanka</p>
+            </div>
+
           </div>
         </div>
       </section>
 
       {/* ─────────────────────────────────────────────────────
-          3. CATEGORIES CAROUSEL SECTION
+      {/* ─────────────────────────────────────────────────────
+          3. CATEGORIES SECTION — Full-width centered grid
       ───────────────────────────────────────────────────── */}
-      <section className="py-14 sm:py-20 md:py-24 w-full px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-14 sm:py-20 md:py-24 w-full px-4 sm:px-8 md:px-12 lg:px-16">
+        <div className="w-full max-w-[1600px] mx-auto flex flex-col items-center">
           {/* Section Header */}
-          <div className="flex flex-col items-center justify-center text-center mb-8 sm:mb-12">
+          <div className="flex flex-col items-center justify-center text-center mb-10 sm:mb-14">
             <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-brand-secondary uppercase mb-2">
               CURATED BOTANICAL HAIRCARE
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-extrabold text-gray-900 tracking-tight mb-3 sm:mb-4">
               Shop by Category
             </h2>
-            <div className="w-14 sm:w-20 h-1 sm:h-1.5 bg-gradient-to-r from-brand-primary to-brand-secondary rounded-full mb-6 sm:mb-8" />
-
-            {/* Carousel Controls */}
-            <div className="flex items-center justify-center gap-3 sm:gap-4">
-              <button 
-                onClick={() => scroll('left')}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-gray-200 bg-white text-gray-800 hover:bg-brand-primary hover:text-white hover:border-brand-primary transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
-                aria-label="Scroll left"
-              >
-                <HiChevronLeft className="w-5 h-5" />
-              </button>
-              <button 
-                onClick={() => scroll('right')}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full border border-gray-200 bg-white text-gray-800 hover:bg-brand-primary hover:text-white hover:border-brand-primary transition-all duration-300 flex items-center justify-center shadow-md hover:shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
-                aria-label="Scroll right"
-              >
-                <HiChevronRight className="w-5 h-5" />
-              </button>
-            </div>
+            <div className="w-14 sm:w-20 h-1 sm:h-1.5 bg-gradient-to-r from-brand-primary to-brand-secondary rounded-full" />
           </div>
 
-          {/* Scrollable Cards */}
-          <div 
-            ref={scrollRef}
-            className="flex gap-4 sm:gap-6 md:gap-8 overflow-x-auto scroll-smooth pb-4 pt-2 no-scrollbar snap-x snap-mandatory"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
+          {/* Full-width Centered Category Cards Grid */}
+          <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 xl:gap-6 justify-center">
             {categories.map((category, idx) => {
               const fallbackKey = category.slug || `shampoos`;
               const meta = CATEGORY_META_FALLBACK[fallbackKey] || CATEGORY_META_FALLBACK['shampoos'];
@@ -457,32 +464,35 @@ export default function Home() {
                 <Link 
                   key={category.id || idx} 
                   to={`/products?category=${category.slug || category.id}`}
-                  className="group relative min-w-[240px] sm:min-w-[280px] md:min-w-[320px] lg:min-w-[340px] h-[340px] sm:h-[400px] md:h-[440px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer flex-shrink-0 block snap-center border border-gray-100 hover:-translate-y-2"
+                  className="group relative w-full h-[360px] sm:h-[400px] md:h-[430px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer flex flex-col justify-end border border-gray-100 hover:-translate-y-2 bg-gray-900"
                 >
                   <img 
                     src={displayImage} 
                     alt={displayTitle} 
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                     loading="lazy"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop';
+                    }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-950/90 via-black/35 to-transparent transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-950/90 via-black/40 to-transparent transition-opacity duration-300" />
                   
                   {/* Floating Tag */}
                   <div className="absolute top-4 sm:top-5 left-4 sm:left-5 z-20">
-                    <span className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-[9px] sm:text-[10px] font-extrabold text-white tracking-widest uppercase shadow-lg">
+                    <span className="px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-[9px] sm:text-[10px] font-extrabold text-white tracking-widest uppercase shadow-lg">
                       {meta.tag}
                     </span>
                   </div>
 
                   {/* Card Content */}
-                  <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 md:p-8 text-center flex flex-col items-center justify-center z-20">
-                    <h3 className="text-lg sm:text-xl md:text-2xl font-heading font-bold text-white mb-2 sm:mb-3 tracking-wide drop-shadow">
+                  <div className="relative p-5 sm:p-6 text-center flex flex-col items-center justify-center z-20">
+                    <h3 className="text-lg sm:text-xl font-heading font-bold text-white mb-2 tracking-wide drop-shadow">
                       {displayTitle}
                     </h3>
-                    <p className="text-xs text-white/80 line-clamp-2 mb-4 font-light max-w-xs drop-shadow">
+                    <p className="text-xs text-white/80 line-clamp-2 mb-4 font-light max-w-xs drop-shadow leading-relaxed">
                       {category.description || meta.description}
                     </p>
-                    <span className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full bg-brand-primary text-white font-semibold text-[10px] sm:text-xs tracking-wider uppercase shadow-xl group-hover:bg-white group-hover:text-gray-950 transition-all duration-300 transform group-hover:scale-105">
+                    <span className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-full bg-brand-primary text-white font-semibold text-[10px] sm:text-xs tracking-wider uppercase shadow-xl group-hover:bg-white group-hover:text-gray-950 transition-all duration-300 transform group-hover:scale-105">
                       Explore Category →
                     </span>
                   </div>
@@ -494,10 +504,10 @@ export default function Home() {
       </section>
 
       {/* ─────────────────────────────────────────────────────
-          4. FEATURED BESTSELLERS / PRODUCT GRID WITH TABS
+          4. FEATURED BESTSELLERS / PRODUCT GRID WITH TABS (FULL WIDTH & CENTERED)
       ───────────────────────────────────────────────────── */}
-      <section className="py-14 sm:py-20 md:py-24 bg-gray-50/70 border-y border-gray-100 w-full px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-14 sm:py-20 md:py-24 bg-gray-50/70 border-y border-gray-100 w-full px-4 sm:px-8 md:px-12 lg:px-16">
+        <div className="w-full max-w-[1600px] mx-auto flex flex-col items-center">
           {/* Section Header */}
           <div className="flex flex-col items-center text-center mb-8 sm:mb-12">
             <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-brand-primary uppercase mb-2">
@@ -506,15 +516,15 @@ export default function Home() {
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-extrabold text-gray-900 mb-3 sm:mb-4">
               The Haircare Collection
             </h2>
-            <div className="w-14 sm:w-20 h-1 sm:h-1.5 bg-gradient-to-r from-brand-primary to-brand-secondary rounded-full mb-6" />
+            <div className="w-14 sm:w-20 h-1 sm:h-1.5 bg-gradient-to-r from-brand-primary to-brand-secondary rounded-full mb-8" />
 
-            {/* Category Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto max-w-full pb-2 no-scrollbar">
+            {/* Centered Category Filter Pills */}
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 max-w-4xl mx-auto">
               <button
                 onClick={() => setSelectedFilter('all')}
-                className={`px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer ${
+                className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer shadow-sm ${
                   selectedFilter === 'all'
-                    ? 'bg-brand-primary text-white shadow-md'
+                    ? 'bg-gradient-to-r from-brand-secondary to-brand-primary text-white shadow-md scale-105'
                     : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                 }`}
               >
@@ -525,9 +535,9 @@ export default function Home() {
                 <button
                   key={cat.id}
                   onClick={() => setSelectedFilter(cat.slug || cat.id)}
-                  className={`px-4 py-2 rounded-full text-xs font-bold tracking-wider uppercase transition-all duration-200 flex-shrink-0 cursor-pointer ${
+                  className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs font-bold tracking-wider uppercase transition-all duration-200 flex-shrink-0 cursor-pointer shadow-sm ${
                     selectedFilter === cat.id || selectedFilter === cat.slug
-                      ? 'bg-brand-primary text-white shadow-md'
+                      ? 'bg-gradient-to-r from-brand-secondary to-brand-primary text-white shadow-md scale-105'
                       : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                   }`}
                 >
@@ -537,8 +547,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Product Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 md:gap-8">
+          {/* Full-width Product Grid */}
+          <div className="w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 justify-center">
             {filteredProducts.map((prod) => {
               const imageSrc = prod.image || prod.primary_image || prod.image_url || 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop';
               const priceDisplay = prod.sale_price 
@@ -551,12 +561,15 @@ export default function Home() {
                   onClick={() => setSelectedProduct(prod)}
                   className="group bg-white rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl border border-gray-100 transition-all duration-300 flex flex-col justify-between cursor-pointer hover:-translate-y-1.5"
                 >
-                  <div className="relative h-60 sm:h-64 md:h-72 overflow-hidden bg-gray-100">
+                  <div className="relative h-64 sm:h-72 overflow-hidden bg-gray-100">
                     <img 
                       src={imageSrc} 
                       alt={prod.name} 
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       loading="lazy"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop';
+                      }}
                     />
                     <span className="absolute top-3 sm:top-4 left-3 sm:left-4 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-brand-primary text-white text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow">
                       {prod.tag || 'HAIR CARE'}
@@ -570,26 +583,26 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="p-4 sm:p-5 md:p-6 flex flex-col flex-1 justify-between">
+                  <div className="p-5 sm:p-6 flex flex-col flex-1 justify-between">
                     <div>
-                      <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                      <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1 text-amber-400">
                           <HiStar className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
                           <span className="text-[11px] sm:text-xs font-bold text-gray-700">{prod.rating || 4.9}</span>
                           <span className="text-[10px] sm:text-xs text-gray-400 font-light">({prod.reviews || 30})</span>
                         </div>
                         {prod.category_name && (
-                          <span className="text-[9px] font-bold text-brand-secondary uppercase tracking-wider">
+                          <span className="text-[9px] font-bold text-brand-secondary uppercase tracking-wider truncate max-w-[130px]">
                             {prod.category_name}
                           </span>
                         )}
                       </div>
 
-                      <h3 className="font-heading font-bold text-base sm:text-lg text-gray-900 mb-1.5 sm:mb-2 group-hover:text-brand-secondary transition-colors leading-snug">
+                      <h3 className="font-heading font-bold text-base sm:text-lg text-gray-900 mb-2 group-hover:text-brand-secondary transition-colors leading-snug">
                         {prod.name}
                       </h3>
 
-                      <p className="text-xs text-gray-500 line-clamp-2 font-light leading-relaxed mb-2">
+                      <p className="text-xs text-gray-500 line-clamp-2 font-light leading-relaxed mb-3">
                         {prod.short_description || prod.full_description}
                       </p>
                     </div>
@@ -611,7 +624,7 @@ export default function Home() {
             })}
           </div>
 
-          <div className="mt-12 text-center">
+          <div className="mt-12 text-center w-full flex justify-center">
             <Link 
               to="/products"
               className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-gray-900 text-white font-semibold text-xs sm:text-sm tracking-wider uppercase shadow-xl hover:bg-brand-primary transition-all duration-300 hover:scale-105"
@@ -625,8 +638,8 @@ export default function Home() {
       {/* ─────────────────────────────────────────────────────
           5. BRAND STORY & PHILOSOPHY
       ───────────────────────────────────────────────────── */}
-      <section className="py-14 sm:py-20 md:py-28 w-full px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-14 sm:py-20 md:py-28 w-full px-4 sm:px-8 md:px-12 lg:px-16">
+        <div className="w-full max-w-[1600px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 xl:gap-20 items-center">
             
             {/* Image Column */}
@@ -730,6 +743,9 @@ export default function Home() {
                 src={selectedProduct.image || selectedProduct.primary_image || 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop'} 
                 alt={selectedProduct.name}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop';
+                }}
               />
               <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-brand-primary text-white text-[10px] font-bold tracking-widest uppercase shadow">
                 {selectedProduct.tag || 'HAIR CARE'}
