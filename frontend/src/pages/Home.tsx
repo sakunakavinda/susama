@@ -1022,7 +1022,7 @@ export default function Home() {
 
           {/* Product Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-            {filteredProducts.map((prod) => {
+            {filteredProducts.slice(0, 4).map((prod) => {
               const imageSrc = prod.image || prod.primary_image || prod.image_url || 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop';
               const priceDisplay = prod.sale_price
                 ? `LKR ${Number(prod.sale_price).toLocaleString()}`
