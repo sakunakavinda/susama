@@ -141,9 +141,6 @@ export default function Home() {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewSubmitSuccess, setReviewSubmitSuccess] = useState(false);
 
-  // Hero and Logo Smooth Load State
-  const [isHeroImageLoaded, setIsHeroImageLoaded] = useState<boolean>(false);
-  const [isLogoLoaded, setIsLogoLoaded] = useState<boolean>(false);
 
   // Video and Social Showcase State
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -237,19 +234,9 @@ export default function Home() {
       })
       .catch((err) => console.log('Overall reviews API error:', err));
 
-    // Preload & check if hero image is cached for immediate smooth animation
+    // Preload hero image for instant rendering
     const heroImg = new Image();
     heroImg.src = '/images/hero/home.jpg';
-    if (heroImg.complete) {
-      setIsHeroImageLoaded(true);
-    } else {
-      heroImg.onload = () => setIsHeroImageLoaded(true);
-      heroImg.onerror = () => {
-        const fallback = new Image();
-        fallback.src = '/images/hero/hero-bg.jpg';
-        fallback.onload = () => setIsHeroImageLoaded(true);
-      };
-    }
   }, []);
 
   // Submit an Overall Brand Experience Review
@@ -474,18 +461,13 @@ export default function Home() {
           <img
             src="/images/hero/home.jpg"
             alt="SUSÁMÁ Botanical Hair Care"
-            onLoad={() => setIsHeroImageLoaded(true)}
             onError={(e) => {
               const target = e.currentTarget;
               if (target.src.includes('/images/hero/home.jpg')) {
                 target.src = '/images/hero/hero-bg.jpg';
               }
             }}
-            className={`w-full h-full object-cover object-[center_20%] transition-all duration-1200 ease-out transform ${
-              isHeroImageLoaded
-                ? 'opacity-100 scale-105 filter-none animate-hero-zoom'
-                : 'opacity-0 scale-115 blur-lg'
-            }`}
+            className="w-full h-full object-cover object-[center_20%] animate-hero-zoom"
           />
         </div>
 
@@ -502,23 +484,16 @@ export default function Home() {
             <img
               src="/images/branding/logo-emblem.png"
               alt="SUSÁMÁ Emblem"
-              onLoad={() => setIsLogoLoaded(true)}
-              className={`h-16 sm:h-20 md:h-24 w-auto object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] animate-float transition-all duration-1000 ease-out ${
-                isLogoLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
-              }`}
+              className="h-16 sm:h-20 md:h-24 w-auto object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] animate-float"
             />
           </div>
 
-          {/* Brand Name Logo (SUSÁMÁ) - Pure White after loading */}
-          <div className="mb-6 sm:mb-8 animate-smooth-reveal delay-150">
+          {/* Brand Name Logo (SUSÁMÁ) - Gradually turns pure white while loading */}
+          <div className="mb-6 sm:mb-8">
             <img
               src="/images/branding/font.png"
               alt="SUSÁMÁ"
-              onLoad={() => setIsLogoLoaded(true)}
-              style={{ filter: 'brightness(0) invert(1) drop-shadow(0 10px 35px rgba(0,0,0,0.9))' }}
-              className={`h-10 sm:h-14 md:h-18 lg:h-20 w-auto max-w-[85vw] object-contain mx-auto transition-all duration-1000 delay-100 ease-out ${
-                isLogoLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
-              }`}
+              className="h-10 sm:h-14 md:h-18 lg:h-20 w-auto max-w-[85vw] object-contain mx-auto animate-turn-white"
             />
           </div>
 

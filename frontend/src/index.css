@@ -148,32 +148,34 @@
 /* Smooth Hero Image Animation */
 @keyframes heroSmoothZoom {
   0% {
-    transform: scale(1.12);
+    opacity: 0.3;
+    transform: scale(1.10);
   }
   100% {
+    opacity: 1;
     transform: scale(1.05);
   }
 }
 
 .animate-hero-zoom {
-  animation: heroSmoothZoom 2.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: heroSmoothZoom 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
 }
 
 @keyframes smoothReveal {
   0% {
     opacity: 0;
-    transform: translateY(18px) scale(0.95);
-    filter: blur(10px);
+    transform: translate3d(0, 16px, 0) scale(0.95);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0px);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
 .animate-smooth-reveal {
-  animation: smoothReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: smoothReveal 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
 }
 
 /* Animated Small Dotted Background */
@@ -191,6 +193,35 @@
   background-size: 22px 22px;
   animation: dottedGlide 20s linear infinite;
   will-change: background-position;
+}
+
+/* Gradually turn SUSÁMÁ brand image pure white while loading */
+@keyframes susamaTurnWhite {
+  0% {
+    opacity: 0;
+    filter: invert(0) brightness(0.2) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+    transform: translate3d(0, 14px, 0) scale(0.96);
+  }
+  30% {
+    opacity: 0.55;
+    filter: invert(0.3) brightness(0.65) drop-shadow(0 6px 16px rgba(0, 0, 0, 0.5));
+    transform: translate3d(0, 7px, 0) scale(0.98);
+  }
+  65% {
+    opacity: 0.88;
+    filter: invert(0.72) brightness(0.92) drop-shadow(0 8px 24px rgba(0, 0, 0, 0.7));
+    transform: translate3d(0, 2px, 0) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    filter: invert(1) brightness(1) drop-shadow(0 10px 35px rgba(0, 0, 0, 0.95));
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.animate-turn-white {
+  animation: susamaTurnWhite 2.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, filter, transform;
 }
 
 
