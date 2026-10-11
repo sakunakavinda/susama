@@ -128,3 +128,26 @@ CREATE TABLE IF NOT EXISTS store_settings (
   setting_key VARCHAR(100) NOT NULL UNIQUE,
   setting_value TEXT NOT NULL
 );
+
+-- 10. Social Media & Community Posts
+CREATE TABLE IF NOT EXISTS social_posts (
+  id VARCHAR(36) PRIMARY KEY,
+  platform ENUM('instagram', 'tiktok') NOT NULL DEFAULT 'instagram',
+  author VARCHAR(100) NOT NULL,
+  handle VARCHAR(100) NOT NULL,
+  verified BOOLEAN DEFAULT FALSE,
+  avatar_url TEXT NULL,
+  image_url TEXT NOT NULL,
+  post_url TEXT NOT NULL,
+  caption TEXT NOT NULL,
+  likes_count INT DEFAULT 0,
+  comments_count INT DEFAULT 0,
+  product_name VARCHAR(150) NULL,
+  product_price VARCHAR(50) NULL,
+  product_id VARCHAR(36) NULL,
+  sort_order INT DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+

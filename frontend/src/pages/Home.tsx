@@ -30,76 +30,15 @@ interface SocialPost {
   verified: boolean;
   avatar: string;
   image: string;
+  post_url?: string;
   likes: number;
   comments: number;
   caption: string;
-  tags: string[];
+  tags?: string[];
   productName: string;
   productPrice: string;
+  product_id?: string;
 }
-
-const SOCIAL_POSTS: SocialPost[] = [
-  {
-    id: 'post-1',
-    platform: 'instagram',
-    author: 'Ananya Perera',
-    handle: '@ananya.curls',
-    verified: true,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
-    image: '/social-card-1.jpg',
-    likes: 12480,
-    comments: 348,
-    caption: 'Day 14 using the @susama Botanical Curl Elixir. The frizz is completely gone and my curl definition has never felt this bouncy! 🌀✨',
-    tags: ['#SusamaRitual', '#CurlyHairCare', '#CeylonBotanicals'],
-    productName: 'Botanical Curl Elixir',
-    productPrice: 'LKR 4,200'
-  },
-  {
-    id: 'post-2',
-    platform: 'tiktok',
-    author: 'Kavindi Silva',
-    handle: '@kavindi_curls',
-    verified: true,
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=120&q=80',
-    image: '/social-card-2.jpg',
-    likes: 28940,
-    comments: 892,
-    caption: 'My complete wash-day routine with the Keratin Masque! The slip when detangling is unmatched. 10/10 Holy Grail 💆‍♀️🧴',
-    tags: ['#HairCareRoutine', '#CurlCheck', '#NaturalHair'],
-    productName: 'Nourishing Curl Masque',
-    productPrice: 'LKR 3,850'
-  },
-  {
-    id: 'post-3',
-    platform: 'instagram',
-    author: 'Salon Elixir Colombo',
-    handle: '@salon_elixir.lk',
-    verified: true,
-    avatar: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=120&q=80',
-    image: '/social-card-3.jpg',
-    likes: 15320,
-    comments: 412,
-    caption: 'Salon client transformation! Before & after Ceylon Keratin Infusion. Intense mirror shine without weighing down fine curls.',
-    tags: ['#SalonMasterclass', '#CeylonKeratin', '#SilkyCurls'],
-    productName: 'Keratin Repair Serum',
-    productPrice: 'LKR 4,800'
-  },
-  {
-    id: 'post-4',
-    platform: 'instagram',
-    author: 'Ruwi Alwis',
-    handle: '@ruwi.botanicals',
-    verified: false,
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80',
-    image: '/social-card-4.jpg',
-    likes: 9840,
-    comments: 195,
-    caption: 'Obsessed with the botanical fragrance of lotus & vetiver. Finally a clean Sri Lankan haircare brand made for tropical humidity! 🌸🌿',
-    tags: ['#CleanBeautyLK', '#SusamaGlow', '#BotanicalCare'],
-    productName: 'Botanical Scalp Elixir',
-    productPrice: 'LKR 3,900'
-  }
-];
 
 
 interface CategoryItem {
@@ -182,13 +121,10 @@ export default function Home() {
   const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(true);
   const [isVideoMuted, setIsVideoMuted] = useState<boolean>(true);
   const [videoProgress, setVideoProgress] = useState<number>(0);
+  const [socialPosts, setSocialPosts] = useState<SocialPost[]>([]);
   const [activeSocialTab, setActiveSocialTab] = useState<'all' | 'instagram' | 'tiktok'>('all');
   const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
-  const [likeCounts, setLikeCounts] = useState<Record<string, number>>(() => {
-    const initial: Record<string, number> = {};
-    SOCIAL_POSTS.forEach(p => { initial[p.id] = p.likes; });
-    return initial;
-  });
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
 
   const toggleVideoPlay = () => {
     if (!videoRef.current) return;
@@ -238,6 +174,42 @@ export default function Home() {
         }
       })
       .catch((err) => console.log('Using default video setting:', err));
+
+    // Fetch community social posts from database
+    fetch('http://localhost:5001/api/social-posts')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          const mapped = data.data.map((item: any) => ({
+            id: item.id,
+            platform: item.platform,
+            author: item.author,
+            handle: item.handle,
+            verified: Boolean(item.verified),
+            avatar: item.avatar_url,
+            image: item.image_url,
+            post_url: item.post_url,
+            likes: Number(item.likes_count),
+            comments: Number(item.comments_count),
+            caption: item.caption,
+            tags: item.tags ? (typeof item.tags === 'string' ? JSON.parse(item.tags) : item.tags) : [],
+            productName: item.product_name || '',
+            productPrice: item.product_price || '',
+            product_id: item.product_id
+          }));
+          setSocialPosts(mapped);
+          setLikeCounts(prev => {
+            const counts = { ...prev };
+            mapped.forEach((p: any) => {
+              if (counts[p.id] === undefined) {
+                counts[p.id] = p.likes;
+              }
+            });
+            return counts;
+          });
+        }
+      })
+      .catch((err) => console.log('Social posts API error:', err));
 
     // Fetch categories from database API
     fetch('http://localhost:5001/api/categories')
@@ -554,11 +526,11 @@ export default function Home() {
               
               {/* Cards Grid - Compact 2x2 to perfectly match the left column height */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5 h-full">
-                {SOCIAL_POSTS
+                {socialPosts
                   .filter(post => activeSocialTab === 'all' || post.platform === activeSocialTab)
                   .map((post) => {
                     const isLiked = !!likedPosts[post.id];
-                    const currentLikes = likeCounts[post.id] || post.likes;
+                    const currentLikes = likeCounts[post.id] !== undefined ? likeCounts[post.id] : post.likes;
 
                     return (
                       <div
@@ -567,7 +539,13 @@ export default function Home() {
                       >
                         {/* Compact Header: Author Profile & Platform Pill */}
                         <div className="flex items-center justify-between gap-2 mb-2">
-                          <div className="flex items-center gap-2 min-w-0">
+                          <a
+                            href={post.post_url || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
+                            title={`Open ${post.author}'s post on ${post.platform}`}
+                          >
                             <img
                               src={post.avatar}
                               alt={post.author}
@@ -588,25 +566,37 @@ export default function Home() {
                                 {post.handle}
                               </p>
                             </div>
-                          </div>
+                          </a>
 
-                          {/* Compact Platform Pill */}
-                          <div className={`px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1 shrink-0 ${
-                            post.platform === 'instagram'
-                              ? 'bg-gradient-to-r from-purple-50 to-pink-50 text-pink-700 border border-pink-100'
-                              : 'bg-gray-100 text-gray-900 border border-gray-200'
-                          }`}>
+                          {/* Compact Platform Pill with direct link */}
+                          <a
+                            href={post.post_url || '#'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={`View post on ${post.platform}`}
+                            className={`px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1 shrink-0 hover:scale-105 transition-transform ${
+                              post.platform === 'instagram'
+                                ? 'bg-gradient-to-r from-purple-50 to-pink-50 text-pink-700 border border-pink-100'
+                                : 'bg-gray-100 text-gray-900 border border-gray-200'
+                            }`}
+                          >
                             {post.platform === 'instagram' ? (
                               <FaInstagram className="w-2.5 h-2.5 text-pink-600" />
                             ) : (
                               <FaTiktok className="w-2 h-2 text-black" />
                             )}
                             <span className="capitalize">{post.platform}</span>
-                          </div>
+                          </a>
                         </div>
 
-                        {/* Compact Visual Thumbnail */}
-                        <div className="relative h-20 sm:h-22 w-full overflow-hidden rounded-xl bg-gray-100 my-auto">
+                        {/* Compact Visual Thumbnail (Click to view real post) */}
+                        <a
+                          href={post.post_url || '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="Watch original post"
+                          className="relative h-20 sm:h-22 w-full overflow-hidden rounded-xl bg-gray-100 my-auto block cursor-pointer"
+                        >
                           <img
                             src={post.image}
                             alt={post.caption}
@@ -631,7 +621,7 @@ export default function Home() {
                               </span>
                             </div>
                           </div>
-                        </div>
+                        </a>
 
                         {/* Compact Caption & Footer in Single Block */}
                         <div className="mt-2 pt-2 border-t border-gray-100/90">

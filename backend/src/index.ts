@@ -65,6 +65,47 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
   });
 });
 
+// Community & Social Posts API Routes
+app.get('/api/social-posts', async (req, res) => {
+  try {
+    const [rows]: any = await pool.query(
+      `SELECT * FROM social_posts WHERE is_active = TRUE ORDER BY sort_order ASC, created_at DESC`
+    );
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (error: any) {
+    console.error('Error fetching social posts:', error);
+    res.status(500).json({ success: false, message: 'Database error', error: error.message });
+  }
+});
+
+app.put('/api/social-posts/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { post_url, author, handle, caption, likes_count, comments_count, is_active } = req.body;
+    
+    await pool.query(
+      `UPDATE social_posts SET 
+        post_url = COALESCE(?, post_url),
+        author = COALESCE(?, author),
+        handle = COALESCE(?, handle),
+        caption = COALESCE(?, caption),
+        likes_count = COALESCE(?, likes_count),
+        comments_count = COALESCE(?, comments_count),
+        is_active = COALESCE(?, is_active)
+       WHERE id = ?`,
+      [post_url, author, handle, caption, likes_count, comments_count, is_active, id]
+    );
+
+    res.json({ success: true, message: 'Social post updated successfully' });
+  } catch (error: any) {
+    console.error('Error updating social post:', error);
+    res.status(500).json({ success: false, message: 'Database error', error: error.message });
+  }
+});
+
 // Ritual Video Database API Routes
 app.get('/api/settings/ritual-video', async (req, res) => {
   try {
