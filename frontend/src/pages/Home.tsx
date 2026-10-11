@@ -16,7 +16,10 @@ import {
   HiArrowRight,
   HiOutlineHeart,
   HiChevronLeft,
-  HiChevronRight
+  HiChevronRight,
+  HiShieldCheck,
+  HiTruck,
+  HiHeart
 } from 'react-icons/hi2';
 
 interface CategoryItem {
@@ -558,45 +561,45 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════
-          2. TRUST PILLARS BAR
+          2. TRUST PILLARS BAR (SLEEK & PROFESSIONAL)
       ══════════════════════════════════════════ */}
-      <section className="w-full bg-white border-b border-gray-100/80 shadow-xs">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+      <section className="w-full bg-[#FCFAF7] border-b border-stone-200/60 py-3 sm:py-3.5">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {[
               { 
-                icon: '🌿', 
+                icon: HiShieldCheck, 
                 title: 'Sulfate & Paraben Free', 
-                sub: 'Gentle on scalp and cuticles' 
+                sub: 'Scalp & cuticle gentle' 
               },
               { 
-                icon: '✨', 
+                icon: HiSparkles, 
                 title: 'Keratin Enriched', 
                 sub: 'Restores strength & shine' 
               },
               { 
-                icon: '🌀', 
+                icon: HiHeart, 
                 title: 'Silky & Curly Care', 
-                sub: 'Customized for every hair texture' 
+                sub: 'Tailored for every texture' 
               },
               { 
-                icon: '🚚', 
+                icon: HiTruck, 
                 title: 'Islandwide Delivery', 
-                sub: 'Fast & secure shipping in Sri Lanka' 
+                sub: 'Fast & secure shipping' 
               },
             ].map((item, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3.5 sm:gap-4 px-2 sm:px-4 py-3 sm:py-2 first:pt-0 pt-4 sm:pt-2"
+                className="flex items-center gap-2.5 sm:gap-3 px-2 py-1 justify-start"
               >
-                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-amber-50/90 border border-amber-100 flex items-center justify-center text-xl sm:text-2xl shrink-0 shadow-xs">
-                  {item.icon}
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-500/10 border border-amber-200/60 flex items-center justify-center text-brand-primary shrink-0">
+                  <item.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-brand-primary" />
                 </div>
-                <div className="text-left">
-                  <h4 className="font-heading text-xs sm:text-sm font-bold text-gray-900 leading-snug">
+                <div className="min-w-0">
+                  <h4 className="text-[11px] sm:text-xs font-semibold text-gray-900 tracking-tight truncate leading-tight">
                     {item.title}
                   </h4>
-                  <p className="text-[11px] sm:text-xs text-gray-400 leading-relaxed mt-0.5">
+                  <p className="text-[10px] text-gray-400 font-light truncate leading-tight mt-0.5">
                     {item.sub}
                   </p>
                 </div>
