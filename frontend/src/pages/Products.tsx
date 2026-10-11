@@ -252,7 +252,7 @@ export default function Products() {
       <section className="relative bg-gray-950 text-white pt-32 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-brand-secondary/90 to-brand-primary/80 z-10" />
         <img 
-          src="/hero-bg.jpg" 
+          src="/images/hero/hero-bg.jpg" 
           alt="SUSÁMÁ Haircare Collection" 
           className="absolute inset-0 w-full h-full object-cover object-center brightness-75"
         />

@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="sm:col-span-2 lg:col-span-2 flex flex-col items-start pr-0 sm:pr-6">
             <Link to="/" className="mb-4 inline-block">
               <img 
-                src="/logo.png" 
+                src="/images/branding/logo.png" 
                 alt="SUSÁMÁ" 
                 className="h-9 sm:h-11 w-auto object-contain brightness-110"
               />

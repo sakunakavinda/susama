@@ -57,7 +57,7 @@ function detectPlatform(url) {
  */
 async function downloadThumbnail(imageUrl, uploadDir, hostBaseUrl) {
     if (!imageUrl)
-        return '/social-card-1.jpg';
+        return '/images/social/social-card-1.jpg';
     try {
         const filename = `social-${Date.now()}-${Math.round(Math.random() * 1e6)}.jpg`;
         const localFilePath = path_1.default.join(uploadDir, filename);
@@ -98,7 +98,7 @@ async function scrapeSocialPost(postUrl, uploadDir, hostBaseUrl) {
             const author = data.author_name || 'TikTok Creator';
             const handle = data.author_unique_id ? `@${data.author_unique_id}` : '@tiktok_user';
             const caption = data.title || 'Botanical transformation featured on TikTok';
-            let localImage = '/social-card-2.jpg';
+            let localImage = '/images/social/social-card-2.jpg';
             if (data.thumbnail_url) {
                 localImage = await downloadThumbnail(data.thumbnail_url, uploadDir, hostBaseUrl);
             }
@@ -123,7 +123,7 @@ async function scrapeSocialPost(postUrl, uploadDir, hostBaseUrl) {
                 author: 'TikTok Creator',
                 handle: '@community.creator',
                 caption: 'Haircare ritual and curl routine transformation',
-                image_url: '/social-card-2.jpg',
+                image_url: '/images/social/social-card-2.jpg',
                 post_url: postUrl,
                 likes_count: 5400,
                 comments_count: 85,
@@ -151,7 +151,7 @@ async function scrapeSocialPost(postUrl, uploadDir, hostBaseUrl) {
                 author = 'Facebook Creator';
             }
             const handle = `@${author.toLowerCase().replace(/[^a-z0-9_]/g, '') || 'facebook_creator'}`;
-            let localImage = '/social-card-3.jpg';
+            let localImage = '/images/social/social-card-3.jpg';
             if (ogImage) {
                 localImage = await downloadThumbnail(ogImage, uploadDir, hostBaseUrl);
             }
@@ -175,7 +175,7 @@ async function scrapeSocialPost(postUrl, uploadDir, hostBaseUrl) {
                 author: 'Facebook Creator',
                 handle: '@community_curls',
                 caption: 'Watch customer transformation and hair ritual on Facebook',
-                image_url: '/social-card-3.jpg',
+                image_url: '/images/social/social-card-3.jpg',
                 post_url: postUrl,
                 likes_count: 3200,
                 comments_count: 42,
@@ -209,7 +209,7 @@ async function scrapeSocialPost(postUrl, uploadDir, hostBaseUrl) {
                 author = ogTitle.split('on Instagram')[0].trim() || 'Instagram Creator';
                 handle = `@${author.toLowerCase().replace(/[^a-z0-9_]/g, '')}`;
             }
-            let localImage = '/social-card-1.jpg';
+            let localImage = '/images/social/social-card-1.jpg';
             if (ogImage) {
                 localImage = await downloadThumbnail(ogImage, uploadDir, hostBaseUrl);
             }
@@ -233,7 +233,7 @@ async function scrapeSocialPost(postUrl, uploadDir, hostBaseUrl) {
                 author: 'Instagram Creator',
                 handle: '@community_curls',
                 caption: 'Watch customer transformation and hair ritual on Instagram',
-                image_url: '/social-card-1.jpg',
+                image_url: '/images/social/social-card-1.jpg',
                 post_url: postUrl,
                 likes_count: 8500,
                 comments_count: 90,

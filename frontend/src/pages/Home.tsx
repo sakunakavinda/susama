@@ -147,7 +147,7 @@ export default function Home() {
 
   // Video and Social Showcase State
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [ritualVideoUrl, setRitualVideoUrl] = useState<string>('/ritual-video.mp4');
+  const [ritualVideoUrl, setRitualVideoUrl] = useState<string>('/videos/ritual-video.mp4');
   const [ritualVideoHeading, setRitualVideoHeading] = useState<string>('The Ritual In Motion');
   const [ritualVideoDescription, setRitualVideoDescription] = useState<string>('');
   const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(true);
@@ -239,14 +239,14 @@ export default function Home() {
 
     // Preload & check if hero image is cached for immediate smooth animation
     const heroImg = new Image();
-    heroImg.src = '/home.jpg';
+    heroImg.src = '/images/hero/home.jpg';
     if (heroImg.complete) {
       setIsHeroImageLoaded(true);
     } else {
       heroImg.onload = () => setIsHeroImageLoaded(true);
       heroImg.onerror = () => {
         const fallback = new Image();
-        fallback.src = '/home.JPG';
+        fallback.src = '/images/hero/hero-bg.jpg';
         fallback.onload = () => setIsHeroImageLoaded(true);
       };
     }
@@ -472,13 +472,13 @@ export default function Home() {
         {/* Background image container with smooth luxury load transition */}
         <div className="absolute inset-0 bg-stone-950 overflow-hidden">
           <img
-            src="/home.jpg"
+            src="/images/hero/home.jpg"
             alt="SUSÁMÁ Botanical Hair Care"
             onLoad={() => setIsHeroImageLoaded(true)}
             onError={(e) => {
               const target = e.currentTarget;
-              if (target.src.endsWith('/home.jpg')) {
-                target.src = '/home.JPG';
+              if (target.src.includes('/images/hero/home.jpg')) {
+                target.src = '/images/hero/hero-bg.jpg';
               }
             }}
             className={`w-full h-full object-cover object-[center_20%] transition-all duration-1200 ease-out transform ${
@@ -500,7 +500,7 @@ export default function Home() {
           {/* Emblem with smooth reveal */}
           <div className="mb-6 sm:mb-8 animate-smooth-reveal">
             <img
-              src="/logo-emblem.png"
+              src="/images/branding/logo-emblem.png"
               alt="SUSÁMÁ Emblem"
               onLoad={() => setIsLogoLoaded(true)}
               className={`h-16 sm:h-20 md:h-24 w-auto object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] animate-float transition-all duration-1000 ease-out ${
@@ -512,7 +512,7 @@ export default function Home() {
           {/* Brand Name Logo (SUSÁMÁ) - Pure White after loading */}
           <div className="mb-6 sm:mb-8 animate-smooth-reveal delay-150">
             <img
-              src="/font.png"
+              src="/images/branding/font.png"
               alt="SUSÁMÁ"
               onLoad={() => setIsLogoLoaded(true)}
               style={{ filter: 'brightness(0) invert(1) drop-shadow(0 10px 35px rgba(0,0,0,0.9))' }}
@@ -648,7 +648,7 @@ export default function Home() {
               <video
                 ref={videoRef}
                 src={ritualVideoUrl}
-                poster="/home.jpg"
+                poster="/images/hero/home.jpg"
                 autoPlay
                 loop
                 muted

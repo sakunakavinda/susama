@@ -48,7 +48,7 @@ export default function Navbar() {
         <div className="flex items-center">
           <Link to="/" className="flex items-center gap-2 sm:gap-3 group focus:outline-none">
             <img 
-              src="/logo.png" 
+              src="/images/branding/logo.png" 
               alt="Susámá Logo" 
               className="h-8 sm:h-10 md:h-12 w-auto object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-105"
             />
