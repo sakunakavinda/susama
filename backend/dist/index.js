@@ -77,11 +77,23 @@ app.get('/api/settings/ritual-video', async (req, res) => {
         if (titleRows && titleRows.length > 0 && titleRows[0].setting_value) {
             videoTitle = titleRows[0].setting_value;
         }
+        const [descRows] = await db_1.pool.query(`SELECT setting_value FROM store_settings WHERE setting_key = 'ritual_video_description' LIMIT 1`);
+        let videoDescription = 'Watch the botanical curl transformation in action and explore real results shared across social media by our growing island community.';
+        if (descRows && descRows.length > 0 && descRows[0].setting_value) {
+            videoDescription = descRows[0].setting_value;
+        }
+        const [headingRows] = await db_1.pool.query(`SELECT setting_value FROM store_settings WHERE setting_key = 'ritual_video_heading' LIMIT 1`);
+        let videoHeading = 'The Ritual In Motion';
+        if (headingRows && headingRows.length > 0 && headingRows[0].setting_value) {
+            videoHeading = headingRows[0].setting_value;
+        }
         res.json({
             success: true,
             data: {
                 video_url: videoUrl,
-                video_title: videoTitle
+                video_title: videoTitle,
+                heading: videoHeading,
+                description: videoDescription
             }
         });
     }
@@ -90,7 +102,9 @@ app.get('/api/settings/ritual-video', async (req, res) => {
         res.json({
             success: true,
             data: {
-                video_url: '/ritual-video.mp4'
+                video_url: '/ritual-video.mp4',
+                heading: 'The Ritual In Motion',
+                description: 'Watch the botanical curl transformation in action and explore real results shared across social media by our growing island community.'
             }
         });
     }
@@ -108,21 +122,36 @@ app.post('/api/settings/ritual-video', upload.single('video'), async (req, res) 
         if (req.file) {
             videoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
         }
-        if (!videoUrl) {
-            return res.status(400).json({ success: false, message: 'No video file or URL provided' });
+        if (videoUrl) {
+            // Save or update in store_settings table in database
+            await db_1.pool.query(`
+        INSERT INTO store_settings (id, setting_key, setting_value)
+        VALUES (UUID(), 'ritual_video_url', ?)
+        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+      `, [videoUrl]);
+            console.log('✅ Ritual video updated in database:', videoUrl);
         }
-        // Save or update in store_settings table in database
-        await db_1.pool.query(`
-      INSERT INTO store_settings (id, setting_key, setting_value)
-      VALUES (UUID(), 'ritual_video_url', ?)
-      ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
-    `, [videoUrl]);
-        console.log('✅ Ritual video updated in database:', videoUrl);
+        if (req.body?.description) {
+            await db_1.pool.query(`
+        INSERT INTO store_settings (id, setting_key, setting_value)
+        VALUES (UUID(), 'ritual_video_description', ?)
+        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+      `, [req.body.description]);
+        }
+        if (req.body?.heading) {
+            await db_1.pool.query(`
+        INSERT INTO store_settings (id, setting_key, setting_value)
+        VALUES (UUID(), 'ritual_video_heading', ?)
+        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+      `, [req.body.heading]);
+        }
         res.json({
             success: true,
-            message: 'Ritual video successfully saved to database',
+            message: 'Ritual video settings successfully saved to database',
             data: {
-                video_url: videoUrl
+                video_url: videoUrl,
+                description: req.body?.description,
+                heading: req.body?.heading
             }
         });
     }

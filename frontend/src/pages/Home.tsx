@@ -177,7 +177,8 @@ export default function Home() {
   // Video and Social Showcase State
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ritualVideoUrl, setRitualVideoUrl] = useState<string>('/ritual-video.mp4');
-  const [ritualVideoTitle, setRitualVideoTitle] = useState<string>('Ceylon Keratin Curl Elixir');
+  const [ritualVideoHeading, setRitualVideoHeading] = useState<string>('The Ritual In Motion');
+  const [ritualVideoDescription, setRitualVideoDescription] = useState<string>('');
   const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(true);
   const [isVideoMuted, setIsVideoMuted] = useState<boolean>(true);
   const [videoProgress, setVideoProgress] = useState<number>(0);
@@ -222,15 +223,18 @@ export default function Home() {
   };
 
   useEffect(() => {
-    // Fetch dynamic ritual video from database
+    // Fetch dynamic ritual video and description from database
     fetch('http://localhost:5001/api/settings/ritual-video')
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.data?.video_url) {
           setRitualVideoUrl(data.data.video_url);
         }
-        if (data.success && data.data?.video_title) {
-          setRitualVideoTitle(data.data.video_title);
+        if (data.success && data.data?.heading) {
+          setRitualVideoHeading(data.data.heading);
+        }
+        if (data.success && data.data?.description) {
+          setRitualVideoDescription(data.data.description);
         }
       })
       .catch((err) => console.log('Using default video setting:', err));
@@ -241,6 +245,7 @@ export default function Home() {
       .then((data) => {
         if (data.success && Array.isArray(data.data) && data.data.length > 0) {
           setCategories(data.data);
+          console.log(data);
         }
       })
       .catch((err) => console.log('Categories API error:', err));
@@ -440,11 +445,13 @@ export default function Home() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-14 gap-5">
             <div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-gray-900 tracking-tight">
-                The Ritual In Motion
+                {ritualVideoHeading}
               </h2>
-              <p className="text-xs sm:text-sm md:text-base text-gray-500 max-w-xl mt-2 font-light leading-relaxed">
-                Watch the botanical curl transformation in action and explore real results shared across social media by our growing island community.
-              </p>
+              {ritualVideoDescription && (
+                <p className="text-xs sm:text-sm md:text-base text-gray-500 max-w-xl mt-2 font-light leading-relaxed">
+                  {ritualVideoDescription}
+                </p>
+              )}
             </div>
 
             {/* Social Platform Filter Tabs */}
@@ -489,6 +496,13 @@ export default function Home() {
                   muted
                   playsInline
                   onTimeUpdate={handleVideoTimeUpdate}
+                  onError={() => {
+                    if (ritualVideoUrl.endsWith('.mp4')) {
+                      setRitualVideoUrl(ritualVideoUrl.replace('.mp4', '.MP4'));
+                    } else if (ritualVideoUrl.endsWith('.MP4')) {
+                      setRitualVideoUrl(ritualVideoUrl.replace('.MP4', '.mp4'));
+                    }
+                  }}
                   className="absolute inset-0 w-full h-full aspect-video object-cover object-center transition-transform duration-700 group-hover:scale-102"
                 />
 
@@ -531,18 +545,6 @@ export default function Home() {
                   />
                 </div>
 
-              </div>
-
-              {/* Beneath the 16:9 Video: Video Name Card */}
-              <div className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-4 shadow-sm flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
-                  <img src="/logo-emblem.png" alt="SUSÁMÁ" className="h-6 w-auto object-contain" />
-                </div>
-                <div className="min-w-0">
-                  <h4 className="text-xs sm:text-sm md:text-base font-bold text-gray-900 tracking-tight truncate">
-                    {ritualVideoTitle}
-                  </h4>
-                </div>
               </div>
 
             </div>
@@ -687,7 +689,7 @@ export default function Home() {
                       Tag @susama.lk or #SusamaRitual
                     </h5>
                     <p className="text-[11px] text-gray-500">
-                      Share your curl journey on Instagram &amp; TikTok to be featured in our collective.
+                      Share your journey on Instagram &amp; TikTok to be featured in our collective.
                     </p>
                   </div>
                 </div>
