@@ -37,6 +37,7 @@ const upload = multer({ storage });
 
 import categoryRoutes from './routes/categoryRoutes';
 import productRoutes from './routes/productRoutes';
+import { scrapeSocialPost } from './services/socialScraper';
 
 // Routes
 app.get('/api/health', (req, res) => {
@@ -105,6 +106,62 @@ app.put('/api/social-posts/:id', async (req, res) => {
     res.status(500).json({ success: false, message: 'Database error', error: error.message });
   }
 });
+
+app.post('/api/social-posts/import-url', async (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ success: false, message: 'Please provide a valid URL' });
+    }
+
+    const hostBaseUrl = `${req.protocol}://${req.get('host')}`;
+    const scraped = await scrapeSocialPost(url.trim(), uploadDir, hostBaseUrl);
+
+    const postId = `post-${Date.now()}`;
+    await pool.query(
+      `INSERT INTO social_posts (
+        id, platform, author, handle, verified, avatar_url, image_url, post_url, caption, likes_count, comments_count, sort_order, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, TRUE)`,
+      [
+        postId,
+        scraped.platform,
+        scraped.author,
+        scraped.handle,
+        scraped.verified ? 1 : 0,
+        scraped.avatar_url || null,
+        scraped.image_url,
+        scraped.post_url,
+        scraped.caption,
+        scraped.likes_count,
+        scraped.comments_count
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: `Successfully imported ${scraped.platform} post!`,
+      data: {
+        id: postId,
+        ...scraped
+      }
+    });
+  } catch (error: any) {
+    console.error('Error importing social post from URL:', error);
+    res.status(500).json({ success: false, message: error.message || 'Could not import post from URL' });
+  }
+});
+
+app.delete('/api/social-posts/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query(`DELETE FROM social_posts WHERE id = ?`, [id]);
+    res.json({ success: true, message: 'Social post deleted' });
+  } catch (error: any) {
+    console.error('Error deleting social post:', error);
+    res.status(500).json({ success: false, message: 'Database error', error: error.message });
+  }
+});
+
 
 // Ritual Video Database API Routes
 app.get('/api/settings/ritual-video', async (req, res) => {

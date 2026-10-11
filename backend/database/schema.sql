@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS store_settings (
 -- 10. Social Media & Community Posts
 CREATE TABLE IF NOT EXISTS social_posts (
   id VARCHAR(36) PRIMARY KEY,
-  platform ENUM('instagram', 'tiktok') NOT NULL DEFAULT 'instagram',
+  platform ENUM('instagram', 'tiktok', 'facebook') NOT NULL DEFAULT 'instagram',
   author VARCHAR(100) NOT NULL,
   handle VARCHAR(100) NOT NULL,
   verified BOOLEAN DEFAULT FALSE,

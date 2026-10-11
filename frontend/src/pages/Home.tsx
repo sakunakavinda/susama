@@ -1,3 +1,10 @@
+import { 
+  FaPlay, 
+  FaPause, 
+  FaVolumeHigh, 
+  FaVolumeXmark 
+} from 'react-icons/fa6';
+
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -9,37 +16,6 @@ import {
   HiArrowRight,
   HiOutlineHeart
 } from 'react-icons/hi2';
-import { 
-  FaInstagram, 
-  FaTiktok, 
-  FaPlay, 
-  FaPause, 
-  FaVolumeHigh, 
-  FaVolumeXmark, 
-  FaHeart, 
-  FaRegHeart,
-  FaRegComment, 
-  FaArrowUpRightFromSquare 
-} from 'react-icons/fa6';
-
-interface SocialPost {
-  id: string;
-  platform: 'instagram' | 'tiktok';
-  author: string;
-  handle: string;
-  verified: boolean;
-  avatar: string;
-  image: string;
-  post_url?: string;
-  likes: number;
-  comments: number;
-  caption: string;
-  tags?: string[];
-  productName: string;
-  productPrice: string;
-  product_id?: string;
-}
-
 
 interface CategoryItem {
   id: string;
@@ -121,11 +97,6 @@ export default function Home() {
   const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(true);
   const [isVideoMuted, setIsVideoMuted] = useState<boolean>(true);
   const [videoProgress, setVideoProgress] = useState<number>(0);
-  const [socialPosts, setSocialPosts] = useState<SocialPost[]>([]);
-  const [activeSocialTab, setActiveSocialTab] = useState<'all' | 'instagram' | 'tiktok'>('all');
-  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
-  const [likeCounts, setLikeCounts] = useState<Record<string, number>>({});
-
   const toggleVideoPlay = () => {
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
@@ -149,15 +120,6 @@ export default function Home() {
     setVideoProgress(isNaN(progress) ? 0 : progress);
   };
 
-  const toggleLikePost = (id: string) => {
-    const isLiked = !!likedPosts[id];
-    setLikedPosts(prev => ({ ...prev, [id]: !isLiked }));
-    setLikeCounts(prev => ({
-      ...prev,
-      [id]: isLiked ? (prev[id] || 0) - 1 : (prev[id] || 0) + 1
-    }));
-  };
-
   useEffect(() => {
     // Fetch dynamic ritual video and description from database
     fetch('http://localhost:5001/api/settings/ritual-video')
@@ -174,42 +136,6 @@ export default function Home() {
         }
       })
       .catch((err) => console.log('Using default video setting:', err));
-
-    // Fetch community social posts from database
-    fetch('http://localhost:5001/api/social-posts')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
-          const mapped = data.data.map((item: any) => ({
-            id: item.id,
-            platform: item.platform,
-            author: item.author,
-            handle: item.handle,
-            verified: Boolean(item.verified),
-            avatar: item.avatar_url,
-            image: item.image_url,
-            post_url: item.post_url,
-            likes: Number(item.likes_count),
-            comments: Number(item.comments_count),
-            caption: item.caption,
-            tags: item.tags ? (typeof item.tags === 'string' ? JSON.parse(item.tags) : item.tags) : [],
-            productName: item.product_name || '',
-            productPrice: item.product_price || '',
-            product_id: item.product_id
-          }));
-          setSocialPosts(mapped);
-          setLikeCounts(prev => {
-            const counts = { ...prev };
-            mapped.forEach((p: any) => {
-              if (counts[p.id] === undefined) {
-                counts[p.id] = p.likes;
-              }
-            });
-            return counts;
-          });
-        }
-      })
-      .catch((err) => console.log('Social posts API error:', err));
 
     // Fetch categories from database API
     fetch('http://localhost:5001/api/categories')
@@ -404,7 +330,7 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════
-          2.5. IN MOTION & SOCIAL MEDIA CONTENT CARDS
+          2.5. THE RITUAL IN MOTION (CINEMATIC VIDEO)
       ══════════════════════════════════════════ */}
       <section className="w-full py-16 sm:py-20 md:py-24 bg-gradient-to-b from-white via-amber-50/20 to-white relative overflow-hidden border-b border-gray-100">
         {/* Subtle atmospheric ambient glows */}
@@ -414,301 +340,83 @@ export default function Home() {
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           
           {/* Section Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-14 gap-5">
-            <div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-gray-900 tracking-tight">
-                {ritualVideoHeading}
-              </h2>
-              {ritualVideoDescription && (
-                <p className="text-xs sm:text-sm md:text-base text-gray-500 max-w-xl mt-2 font-light leading-relaxed">
-                  {ritualVideoDescription}
-                </p>
-              )}
-            </div>
+          <div className="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-gray-900 tracking-tight">
+              {ritualVideoHeading}
+            </h2>
+            {ritualVideoDescription && (
+              <p className="text-xs sm:text-sm md:text-base text-gray-500 mt-2 font-light leading-relaxed">
+                {ritualVideoDescription}
+              </p>
+            )}
+          </div>
 
-            {/* Social Platform Filter Tabs */}
-            <div className="flex items-center gap-1.5 bg-gray-100/90 p-1.5 rounded-full w-fit border border-gray-200/60 self-start md:self-auto">
-              {[
-                { id: 'all', label: 'All Community' },
-                { id: 'instagram', label: 'Instagram', icon: <FaInstagram className="w-3.5 h-3.5 text-pink-600" /> },
-                { id: 'tiktok', label: 'TikTok', icon: <FaTiktok className="w-3 h-3 text-gray-900" /> }
-              ].map((tab) => (
+          {/* 16:9 Cinematic Video Feature */}
+          <div className="max-w-4xl mx-auto">
+            <div className="w-full aspect-video rounded-2xl sm:rounded-3xl overflow-hidden bg-gray-950 shadow-2xl border border-gray-800/80 group relative flex flex-col justify-between">
+              
+              {/* HTML5 16:9 Video element */}
+              <video
+                ref={videoRef}
+                src={ritualVideoUrl}
+                poster="/home.jpg"
+                autoPlay
+                loop
+                muted
+                playsInline
+                onTimeUpdate={handleVideoTimeUpdate}
+                onError={() => {
+                  if (ritualVideoUrl.endsWith('.mp4')) {
+                    setRitualVideoUrl(ritualVideoUrl.replace('.mp4', '.MP4'));
+                  } else if (ritualVideoUrl.endsWith('.MP4')) {
+                    setRitualVideoUrl(ritualVideoUrl.replace('.MP4', '.mp4'));
+                  }
+                }}
+                className="absolute inset-0 w-full h-full aspect-video object-cover object-center transition-transform duration-700 group-hover:scale-102"
+              />
+
+              {/* Dark Vignette Overlay for High Legibility */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50 pointer-events-none" />
+
+              {/* Top Floating Controls */}
+              <div className="relative z-20 p-3.5 sm:p-4.5 flex items-center justify-end">
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveSocialTab(tab.id as any)}
-                  className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold transition-all duration-300 ${
-                    activeSocialTab === tab.id
-                      ? 'bg-white text-gray-900 shadow-sm border border-gray-100'
-                      : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
+                  onClick={toggleVideoMute}
+                  aria-label={isVideoMuted ? 'Unmute video' : 'Mute video'}
+                  className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95 shadow-md"
+                >
+                  {isVideoMuted ? <FaVolumeXmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/90" /> : <FaVolumeHigh className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />}
+                </button>
+              </div>
+
+              {/* Center Play / Pause Floating Toggle */}
+              <div className="relative z-20 flex items-center justify-center my-auto">
+                <button
+                  onClick={toggleVideoPlay}
+                  aria-label={isVideoPlaying ? 'Pause ritual video' : 'Play ritual video'}
+                  className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-xl border border-white/40 text-white flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 shadow-2xl ${
+                    isVideoPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100 ring-4 ring-white/30'
                   }`}
                 >
-                  {tab.icon}
-                  <span>{tab.label}</span>
+                  {isVideoPlaying ? (
+                    <FaPause className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  ) : (
+                    <FaPlay className="w-5 h-5 sm:w-6 sm:h-6 text-white translate-x-0.5" />
+                  )}
                 </button>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* 2-Column Responsive Showcase Layout: Video Left, Social Cards Right */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
-            
-            {/* ── LEFT COLUMN (6 Cols): 16:9 Cinematic Video Feature ── */}
-            <div className="lg:col-span-6 flex flex-col gap-4">
-              
-              {/* 16:9 Aspect Ratio Video Player Card */}
-              <div className="w-full aspect-video rounded-2xl sm:rounded-3xl overflow-hidden bg-gray-950 shadow-2xl border border-gray-800/80 group relative flex flex-col justify-between">
-                
-                {/* HTML5 16:9 Video element */}
-                <video
-                  ref={videoRef}
-                  src={ritualVideoUrl}
-                  poster="/home.jpg"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  onTimeUpdate={handleVideoTimeUpdate}
-                  onError={() => {
-                    if (ritualVideoUrl.endsWith('.mp4')) {
-                      setRitualVideoUrl(ritualVideoUrl.replace('.mp4', '.MP4'));
-                    } else if (ritualVideoUrl.endsWith('.MP4')) {
-                      setRitualVideoUrl(ritualVideoUrl.replace('.MP4', '.mp4'));
-                    }
-                  }}
-                  className="absolute inset-0 w-full h-full aspect-video object-cover object-center transition-transform duration-700 group-hover:scale-102"
+              {/* Bottom Scrub Progress Line */}
+              <div className="relative z-20 w-full h-1 bg-white/20">
+                <div 
+                  className="h-full bg-gradient-to-r from-brand-primary to-amber-400 transition-all duration-150"
+                  style={{ width: `${videoProgress}%` }}
                 />
-
-                {/* Dark Vignette Overlay for High Legibility */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50 pointer-events-none" />
-
-                {/* Top Floating Controls */}
-                <div className="relative z-20 p-3.5 sm:p-4.5 flex items-center justify-end">
-                  <button
-                    onClick={toggleVideoMute}
-                    aria-label={isVideoMuted ? 'Unmute video' : 'Mute video'}
-                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95 shadow-md"
-                  >
-                    {isVideoMuted ? <FaVolumeXmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/90" /> : <FaVolumeHigh className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />}
-                  </button>
-                </div>
-
-                {/* Center Play / Pause Floating Toggle */}
-                <div className="relative z-20 flex items-center justify-center my-auto">
-                  <button
-                    onClick={toggleVideoPlay}
-                    aria-label={isVideoPlaying ? 'Pause ritual video' : 'Play ritual video'}
-                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-xl border border-white/40 text-white flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 shadow-2xl ${
-                      isVideoPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100 ring-4 ring-white/30'
-                    }`}
-                  >
-                    {isVideoPlaying ? (
-                      <FaPause className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    ) : (
-                      <FaPlay className="w-5 h-5 sm:w-6 sm:h-6 text-white translate-x-0.5" />
-                    )}
-                  </button>
-                </div>
-
-                {/* Bottom Scrub Progress Line */}
-                <div className="relative z-20 w-full h-1 bg-white/20">
-                  <div 
-                    className="h-full bg-gradient-to-r from-brand-primary to-amber-400 transition-all duration-150"
-                    style={{ width: `${videoProgress}%` }}
-                  />
-                </div>
-
               </div>
 
             </div>
-
-            {/* ── RIGHT COLUMN (6 Cols): Social Media Content Cards (Compact to fit video height) ── */}
-            <div className="lg:col-span-6 flex flex-col justify-between h-full">
-              
-              {/* Cards Grid - Compact 2x2 to perfectly match the left column height */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5 h-full">
-                {socialPosts
-                  .filter(post => activeSocialTab === 'all' || post.platform === activeSocialTab)
-                  .map((post) => {
-                    const isLiked = !!likedPosts[post.id];
-                    const currentLikes = likeCounts[post.id] !== undefined ? likeCounts[post.id] : post.likes;
-
-                    return (
-                      <div
-                        key={post.id}
-                        className="group bg-white rounded-2xl border border-gray-100 hover:border-amber-200/90 shadow-2xs hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 flex flex-col justify-between p-3 sm:p-3.5 overflow-hidden"
-                      >
-                        {/* Compact Header: Author Profile & Platform Pill */}
-                        <div className="flex items-center justify-between gap-2 mb-2">
-                          <a
-                            href={post.post_url || '#'}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 min-w-0 hover:opacity-80 transition-opacity"
-                            title={`Open ${post.author}'s post on ${post.platform}`}
-                          >
-                            <img
-                              src={post.avatar}
-                              alt={post.author}
-                              className="w-6 h-6 rounded-full object-cover border border-gray-200 shrink-0"
-                            />
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-1">
-                                <h5 className="text-[11px] font-bold text-gray-900 truncate leading-tight">
-                                  {post.author}
-                                </h5>
-                                {post.verified && (
-                                  <span className="w-3 h-3 rounded-full bg-blue-500 text-white flex items-center justify-center text-[7px] shrink-0 font-bold">
-                                    ✓
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[9px] text-gray-400 truncate leading-none mt-0.5">
-                                {post.handle}
-                              </p>
-                            </div>
-                          </a>
-
-                          {/* Compact Platform Pill with direct link */}
-                          <a
-                            href={post.post_url || '#'}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title={`View post on ${post.platform}`}
-                            className={`px-2 py-0.5 rounded-full text-[9px] font-bold flex items-center gap-1 shrink-0 hover:scale-105 transition-transform ${
-                              post.platform === 'instagram'
-                                ? 'bg-gradient-to-r from-purple-50 to-pink-50 text-pink-700 border border-pink-100'
-                                : 'bg-gray-100 text-gray-900 border border-gray-200'
-                            }`}
-                          >
-                            {post.platform === 'instagram' ? (
-                              <FaInstagram className="w-2.5 h-2.5 text-pink-600" />
-                            ) : (
-                              <FaTiktok className="w-2 h-2 text-black" />
-                            )}
-                            <span className="capitalize">{post.platform}</span>
-                          </a>
-                        </div>
-
-                        {/* Compact Visual Thumbnail (Click to view real post) */}
-                        <a
-                          href={post.post_url || '#'}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="Watch original post"
-                          className="relative h-20 sm:h-22 w-full overflow-hidden rounded-xl bg-gray-100 my-auto block cursor-pointer"
-                        >
-                          <img
-                            src={post.image}
-                            alt={post.caption}
-                            className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
-                          />
-
-                          {/* Hover Play Pill */}
-                          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                            <span className="w-7 h-7 rounded-full bg-white/95 backdrop-blur-md text-gray-900 flex items-center justify-center shadow-md">
-                              <FaPlay className="w-2.5 h-2.5 translate-x-0.5 text-gray-900" />
-                            </span>
-                          </div>
-
-                          {/* Tagged Product Micro Pill on Image */}
-                          <div className="absolute bottom-1.5 left-1.5 right-1.5">
-                            <div className="bg-black/65 backdrop-blur-md border border-white/20 rounded-lg px-2 py-0.5 text-white flex items-center justify-between text-[9px]">
-                              <span className="font-semibold truncate">
-                                🌿 {post.productName}
-                              </span>
-                              <span className="text-amber-300 font-bold shrink-0 ml-1">
-                                {post.productPrice}
-                              </span>
-                            </div>
-                          </div>
-                        </a>
-
-                        {/* Compact Caption & Footer in Single Block */}
-                        <div className="mt-2 pt-2 border-t border-gray-100/90">
-                          <p className="text-[11px] text-gray-600 line-clamp-1 leading-snug">
-                            {post.caption}
-                          </p>
-
-                          {/* Engagement Row */}
-                          <div className="mt-1.5 flex items-center justify-between text-[10px] text-gray-500">
-                            <div className="flex items-center gap-2.5">
-                              <button
-                                onClick={() => toggleLikePost(post.id)}
-                                className={`flex items-center gap-1 transition-all duration-200 ${
-                                  isLiked ? 'text-rose-600 scale-105' : 'hover:text-rose-600'
-                                }`}
-                              >
-                                {isLiked ? (
-                                  <FaHeart className="w-2.5 h-2.5 text-rose-600" />
-                                ) : (
-                                  <FaRegHeart className="w-2.5 h-2.5" />
-                                )}
-                                <span className="font-medium">
-                                  {currentLikes.toLocaleString()}
-                                </span>
-                              </button>
-
-                              <span className="flex items-center gap-1 text-gray-400">
-                                <FaRegComment className="w-2.5 h-2.5" />
-                                {post.comments}
-                              </span>
-                            </div>
-
-                            <Link
-                              to="/products"
-                              className="font-bold text-gray-400 hover:text-brand-primary flex items-center gap-1 transition-colors text-[9px] uppercase tracking-wider"
-                            >
-                              Shop <FaArrowUpRightFromSquare className="w-2 h-2" />
-                            </Link>
-                          </div>
-                        </div>
-
-                      </div>
-                    );
-                  })}
-              </div>
-
-              {/* Bottom Community Banner */}
-              <div className="mt-5 p-4 rounded-2xl bg-amber-50/70 border border-amber-200/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-900 text-base shrink-0">
-                    📸
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-bold text-gray-900">
-                      Tag @susama.lk or #SusamaRitual
-                    </h5>
-                    <p className="text-[11px] text-gray-500">
-                      Share your journey on Instagram &amp; TikTok to be featured in our collective.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0">
-                  <a
-                    href="https://instagram.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-gray-50 border border-gray-200 text-xs font-bold text-gray-700 transition-colors shadow-xs"
-                  >
-                    <FaInstagram className="w-3 h-3 text-pink-600" />
-                    <span>Follow</span>
-                  </a>
-                  <a
-                    href="https://tiktok.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-gray-50 border border-gray-200 text-xs font-bold text-gray-700 transition-colors shadow-xs"
-                  >
-                    <FaTiktok className="w-2.5 h-2.5 text-black" />
-                    <span>Follow</span>
-                  </a>
-                </div>
-              </div>
-
-            </div>
-
           </div>
+
         </div>
       </section>
 
