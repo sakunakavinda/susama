@@ -610,6 +610,15 @@ export default function Home() {
           2.5. THE RITUAL IN MOTION (CINEMATIC VIDEO)
       ══════════════════════════════════════════ */}
       <section className="w-full py-16 sm:py-20 md:py-24 bg-gradient-to-b from-white via-amber-50/20 to-white relative overflow-hidden border-b border-gray-100">
+        {/* Small Dotted Animated Background */}
+        <div 
+          className="absolute inset-0 animate-dotted-bg pointer-events-none opacity-90 z-0"
+          style={{
+            maskImage: 'radial-gradient(ellipse at center, black 50%, transparent 85%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at center, black 50%, transparent 85%)'
+          }}
+        />
+
         {/* Subtle atmospheric ambient glows */}
         <div className="absolute top-1/4 left-10 w-80 h-80 bg-brand-primary/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 right-10 w-80 h-80 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
