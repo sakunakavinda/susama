@@ -26,6 +26,9 @@ export const getProducts = async (req: Request, res: Response) => {
         p.is_in_stock,
         p.is_featured,
         p.is_new_arrival,
+        p.tag,
+        p.rating,
+        p.reviews,
         p.is_active,
         p.created_at,
         p.updated_at,
@@ -170,6 +173,9 @@ export const createProduct = async (req: Request, res: Response) => {
       is_in_stock = true,
       is_featured = false,
       is_new_arrival = false,
+      tag = null,
+      rating = 5.0,
+      reviews = 0,
       images = []
     } = req.body;
 
@@ -188,8 +194,8 @@ export const createProduct = async (req: Request, res: Response) => {
       `INSERT INTO products (
         id, category_id, name, slug, sku, short_description, full_description, 
         ingredients, how_to_use, base_price, sale_price, stock_quantity, 
-        is_in_stock, is_featured, is_new_arrival, is_active
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
+        is_in_stock, is_featured, is_new_arrival, tag, rating, reviews, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
       [
         productId,
         category_id,
@@ -205,7 +211,10 @@ export const createProduct = async (req: Request, res: Response) => {
         stock_quantity || 0,
         is_in_stock,
         is_featured,
-        is_new_arrival
+        is_new_arrival,
+        tag || null,
+        rating || 5.0,
+        reviews || 0
       ]
     );
 
@@ -262,6 +271,9 @@ export const updateProduct = async (req: Request, res: Response) => {
       is_in_stock,
       is_featured,
       is_new_arrival,
+      tag,
+      rating,
+      reviews,
       is_active
     } = req.body;
 
@@ -289,6 +301,9 @@ export const updateProduct = async (req: Request, res: Response) => {
            is_in_stock = COALESCE(?, is_in_stock),
            is_featured = COALESCE(?, is_featured),
            is_new_arrival = COALESCE(?, is_new_arrival),
+           tag = COALESCE(?, tag),
+           rating = COALESCE(?, rating),
+           reviews = COALESCE(?, reviews),
            is_active = COALESCE(?, is_active)
        WHERE id = ?`,
       [
@@ -306,6 +321,9 @@ export const updateProduct = async (req: Request, res: Response) => {
         is_in_stock,
         is_featured,
         is_new_arrival,
+        tag,
+        rating,
+        reviews,
         is_active,
         id
       ]

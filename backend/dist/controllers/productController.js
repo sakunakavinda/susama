@@ -26,6 +26,9 @@ const getProducts = async (req, res) => {
         p.is_in_stock,
         p.is_featured,
         p.is_new_arrival,
+        p.tag,
+        p.rating,
+        p.reviews,
         p.is_active,
         p.created_at,
         p.updated_at,
@@ -136,7 +139,7 @@ exports.getProductByIdOrSlug = getProductByIdOrSlug;
 const createProduct = async (req, res) => {
     const connection = await db_1.pool.getConnection();
     try {
-        const { category_id, name, slug, sku, short_description, full_description, ingredients, how_to_use, base_price, sale_price, stock_quantity, is_in_stock = true, is_featured = false, is_new_arrival = false, images = [] } = req.body;
+        const { category_id, name, slug, sku, short_description, full_description, ingredients, how_to_use, base_price, sale_price, stock_quantity, is_in_stock = true, is_featured = false, is_new_arrival = false, tag = null, rating = 5.0, reviews = 0, images = [] } = req.body;
         if (!category_id || !name || !slug || base_price === undefined) {
             return res.status(400).json({
                 success: false,
@@ -148,8 +151,8 @@ const createProduct = async (req, res) => {
         await connection.execute(`INSERT INTO products (
         id, category_id, name, slug, sku, short_description, full_description, 
         ingredients, how_to_use, base_price, sale_price, stock_quantity, 
-        is_in_stock, is_featured, is_new_arrival, is_active
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`, [
+        is_in_stock, is_featured, is_new_arrival, tag, rating, reviews, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`, [
             productId,
             category_id,
             name,
@@ -164,7 +167,10 @@ const createProduct = async (req, res) => {
             stock_quantity || 0,
             is_in_stock,
             is_featured,
-            is_new_arrival
+            is_new_arrival,
+            tag || null,
+            rating || 5.0,
+            reviews || 0
         ]);
         // Insert images if provided
         if (Array.isArray(images) && images.length > 0) {
@@ -201,7 +207,7 @@ exports.createProduct = createProduct;
 const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { category_id, name, slug, sku, short_description, full_description, ingredients, how_to_use, base_price, sale_price, stock_quantity, is_in_stock, is_featured, is_new_arrival, is_active } = req.body;
+        const { category_id, name, slug, sku, short_description, full_description, ingredients, how_to_use, base_price, sale_price, stock_quantity, is_in_stock, is_featured, is_new_arrival, tag, rating, reviews, is_active } = req.body;
         const [existing] = await db_1.pool.query('SELECT id FROM products WHERE id = ?', [id]);
         if (existing.length === 0) {
             return res.status(404).json({
@@ -224,6 +230,9 @@ const updateProduct = async (req, res) => {
            is_in_stock = COALESCE(?, is_in_stock),
            is_featured = COALESCE(?, is_featured),
            is_new_arrival = COALESCE(?, is_new_arrival),
+           tag = COALESCE(?, tag),
+           rating = COALESCE(?, rating),
+           reviews = COALESCE(?, reviews),
            is_active = COALESCE(?, is_active)
        WHERE id = ?`, [
             category_id,
@@ -240,6 +249,9 @@ const updateProduct = async (req, res) => {
             is_in_stock,
             is_featured,
             is_new_arrival,
+            tag,
+            rating,
+            reviews,
             is_active,
             id
         ]);

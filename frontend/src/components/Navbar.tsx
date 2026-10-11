@@ -18,16 +18,8 @@ interface Category {
   image_url?: string;
 }
 
-const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'c1000000-0000-4000-8000-000000000001', name: "Shampoos & Cleansers", slug: "shampoos" },
-  { id: 'c1000000-0000-4000-8000-000000000002', name: "Nourishing Conditioners", slug: "conditioners" },
-  { id: 'c1000000-0000-4000-8000-000000000003', name: "Hair Treatments & Oils", slug: "hair-treatments" },
-  { id: 'c1000000-0000-4000-8000-000000000004', name: "Curl Care & Styling", slug: "curl-care-styling" },
-  { id: 'c1000000-0000-4000-8000-000000000005', name: "Hair Perfumes & Mists", slug: "hair-perfumes" }
-];
-
 export default function Navbar() {
-  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const location = useLocation();
@@ -40,7 +32,7 @@ export default function Navbar() {
           setCategories(data.data);
         }
       })
-      .catch((err) => console.log('Using default categories. API error:', err));
+      .catch((err) => console.log('Categories API error:', err));
   }, []);
 
   // Close mobile menu on route change

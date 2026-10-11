@@ -85,10 +85,20 @@ app.get('/api/settings/ritual-video', async (req, res) => {
       videoUrl = rows[0].setting_value;
     }
 
+    const [titleRows]: any = await pool.query(
+      `SELECT setting_value FROM store_settings WHERE setting_key = 'ritual_video_title' LIMIT 1`
+    );
+
+    let videoTitle = 'Ceylon Keratin Curl Elixir';
+    if (titleRows && titleRows.length > 0 && titleRows[0].setting_value) {
+      videoTitle = titleRows[0].setting_value;
+    }
+
     res.json({
       success: true,
       data: {
-        video_url: videoUrl
+        video_url: videoUrl,
+        video_title: videoTitle
       }
     });
   } catch (error: any) {
