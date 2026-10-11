@@ -1220,70 +1220,140 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Overall Reviews Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            {(overallReviews.length > 0 ? overallReviews.slice(0, 3) : [
-              {
-                id: '1',
-                customer_name: 'Dilini Senanayake',
-                rating: 5,
-                title: 'Exceptional luxury packaging and swift delivery',
-                comment: 'Ordered on Monday morning and received the package in Colombo by Tuesday afternoon. The gold-accented frosted amber glass bottles feel so luxurious on my vanity.',
-              },
-              {
-                id: '2',
-                customer_name: 'Kavinda Wickramasinghe',
-                rating: 5,
-                title: 'Finally, genuine salon-grade botanical haircare in Sri Lanka',
-                comment: 'SUSÁMÁ has completely raised the bar for Sri Lankan beauty brands. The aromas are naturally subtle rather than artificial, and customer care was wonderful.',
-              },
-              {
-                id: '3',
-                customer_name: 'Tharushi Jayawardena',
-                rating: 5,
-                title: 'Transformed my whole weekly hair ritual',
-                comment: 'I have sensitive scalp and usually dread trying new formulations. Every single product I received has been so gentle, non-irritating, and truly therapeutic.',
-              }
-            ]).map((review, i) => (
-              <div 
-                key={review.id || i}
-                className="bg-white rounded-3xl p-6 sm:p-8 shadow-xs border border-gray-100/90 flex flex-col justify-between hover:shadow-lg transition-all duration-300"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-1 text-amber-400">
-                      {[...Array(5)].map((_, idx) => (
-                        <HiStar 
-                          key={idx} 
-                          className={`w-4 h-4 ${idx < Math.round(review.rating) ? 'fill-current text-amber-400' : 'text-gray-200'}`} 
-                        />
-                      ))}
+          {/* Smooth Continuous Scrolling Review Cards */}
+          <div className="relative w-full overflow-hidden py-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+            {/* Elegant Side Gradient Masks */}
+            <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 sm:w-28 bg-gradient-to-r from-stone-50 via-stone-50/80 to-transparent z-10" />
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 sm:w-28 bg-gradient-to-l from-stone-50 via-stone-50/80 to-transparent z-10" />
+
+            <div className="animate-marquee-continuous flex gap-6 sm:gap-8">
+              {(overallReviews.length > 0 ? [...overallReviews, ...overallReviews] : [
+                {
+                  id: '1',
+                  customer_name: 'Dilini Senanayake',
+                  rating: 5,
+                  title: 'Exceptional luxury packaging and swift delivery',
+                  comment: 'Ordered on Monday morning and received the package in Colombo by Tuesday afternoon. The gold-accented frosted amber glass bottles feel so luxurious on my vanity.',
+                },
+                {
+                  id: '2',
+                  customer_name: 'Kavinda Wickramasinghe',
+                  rating: 5,
+                  title: 'Finally, genuine salon-grade botanical haircare in Sri Lanka',
+                  comment: 'SUSÁMÁ has completely raised the bar for Sri Lankan beauty brands. The aromas are naturally subtle rather than artificial, and customer care was wonderful.',
+                },
+                {
+                  id: '3',
+                  customer_name: 'Tharushi Jayawardena',
+                  rating: 5,
+                  title: 'Transformed my whole weekly hair ritual',
+                  comment: 'I have sensitive scalp and usually dread trying new formulations. Every single product I received has been so gentle, non-irritating, and truly therapeutic.',
+                },
+                {
+                  id: '4',
+                  customer_name: 'Anoma Rathnayake',
+                  rating: 5,
+                  title: 'Authentic island botanicals that actually work',
+                  comment: 'From the damask rose water to Ceylon sandalwood mists, you can instantly tell the ingredients are pure grade. My daughter and I are both hooked on the SUSÁMÁ ritual.',
+                },
+                {
+                  id: '5',
+                  customer_name: 'Ruwantha Perera',
+                  rating: 5,
+                  title: 'Unmatched quality and fast delivery to Galle',
+                  comment: 'Delivered all the way down south to Galle in 2 days. The formulas work wonders against the coastal humidity and frizz. Will definitely order the full bundle again.',
+                },
+                {
+                  id: '6',
+                  customer_name: 'Shanika De Silva',
+                  rating: 5,
+                  title: 'The best local haircare investment I have made',
+                  comment: 'Salon quality results right at home. It is so refreshing to see a Sri Lankan cosmetics brand delivering world-class formulations with genuine sulfate-free integrity.',
+                }
+              ].concat([
+                {
+                  id: '1-dup',
+                  customer_name: 'Dilini Senanayake',
+                  rating: 5,
+                  title: 'Exceptional luxury packaging and swift delivery',
+                  comment: 'Ordered on Monday morning and received the package in Colombo by Tuesday afternoon. The gold-accented frosted amber glass bottles feel so luxurious on my vanity.',
+                },
+                {
+                  id: '2-dup',
+                  customer_name: 'Kavinda Wickramasinghe',
+                  rating: 5,
+                  title: 'Finally, genuine salon-grade botanical haircare in Sri Lanka',
+                  comment: 'SUSÁMÁ has completely raised the bar for Sri Lankan beauty brands. The aromas are naturally subtle rather than artificial, and customer care was wonderful.',
+                },
+                {
+                  id: '3-dup',
+                  customer_name: 'Tharushi Jayawardena',
+                  rating: 5,
+                  title: 'Transformed my whole weekly hair ritual',
+                  comment: 'I have sensitive scalp and usually dread trying new formulations. Every single product I received has been so gentle, non-irritating, and truly therapeutic.',
+                },
+                {
+                  id: '4-dup',
+                  customer_name: 'Anoma Rathnayake',
+                  rating: 5,
+                  title: 'Authentic island botanicals that actually work',
+                  comment: 'From the damask rose water to Ceylon sandalwood mists, you can instantly tell the ingredients are pure grade. My daughter and I are both hooked on the SUSÁMÁ ritual.',
+                },
+                {
+                  id: '5-dup',
+                  customer_name: 'Ruwantha Perera',
+                  rating: 5,
+                  title: 'Unmatched quality and fast delivery to Galle',
+                  comment: 'Delivered all the way down south to Galle in 2 days. The formulas work wonders against the coastal humidity and frizz. Will definitely order the full bundle again.',
+                },
+                {
+                  id: '6-dup',
+                  customer_name: 'Shanika De Silva',
+                  rating: 5,
+                  title: 'The best local haircare investment I have made',
+                  comment: 'Salon quality results right at home. It is so refreshing to see a Sri Lankan cosmetics brand delivering world-class formulations with genuine sulfate-free integrity.',
+                }
+              ])).map((review, i) => (
+                <div 
+                  key={`${review.id}-${i}`}
+                  className="w-[320px] sm:w-[380px] shrink-0 bg-white rounded-3xl p-6 sm:p-8 shadow-xs border border-gray-100/90 flex flex-col justify-between hover:shadow-lg transition-all duration-300 select-none"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-1 text-amber-400">
+                        {[...Array(5)].map((_, idx) => (
+                          <HiStar 
+                            key={idx} 
+                            className={`w-4 h-4 ${idx < Math.round(review.rating) ? 'fill-current text-amber-400' : 'text-gray-200'}`} 
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                        <HiCheck className="w-3 h-3" /> Verified Buyer
+                      </span>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
-                      <HiCheck className="w-3 h-3" /> Verified Buyer
+                    {review.title && (
+                      <h4 className="font-heading font-bold text-base text-gray-900 mb-2 leading-snug line-clamp-1">
+                        "{review.title}"
+                      </h4>
+                    )}
+                    <p className="text-gray-600 text-sm leading-relaxed italic mb-6 line-clamp-3">
+                      "{review.comment}"
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <div>
+                      <h5 className="font-heading font-bold text-sm text-gray-900">{review.customer_name}</h5>
+                      <span className="text-[11px] text-gray-400">Sri Lanka • Verified Brand Experience</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-brand-primary">
+                      Overall Experience
                     </span>
                   </div>
-                  {review.title && (
-                    <h4 className="font-heading font-bold text-base text-gray-900 mb-2 leading-snug">
-                      "{review.title}"
-                    </h4>
-                  )}
-                  <p className="text-gray-600 text-sm leading-relaxed italic mb-6">
-                    "{review.comment}"
-                  </p>
                 </div>
-
-                <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
-                  <div>
-                    <h5 className="font-heading font-bold text-sm text-gray-900">{review.customer_name}</h5>
-                    <span className="text-[11px] text-gray-400">Sri Lanka • Verified Brand Experience</span>
-                  </div>
-                  <span className="text-[10px] font-semibold text-brand-primary">
-                    Overall Experience
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>

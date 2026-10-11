@@ -127,3 +127,21 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Smooth Continuous Marquee Animation for Reviews */
+@keyframes marqueeContinuous {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-marquee-continuous {
+  display: flex;
+  width: max-content;
+  animation: marqueeContinuous 50s linear infinite;
+  will-change: transform;
+}
+
