@@ -1495,8 +1495,8 @@ export default function Home() {
               SUSÁMÁ VIP Club
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-white mb-4 sm:mb-5 tracking-tight">
-              Enjoy 10% Off Your First Ritual
-            </h2>
+            Join Susama and be a part of the family
+            </h2> 
             <p className="text-white/70 text-sm sm:text-base font-light mb-8 sm:mb-10 max-w-md mx-auto leading-relaxed">
               Subscribe for exclusive botanical hair rituals, seasonal care guides, and VIP-only invitations.
             </p>
