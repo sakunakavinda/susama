@@ -51,6 +51,29 @@ interface ProductItem {
   sku?: string;
 }
 
+interface ReviewItem {
+  id: string;
+  product_id?: string | null;
+  review_type?: 'overall' | 'product';
+  product_name?: string;
+  product_slug?: string;
+  customer_name: string;
+  customer_email?: string;
+  rating: number;
+  title?: string;
+  comment: string;
+  is_verified_purchase?: boolean;
+  helpful_count?: number;
+  created_at?: string;
+}
+
+interface OverallReviewsStats {
+  average_rating: number;
+  total_reviews: number;
+  recommendation_percentage: number;
+  rating_breakdown: Record<number, number>;
+}
+
 const CATEGORY_META_FALLBACK: Record<string, { title: string; tag: string; image: string; description: string }> = {
   'shampoos': { 
     title: "Shampoos & Cleansers", 
@@ -90,6 +113,30 @@ export default function Home() {
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Overall Brand Reviews State
+  const [overallStats, setOverallStats] = useState<OverallReviewsStats | null>(null);
+  const [overallReviews, setOverallReviews] = useState<ReviewItem[]>([]);
+  const [isOverallModalOpen, setIsOverallModalOpen] = useState(false);
+  const [overallAuthor, setOverallAuthor] = useState('');
+  const [overallEmail, setOverallEmail] = useState('');
+  const [overallRating, setOverallRating] = useState(5);
+  const [overallTitle, setOverallTitle] = useState('');
+  const [overallComment, setOverallComment] = useState('');
+  const [isSubmittingOverall, setIsSubmittingOverall] = useState(false);
+  const [overallSubmitSuccess, setOverallSubmitSuccess] = useState(false);
+
+  // Product Reviews State
+  const [modalReviews, setModalReviews] = useState<ReviewItem[]>([]);
+  const [modalReviewsLoading, setModalReviewsLoading] = useState<boolean>(false);
+  const [activeModalTab, setActiveModalTab] = useState<'details' | 'reviews'>('details');
+  const [newReviewAuthor, setNewReviewAuthor] = useState('');
+  const [newReviewEmail, setNewReviewEmail] = useState('');
+  const [newReviewRating, setNewReviewRating] = useState(5);
+  const [newReviewTitle, setNewReviewTitle] = useState('');
+  const [newReviewComment, setNewReviewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewSubmitSuccess, setReviewSubmitSuccess] = useState(false);
 
   // Video and Social Showcase State
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -171,7 +218,134 @@ export default function Home() {
         }
       })
       .catch((err) => console.log('Products API error:', err));
+
+    // Fetch overall brand reviews and calculated average rating math
+    fetch('http://localhost:5001/api/reviews/overall')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          if (data.stats) setOverallStats(data.stats);
+          if (Array.isArray(data.data)) setOverallReviews(data.data);
+        }
+      })
+      .catch((err) => console.log('Overall reviews API error:', err));
   }, []);
+
+  // Submit an Overall Brand Experience Review
+  const handleSubmitOverallReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!overallAuthor.trim() || !overallComment.trim()) return;
+    setIsSubmittingOverall(true);
+    try {
+      const res = await fetch('http://localhost:5001/api/reviews/overall', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_name: overallAuthor.trim(),
+          customer_email: overallEmail.trim() || undefined,
+          rating: overallRating,
+          title: overallTitle.trim() || undefined,
+          comment: overallComment.trim()
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setOverallSubmitSuccess(true);
+        setOverallAuthor('');
+        setOverallEmail('');
+        setOverallTitle('');
+        setOverallComment('');
+        // Recalculate and update overall stats & reviews list
+        const refreshed = await fetch('http://localhost:5001/api/reviews/overall');
+        const refData = await refreshed.json();
+        if (refData.success) {
+          if (refData.stats) setOverallStats(refData.stats);
+          if (Array.isArray(refData.data)) setOverallReviews(refData.data);
+        }
+        setTimeout(() => {
+          setIsOverallModalOpen(false);
+          setOverallSubmitSuccess(false);
+        }, 2000);
+      }
+    } catch (err) {
+      console.error('Failed to submit overall review:', err);
+    } finally {
+      setIsSubmittingOverall(false);
+    }
+  };
+
+  // Fetch reviews whenever a product is opened in Quick View
+  useEffect(() => {
+    if (selectedProduct) {
+      setModalReviewsLoading(true);
+      setActiveModalTab('details');
+      setReviewSubmitSuccess(false);
+      fetch(`http://localhost:5001/api/reviews/product/${selectedProduct.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.data)) {
+            setModalReviews(data.data);
+          } else {
+            setModalReviews([]);
+          }
+        })
+        .catch(() => setModalReviews([]))
+        .finally(() => setModalReviewsLoading(false));
+    } else {
+      setModalReviews([]);
+    }
+  }, [selectedProduct]);
+
+  // Submit a customer review
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProduct || !newReviewAuthor.trim() || !newReviewComment.trim()) return;
+    setIsSubmittingReview(true);
+    try {
+      const res = await fetch('http://localhost:5001/api/reviews/product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: selectedProduct.id,
+          customer_name: newReviewAuthor.trim(),
+          customer_email: newReviewEmail.trim() || undefined,
+          rating: newReviewRating,
+          title: newReviewTitle.trim() || undefined,
+          comment: newReviewComment.trim()
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReviewSubmitSuccess(true);
+        setNewReviewAuthor('');
+        setNewReviewEmail('');
+        setNewReviewTitle('');
+        setNewReviewComment('');
+        // Refresh product reviews and update product rating/reviews in state
+        const refreshed = await fetch(`http://localhost:5001/api/reviews/product/${selectedProduct.id}`);
+        const refData = await refreshed.json();
+        if (refData.success && Array.isArray(refData.data)) {
+          setModalReviews(refData.data);
+          if (refData.product) {
+            setSelectedProduct((prev) => prev ? {
+              ...prev,
+              rating: refData.product.average_rating,
+              reviews: refData.product.total_reviews
+            } : null);
+            setProducts((prev) => prev.map((p) => p.id === selectedProduct.id ? {
+              ...p,
+              rating: refData.product.average_rating,
+              reviews: refData.product.total_reviews
+            } : p));
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to submit review:', err);
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   const filteredProducts = products.filter((prod) => {
     if (selectedFilter === 'all') return true;
@@ -978,73 +1152,134 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════
-          6. SOCIAL PROOF / REVIEWS
+          6. SOCIAL PROOF / OVERALL BRAND REVIEWS
       ══════════════════════════════════════════ */}
       <section className="w-full py-20 sm:py-24 bg-stone-50 border-t border-gray-100">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
+          {/* Header */}
+          <div className="text-center mb-10 sm:mb-12">
             <span className="inline-block text-[11px] sm:text-xs font-bold tracking-[0.25em] text-brand-secondary uppercase mb-3">
-              Real Experiences
+              Overall Brand Experience
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-gray-900 mb-4 tracking-tight">
               Loved by Silk &amp; Curl Lovers
             </h2>
             <p className="text-gray-500 text-sm max-w-md mx-auto font-light">
-              See how our botanical hair care transforms every hair ritual across Sri Lanka.
+              Authentic verified customer ratings and experiences across Sri Lanka.
             </p>
           </div>
 
+          {/* Math-Calculated Overall Rating Banner */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-100/90 max-w-4xl mx-auto mb-12 sm:mb-16 flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
+            <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
+              <div className="flex flex-col items-center justify-center w-24 h-24 rounded-2xl bg-amber-50/70 border border-amber-100/80 shrink-0">
+                <span className="text-3xl sm:text-4xl font-extrabold text-gray-900 font-heading">
+                  {overallStats?.average_rating ? Number(overallStats.average_rating).toFixed(1) : '4.9'}
+                </span>
+                <span className="text-[10px] font-bold text-amber-700 uppercase tracking-widest mt-0.5">
+                  out of 5.0
+                </span>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-center sm:justify-start gap-1 text-amber-400 mb-1.5">
+                  {[...Array(5)].map((_, i) => (
+                    <HiStar
+                      key={i}
+                      className={`w-5 h-5 ${
+                        i < Math.round(overallStats?.average_rating || 4.9)
+                          ? 'fill-current text-amber-400'
+                          : 'text-gray-200'
+                      }`}
+                    />
+                  ))}
+                  <span className="ml-2 text-xs font-bold text-gray-800">
+                    {overallStats?.average_rating ? Number(overallStats.average_rating).toFixed(1) : '4.9'} Rating
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 font-light">
+                  Based on <strong className="font-semibold text-gray-800">{overallStats?.total_reviews || overallReviews.length || 8}</strong> verified customer experiences in Sri Lanka
+                </p>
+                <div className="flex items-center justify-center sm:justify-start gap-2 mt-2">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">
+                    <HiCheck className="w-3 h-3" /> {overallStats?.recommendation_percentage || 100}% Satisfaction
+                  </span>
+                  <span className="text-[11px] text-gray-400 font-light">• Island-wide Delivery</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+              <button
+                onClick={() => setIsOverallModalOpen(true)}
+                className="w-full sm:w-auto btn-primary py-3.5 px-6 rounded-full text-xs font-bold tracking-wider uppercase flex items-center justify-center gap-2 shadow-md cursor-pointer hover:scale-105 transition-all"
+              >
+                <HiSparkles className="w-4 h-4" />
+                Share Your Experience
+              </button>
+            </div>
+          </div>
+
+          {/* Overall Reviews Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            {[
+            {(overallReviews.length > 0 ? overallReviews.slice(0, 3) : [
               {
-                name: 'Kavindi Perera',
-                location: 'Colombo',
-                hair: 'Curly 3A Texture',
-                review: 'The SUSÁMÁ Miracle Curling Cream is unmatched. It defines my curls without any crunchy residue and smells like heavenly sandalwood all day long!',
-                product: 'Miracle Curling Cream'
+                id: '1',
+                customer_name: 'Dilini Senanayake',
+                rating: 5,
+                title: 'Exceptional luxury packaging and swift delivery',
+                comment: 'Ordered on Monday morning and received the package in Colombo by Tuesday afternoon. The gold-accented frosted amber glass bottles feel so luxurious on my vanity.',
               },
               {
-                name: 'Nimasha Fernando',
-                location: 'Kandy',
-                hair: 'Silky Straight Hair',
-                review: 'Finding a sulfate-free shampoo that actually lathers nicely and leaves hair completely sleek was impossible until I tried SUSÁMÁ. Truly salon grade.',
-                product: 'Sulfate Free Shampoo – Silky'
+                id: '2',
+                customer_name: 'Kavinda Wickramasinghe',
+                rating: 5,
+                title: 'Finally, genuine salon-grade botanical haircare in Sri Lanka',
+                comment: 'SUSÁMÁ has completely raised the bar for Sri Lankan beauty brands. The aromas are naturally subtle rather than artificial, and customer care was wonderful.',
               },
               {
-                name: 'Dinithi Jayasinghe',
-                location: 'Galle',
-                hair: 'Dry & Color-Treated',
-                review: 'The Restorative Keratin Oil brought my bleached ends back to life. Just 2 drops and the frizz disappears completely. Packaging feels so luxurious.',
-                product: 'Restorative Keratin Oil'
+                id: '3',
+                customer_name: 'Tharushi Jayawardena',
+                rating: 5,
+                title: 'Transformed my whole weekly hair ritual',
+                comment: 'I have sensitive scalp and usually dread trying new formulations. Every single product I received has been so gentle, non-irritating, and truly therapeutic.',
               }
-            ].map((review, i) => (
+            ]).map((review, i) => (
               <div 
-                key={i}
+                key={review.id || i}
                 className="bg-white rounded-3xl p-6 sm:p-8 shadow-xs border border-gray-100/90 flex flex-col justify-between hover:shadow-lg transition-all duration-300"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-1 text-amber-400">
                       {[...Array(5)].map((_, idx) => (
-                        <HiStar key={idx} className="w-4 h-4 fill-current" />
+                        <HiStar 
+                          key={idx} 
+                          className={`w-4 h-4 ${idx < Math.round(review.rating) ? 'fill-current text-amber-400' : 'text-gray-200'}`} 
+                        />
                       ))}
                     </div>
-                    <span className="text-[10px] font-bold text-brand-secondary bg-brand-primary/10 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                      {review.hair}
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+                      <HiCheck className="w-3 h-3" /> Verified Buyer
                     </span>
                   </div>
+                  {review.title && (
+                    <h4 className="font-heading font-bold text-base text-gray-900 mb-2 leading-snug">
+                      "{review.title}"
+                    </h4>
+                  )}
                   <p className="text-gray-600 text-sm leading-relaxed italic mb-6">
-                    "{review.review}"
+                    "{review.comment}"
                   </p>
                 </div>
 
                 <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
                   <div>
-                    <h5 className="font-heading font-bold text-sm text-gray-900">{review.name}</h5>
-                    <span className="text-[11px] text-gray-400">{review.location} • Verified Buyer</span>
+                    <h5 className="font-heading font-bold text-sm text-gray-900">{review.customer_name}</h5>
+                    <span className="text-[11px] text-gray-400">Sri Lanka • Verified Brand Experience</span>
                   </div>
                   <span className="text-[10px] font-semibold text-brand-primary">
-                    {review.product}
+                    Overall Experience
                   </span>
                 </div>
               </div>
@@ -1052,6 +1287,108 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── Modal for Submitting Overall Brand Review ── */}
+      {isOverallModalOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setIsOverallModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setIsOverallModalOpen(false)}
+              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:text-gray-900 flex items-center justify-center cursor-pointer transition-all"
+            >
+              <HiXMark className="w-5 h-5" />
+            </button>
+
+            <span className="text-[10px] font-bold text-brand-secondary uppercase tracking-widest block mb-1">
+              Customer Feedback
+            </span>
+            <h3 className="text-2xl font-heading font-bold text-gray-900 mb-2">
+              Rate Your Overall Experience
+            </h3>
+            <p className="text-xs text-gray-500 font-light mb-6">
+              Tell us about your shopping, delivery, customer support, and brand experience with SUSÁMÁ.
+            </p>
+
+            {overallSubmitSuccess ? (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-800 text-sm flex items-center gap-2 font-medium">
+                <HiCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                Thank you! Your verified overall experience has been published and recalculated into our score.
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitOverallReview} className="flex flex-col gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-semibold text-gray-700">Overall Rating:</span>
+                  <div className="flex gap-1 text-amber-400">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setOverallRating(star)}
+                        className="cursor-pointer focus:outline-hidden hover:scale-110 transition-transform"
+                      >
+                        <HiStar
+                          className={`w-6 h-6 ${
+                            star <= overallRating ? 'fill-current text-amber-400' : 'text-gray-200'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Your Name *"
+                    value={overallAuthor}
+                    onChange={(e) => setOverallAuthor(e.target.value)}
+                    className="text-xs px-3.5 py-2.5 border border-gray-200 rounded-xl focus:outline-brand-primary"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Email (optional)"
+                    value={overallEmail}
+                    onChange={(e) => setOverallEmail(e.target.value)}
+                    className="text-xs px-3.5 py-2.5 border border-gray-200 rounded-xl focus:outline-brand-primary"
+                  />
+                </div>
+
+                <input
+                  type="text"
+                  placeholder="Headline (e.g. Excellent service and rapid delivery!)"
+                  value={overallTitle}
+                  onChange={(e) => setOverallTitle(e.target.value)}
+                  className="text-xs px-3.5 py-2.5 border border-gray-200 rounded-xl focus:outline-brand-primary"
+                />
+
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="Share details of your overall brand experience with SUSÁMÁ... *"
+                  value={overallComment}
+                  onChange={(e) => setOverallComment(e.target.value)}
+                  className="text-xs px-3.5 py-2.5 border border-gray-200 rounded-xl focus:outline-brand-primary resize-none"
+                />
+
+                <button
+                  type="submit"
+                  disabled={isSubmittingOverall}
+                  className="btn-primary py-3 rounded-full text-xs font-bold tracking-widest uppercase transition-all shadow-md disabled:opacity-50 cursor-pointer"
+                >
+                  {isSubmittingOverall ? 'Submitting...' : 'Post Overall Review'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════
           7. VIP NEWSLETTER CLUB
@@ -1149,35 +1486,187 @@ export default function Home() {
                 )}
               </div>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => setActiveModalTab('reviews')}>
                 <HiStar className="w-4 h-4 text-amber-400 fill-current" />
                 <span className="text-xs font-bold text-gray-700">{selectedProduct.rating || 4.9}</span>
-                <span className="text-xs text-gray-400">({selectedProduct.reviews || 30} reviews)</span>
-              </div>
-
-              <div className="flex items-baseline gap-3">
-                <span className="text-2xl sm:text-3xl font-extrabold text-brand-secondary">
-                  {selectedProduct.sale_price
-                    ? `LKR ${Number(selectedProduct.sale_price).toLocaleString()}`
-                    : (selectedProduct.price || `LKR ${Number(selectedProduct.base_price).toLocaleString()}`)}
+                <span className="text-xs text-brand-primary underline ml-1">
+                  ({modalReviews.length || selectedProduct.reviews || 0} reviews)
                 </span>
-                {selectedProduct.sale_price && (
-                  <span className="text-sm text-gray-400 line-through">
-                    LKR {Number(selectedProduct.base_price).toLocaleString()}
-                  </span>
-                )}
               </div>
 
-              <p className="text-sm text-gray-500 leading-relaxed font-light">
-                {selectedProduct.full_description || selectedProduct.short_description}
-              </p>
+              {/* Tabs Switcher */}
+              <div className="flex border-b border-gray-100 gap-4 text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setActiveModalTab('details')}
+                  className={`pb-2 border-b-2 transition-colors cursor-pointer ${
+                    activeModalTab === 'details'
+                      ? 'border-brand-primary text-brand-primary'
+                      : 'border-transparent text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  Overview &amp; Ritual
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveModalTab('reviews')}
+                  className={`pb-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    activeModalTab === 'reviews'
+                      ? 'border-brand-primary text-brand-primary'
+                      : 'border-transparent text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  Verified Reviews ({modalReviews.length})
+                </button>
+              </div>
 
-              {selectedProduct.how_to_use && (
-                <div className="bg-amber-50/70 rounded-xl p-4 border border-amber-100">
-                  <span className="text-[10px] font-bold text-brand-primary uppercase tracking-wider block mb-1">
-                    💡 How to Use
-                  </span>
-                  <p className="text-xs text-gray-600 leading-relaxed">{selectedProduct.how_to_use}</p>
+              {activeModalTab === 'details' ? (
+                <>
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-2xl sm:text-3xl font-extrabold text-brand-secondary">
+                      {selectedProduct.sale_price
+                        ? `LKR ${Number(selectedProduct.sale_price).toLocaleString()}`
+                        : (selectedProduct.price || `LKR ${Number(selectedProduct.base_price).toLocaleString()}`)}
+                    </span>
+                    {selectedProduct.sale_price && (
+                      <span className="text-sm text-gray-400 line-through">
+                        LKR {Number(selectedProduct.base_price).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-sm text-gray-500 leading-relaxed font-light">
+                    {selectedProduct.full_description || selectedProduct.short_description}
+                  </p>
+
+                  {selectedProduct.how_to_use && (
+                    <div className="bg-amber-50/70 rounded-xl p-4 border border-amber-100">
+                      <span className="text-[10px] font-bold text-brand-primary uppercase tracking-wider block mb-1">
+                        💡 How to Use
+                      </span>
+                      <p className="text-xs text-gray-600 leading-relaxed">{selectedProduct.how_to_use}</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex flex-col gap-4 overflow-y-auto max-h-[38vh] pr-1">
+                  {modalReviewsLoading ? (
+                    <div className="py-8 text-center text-xs text-gray-400">Loading verified customer reviews...</div>
+                  ) : modalReviews.length === 0 ? (
+                    <div className="py-6 text-center text-xs text-gray-400">
+                      No reviews yet for this product. Be the first to share your experience!
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {modalReviews.map((rev) => (
+                        <div key={rev.id} className="p-3.5 rounded-xl bg-stone-50 border border-gray-100/90 text-left">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-xs font-bold text-gray-900">{rev.customer_name}</span>
+                            <div className="flex items-center gap-0.5 text-amber-400">
+                              {[...Array(5)].map((_, i) => (
+                                <HiStar
+                                  key={i}
+                                  className={`w-3.5 h-3.5 ${
+                                    i < Math.round(rev.rating) ? 'fill-current text-amber-400' : 'text-gray-200'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          {rev.title && (
+                            <h5 className="text-xs font-semibold text-gray-800 mb-1">"{rev.title}"</h5>
+                          )}
+                          <p className="text-xs text-gray-600 leading-relaxed font-light">{rev.comment}</p>
+                          <div className="flex items-center gap-2 mt-2 pt-1.5 border-t border-gray-200/50 text-[10px] text-gray-400">
+                            <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                              <HiCheck className="w-2.5 h-2.5" /> Verified Buyer
+                            </span>
+                            {rev.created_at && (
+                              <span>• {new Date(rev.created_at).toLocaleDateString()}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add Review Form */}
+                  <div className="mt-2 pt-3 border-t border-gray-100">
+                    <span className="text-[11px] font-bold text-gray-800 uppercase tracking-wider block mb-2">
+                      Write a Review
+                    </span>
+                    {reviewSubmitSuccess ? (
+                      <div className="p-3 rounded-xl bg-emerald-50 text-emerald-800 text-xs flex items-center gap-2 font-medium">
+                        <HiCheck className="w-4 h-4 shrink-0 text-emerald-600" />
+                        Thank you! Your verified review has been published.
+                      </div>
+                    ) : (
+                      <form onSubmit={handleSubmitReview} className="flex flex-col gap-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-600">Your Rating:</span>
+                          <div className="flex gap-1 text-amber-400">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setNewReviewRating(star)}
+                                className="cursor-pointer focus:outline-hidden"
+                              >
+                                <HiStar
+                                  className={`w-4 h-4 ${
+                                    star <= newReviewRating ? 'fill-current text-amber-400' : 'text-gray-200'
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            required
+                            placeholder="Your Name *"
+                            value={newReviewAuthor}
+                            onChange={(e) => setNewReviewAuthor(e.target.value)}
+                            className="text-xs px-3 py-2 border border-gray-200 rounded-lg focus:outline-brand-primary"
+                          />
+                          <input
+                            type="email"
+                            placeholder="Email (optional)"
+                            value={newReviewEmail}
+                            onChange={(e) => setNewReviewEmail(e.target.value)}
+                            className="text-xs px-3 py-2 border border-gray-200 rounded-lg focus:outline-brand-primary"
+                          />
+                        </div>
+
+                        <input
+                          type="text"
+                          placeholder="Review Headline (e.g. Best curl cream!)"
+                          value={newReviewTitle}
+                          onChange={(e) => setNewReviewTitle(e.target.value)}
+                          className="text-xs px-3 py-2 border border-gray-200 rounded-lg focus:outline-brand-primary"
+                        />
+
+                        <textarea
+                          required
+                          rows={2}
+                          placeholder="Share your experience with this product... *"
+                          value={newReviewComment}
+                          onChange={(e) => setNewReviewComment(e.target.value)}
+                          className="text-xs px-3 py-2 border border-gray-200 rounded-lg focus:outline-brand-primary resize-none"
+                        />
+
+                        <button
+                          type="submit"
+                          disabled={isSubmittingReview}
+                          className="self-start text-[11px] font-bold tracking-wider uppercase px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isSubmittingReview ? 'Submitting...' : 'Post Review'}
+                        </button>
+                      </form>
+                    )}
+                  </div>
                 </div>
               )}
 

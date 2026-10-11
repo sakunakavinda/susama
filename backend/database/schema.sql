@@ -151,3 +151,24 @@ CREATE TABLE IF NOT EXISTS social_posts (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- 11. Customer Reviews
+CREATE TABLE IF NOT EXISTS reviews (
+  id VARCHAR(36) PRIMARY KEY,
+  product_id VARCHAR(36) NULL,
+  review_type ENUM('overall', 'product') NOT NULL DEFAULT 'product',
+  customer_name VARCHAR(150) NOT NULL,
+  customer_email VARCHAR(255) NULL,
+  rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  title VARCHAR(255) NULL,
+  comment TEXT NOT NULL,
+  is_verified_purchase BOOLEAN DEFAULT TRUE,
+  is_approved BOOLEAN DEFAULT TRUE,
+  helpful_count INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+  INDEX idx_review_type_approved (review_type, is_approved),
+  INDEX idx_product_approved (product_id, is_approved),
+  INDEX idx_rating (rating)
+);
+

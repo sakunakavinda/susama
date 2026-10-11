@@ -36,6 +36,16 @@ export interface Product {
   reviews?: number;
 }
 
+export interface Review {
+  id: string;
+  customer_name: string;
+  rating: number;
+  title?: string;
+  comment: string;
+  is_verified_purchase?: boolean;
+  created_at?: string;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -55,6 +65,18 @@ export default function Products() {
   const [sortBy, setSortBy] = useState<'featured' | 'price_asc' | 'price_desc' | 'name'>('featured');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Reviews State
+  const [modalReviews, setModalReviews] = useState<Review[]>([]);
+  const [modalReviewsLoading, setModalReviewsLoading] = useState(false);
+  const [activeModalTab, setActiveModalTab] = useState<'details' | 'reviews'>('details');
+  const [newReviewAuthor, setNewReviewAuthor] = useState('');
+  const [newReviewEmail, setNewReviewEmail] = useState('');
+  const [newReviewRating, setNewReviewRating] = useState(5);
+  const [newReviewTitle, setNewReviewTitle] = useState('');
+  const [newReviewComment, setNewReviewComment] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewSubmitSuccess, setReviewSubmitSuccess] = useState(false);
 
   // Sync category param
   useEffect(() => {
@@ -92,6 +114,78 @@ export default function Products() {
       })
       .catch((err) => console.log('Products API error:', err));
   }, []);
+
+  // Fetch reviews for selected product in Quick View
+  useEffect(() => {
+    if (selectedProduct) {
+      setModalReviewsLoading(true);
+      setActiveModalTab('details');
+      setReviewSubmitSuccess(false);
+      fetch(`http://localhost:5001/api/reviews/product/${selectedProduct.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.data)) {
+            setModalReviews(data.data);
+          } else {
+            setModalReviews([]);
+          }
+        })
+        .catch(() => setModalReviews([]))
+        .finally(() => setModalReviewsLoading(false));
+    } else {
+      setModalReviews([]);
+    }
+  }, [selectedProduct]);
+
+  // Submit product review
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProduct || !newReviewAuthor.trim() || !newReviewComment.trim()) return;
+    setIsSubmittingReview(true);
+    try {
+      const res = await fetch('http://localhost:5001/api/reviews/product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: selectedProduct.id,
+          customer_name: newReviewAuthor.trim(),
+          customer_email: newReviewEmail.trim() || undefined,
+          rating: newReviewRating,
+          title: newReviewTitle.trim() || undefined,
+          comment: newReviewComment.trim()
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setReviewSubmitSuccess(true);
+        setNewReviewAuthor('');
+        setNewReviewEmail('');
+        setNewReviewTitle('');
+        setNewReviewComment('');
+        const refreshed = await fetch(`http://localhost:5001/api/reviews/product/${selectedProduct.id}`);
+        const refData = await refreshed.json();
+        if (refData.success && Array.isArray(refData.data)) {
+          setModalReviews(refData.data);
+          if (refData.product) {
+            setSelectedProduct((prev) => prev ? {
+              ...prev,
+              rating: refData.product.average_rating,
+              reviews: refData.product.total_reviews
+            } : null);
+            setProducts((prev) => prev.map((p) => p.id === selectedProduct.id ? {
+              ...p,
+              rating: refData.product.average_rating,
+              reviews: refData.product.total_reviews
+            } : p));
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to submit review:', err);
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   const handleCategoryChange = (catIdOrSlug: string) => {
     setSelectedCategory(catIdOrSlug);
@@ -437,51 +531,206 @@ export default function Products() {
                 )}
 
                 {/* Rating */}
-                <div className="flex items-center gap-1.5 text-amber-400 mb-4">
+                <div 
+                  className="flex items-center gap-1.5 text-amber-400 mb-3 cursor-pointer"
+                  onClick={() => setActiveModalTab('reviews')}
+                >
                   <HiStar className="w-4 h-4 fill-current" />
                   <span className="text-xs font-bold text-gray-800">{selectedProduct.rating || 5.0}</span>
-                  <span className="text-xs text-gray-400 font-light">({selectedProduct.reviews || 30} customer reviews)</span>
-                </div>
-
-                {/* Price */}
-                <div className="flex items-baseline gap-3 mb-5">
-                  <span className="text-2xl font-extrabold text-brand-secondary">
-                    {selectedProduct.sale_price 
-                      ? `LKR ${Number(selectedProduct.sale_price).toLocaleString()}`
-                      : `LKR ${Number(selectedProduct.base_price).toLocaleString()}`}
+                  <span className="text-xs text-brand-primary underline ml-1 font-medium">
+                    ({modalReviews.length || selectedProduct.reviews || 0} customer reviews)
                   </span>
-                  {selectedProduct.sale_price && (
-                    <span className="text-sm text-gray-400 line-through">
-                      LKR {Number(selectedProduct.base_price).toLocaleString()}
-                    </span>
-                  )}
                 </div>
 
-                {/* Description */}
-                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-light mb-4">
-                  {selectedProduct.full_description || selectedProduct.short_description}
-                </p>
+                {/* Tabs Switcher */}
+                <div className="flex border-b border-gray-100 gap-4 text-xs font-semibold mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setActiveModalTab('details')}
+                    className={`pb-2 border-b-2 transition-colors cursor-pointer ${
+                      activeModalTab === 'details'
+                        ? 'border-brand-primary text-brand-primary'
+                        : 'border-transparent text-gray-400 hover:text-gray-600'
+                    }`}
+                  >
+                    Overview &amp; Ritual
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveModalTab('reviews')}
+                    className={`pb-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
+                      activeModalTab === 'reviews'
+                        ? 'border-brand-primary text-brand-primary'
+                        : 'border-transparent text-gray-400 hover:text-gray-600'
+                    }`}
+                  >
+                    Verified Reviews ({modalReviews.length})
+                  </button>
+                </div>
 
-                {/* Ingredients & How to Use Accordion style */}
-                {selectedProduct.how_to_use && (
-                  <div className="bg-amber-50/60 rounded-xl p-3 mb-3 border border-amber-100">
-                    <span className="text-[10px] font-bold text-brand-primary uppercase tracking-wider block mb-1">
-                      💡 How to Use:
-                    </span>
-                    <p className="text-xs text-gray-700 leading-relaxed font-light">
-                      {selectedProduct.how_to_use}
-                    </p>
-                  </div>
-                )}
+                {activeModalTab === 'details' ? (
+                  <>
+                    {/* Price */}
+                    <div className="flex items-baseline gap-3 mb-5">
+                      <span className="text-2xl font-extrabold text-brand-secondary">
+                        {selectedProduct.sale_price 
+                          ? `LKR ${Number(selectedProduct.sale_price).toLocaleString()}`
+                          : `LKR ${Number(selectedProduct.base_price).toLocaleString()}`}
+                      </span>
+                      {selectedProduct.sale_price && (
+                        <span className="text-sm text-gray-400 line-through">
+                          LKR {Number(selectedProduct.base_price).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
 
-                {selectedProduct.ingredients && (
-                  <div className="bg-gray-50 rounded-xl p-3 mb-4 border border-gray-100">
-                    <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">
-                      🌿 Key Ingredients:
-                    </span>
-                    <p className="text-[11px] text-gray-500 leading-relaxed font-light">
-                      {selectedProduct.ingredients}
+                    {/* Description */}
+                    <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-light mb-4">
+                      {selectedProduct.full_description || selectedProduct.short_description}
                     </p>
+
+                    {/* Ingredients & How to Use Accordion style */}
+                    {selectedProduct.how_to_use && (
+                      <div className="bg-amber-50/60 rounded-xl p-3 mb-3 border border-amber-100">
+                        <span className="text-[10px] font-bold text-brand-primary uppercase tracking-wider block mb-1">
+                          💡 How to Use:
+                        </span>
+                        <p className="text-xs text-gray-700 leading-relaxed font-light">
+                          {selectedProduct.how_to_use}
+                        </p>
+                      </div>
+                    )}
+
+                    {selectedProduct.ingredients && (
+                      <div className="bg-gray-50 rounded-xl p-3 mb-4 border border-gray-100">
+                        <span className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">
+                          🌿 Key Ingredients:
+                        </span>
+                        <p className="text-[11px] text-gray-500 leading-relaxed font-light">
+                          {selectedProduct.ingredients}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex flex-col gap-4 overflow-y-auto max-h-[35vh] pr-1 mb-3">
+                    {modalReviewsLoading ? (
+                      <div className="py-8 text-center text-xs text-gray-400">Loading reviews...</div>
+                    ) : modalReviews.length === 0 ? (
+                      <div className="py-6 text-center text-xs text-gray-400">
+                        No reviews yet for this product. Be the first to share your experience!
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2.5">
+                        {modalReviews.map((rev) => (
+                          <div key={rev.id} className="p-3 rounded-xl bg-stone-50 border border-gray-100/90 text-left">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs font-bold text-gray-900">{rev.customer_name}</span>
+                              <div className="flex items-center gap-0.5 text-amber-400">
+                                {[...Array(5)].map((_, i) => (
+                                  <HiStar
+                                    key={i}
+                                    className={`w-3.5 h-3.5 ${
+                                      i < Math.round(rev.rating) ? 'fill-current text-amber-400' : 'text-gray-200'
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            {rev.title && (
+                              <h5 className="text-xs font-semibold text-gray-800 mb-0.5">"{rev.title}"</h5>
+                            )}
+                            <p className="text-xs text-gray-600 leading-relaxed font-light">{rev.comment}</p>
+                            <div className="flex items-center gap-2 mt-2 pt-1 border-t border-gray-200/50 text-[10px] text-gray-400">
+                              <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                                <HiCheck className="w-2.5 h-2.5" /> Verified Buyer
+                              </span>
+                              {rev.created_at && (
+                                <span>• {new Date(rev.created_at).toLocaleDateString()}</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Write Review Form */}
+                    <div className="mt-2 pt-3 border-t border-gray-100">
+                      <span className="text-[11px] font-bold text-gray-800 uppercase tracking-wider block mb-2">
+                        Write a Review
+                      </span>
+                      {reviewSubmitSuccess ? (
+                        <div className="p-3 rounded-xl bg-emerald-50 text-emerald-800 text-xs flex items-center gap-2 font-medium">
+                          <HiCheck className="w-4 h-4 shrink-0 text-emerald-600" />
+                          Thank you! Your verified review has been published.
+                        </div>
+                      ) : (
+                        <form onSubmit={handleSubmitReview} className="flex flex-col gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-600">Your Rating:</span>
+                            <div className="flex gap-1 text-amber-400">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  type="button"
+                                  onClick={() => setNewReviewRating(star)}
+                                  className="cursor-pointer focus:outline-hidden"
+                                >
+                                  <HiStar
+                                    className={`w-4 h-4 ${
+                                      star <= newReviewRating ? 'fill-current text-amber-400' : 'text-gray-200'
+                                    }`}
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              required
+                              placeholder="Your Name *"
+                              value={newReviewAuthor}
+                              onChange={(e) => setNewReviewAuthor(e.target.value)}
+                              className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-brand-primary"
+                            />
+                            <input
+                              type="email"
+                              placeholder="Email (optional)"
+                              value={newReviewEmail}
+                              onChange={(e) => setNewReviewEmail(e.target.value)}
+                              className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-brand-primary"
+                            />
+                          </div>
+
+                          <input
+                            type="text"
+                            placeholder="Review Headline"
+                            value={newReviewTitle}
+                            onChange={(e) => setNewReviewTitle(e.target.value)}
+                            className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-brand-primary"
+                          />
+
+                          <textarea
+                            required
+                            rows={2}
+                            placeholder="Your experience with this product... *"
+                            value={newReviewComment}
+                            onChange={(e) => setNewReviewComment(e.target.value)}
+                            className="text-xs px-3 py-1.5 border border-gray-200 rounded-lg focus:outline-brand-primary resize-none"
+                          />
+
+                          <button
+                            type="submit"
+                            disabled={isSubmittingReview}
+                            className="self-start text-[10px] font-bold tracking-wider uppercase px-4 py-1.5 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
+                          >
+                            {isSubmittingReview ? 'Submitting...' : 'Post Review'}
+                          </button>
+                        </form>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

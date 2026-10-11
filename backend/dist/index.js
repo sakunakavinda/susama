@@ -36,6 +36,7 @@ const storage = multer_1.default.diskStorage({
 const upload = (0, multer_1.default)({ storage });
 const categoryRoutes_1 = __importDefault(require("./routes/categoryRoutes"));
 const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
+const reviewRoutes_1 = __importDefault(require("./routes/reviewRoutes"));
 const socialScraper_1 = require("./services/socialScraper");
 // Routes
 app.get('/api/health', (req, res) => {
@@ -45,6 +46,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/categories', categoryRoutes_1.default);
 // Product API Routes
 app.use('/api/products', productRoutes_1.default);
+// Review API Routes
+app.use('/api/reviews', reviewRoutes_1.default);
 // Example Product Image Upload Route
 app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) {
