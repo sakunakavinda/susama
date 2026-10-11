@@ -14,7 +14,9 @@ import {
   HiCheck,
   HiXMark,
   HiArrowRight,
-  HiOutlineHeart
+  HiOutlineHeart,
+  HiChevronLeft,
+  HiChevronRight
 } from 'react-icons/hi2';
 
 interface CategoryItem {
@@ -175,6 +177,75 @@ export default function Home() {
     if (selectedFilter === 'all') return true;
     return prod.category_id === selectedFilter || prod.category_slug === selectedFilter;
   });
+
+  // Bestsellers State & 3-Second Infinite Forward Autoscroll
+  const bestsellerProducts = products.filter(
+    (p) => p.tag?.toUpperCase() === 'BESTSELLER'
+  );
+  // Slides array with clones at both ends for seamless forward wrapping: [last, ...items, first]
+  const bestsellerSlides = bestsellerProducts.length > 1
+    ? [
+        bestsellerProducts[bestsellerProducts.length - 1],
+        ...bestsellerProducts,
+        bestsellerProducts[0]
+      ]
+    : bestsellerProducts;
+
+  const [currentIndex, setCurrentIndex] = useState<number>(1);
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(true);
+
+  const nextBestseller = () => {
+    if (bestsellerProducts.length <= 1) return;
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => {
+      if (prev >= bestsellerProducts.length + 1) return prev;
+      return prev + 1;
+    });
+  };
+
+  const prevBestseller = () => {
+    if (bestsellerProducts.length <= 1) return;
+    setIsTransitioning(true);
+    setCurrentIndex((prev) => {
+      if (prev <= 0) return prev;
+      return prev - 1;
+    });
+  };
+
+  const goToBestsellerSlide = (dotIdx: number) => {
+    setIsTransitioning(true);
+    setCurrentIndex(dotIdx + 1);
+  };
+
+  const handleTransitionEnd = () => {
+    if (bestsellerProducts.length <= 1) return;
+    if (currentIndex >= bestsellerProducts.length + 1) {
+      // Smoothly scrolled forward past the last photo to the cloned first photo:
+      // Instantly jump to the real first photo without animation
+      setIsTransitioning(false);
+      setCurrentIndex(1);
+    } else if (currentIndex <= 0) {
+      // Scrolled backward past the first photo to the cloned last photo:
+      // Instantly jump to the real last photo without animation
+      setIsTransitioning(false);
+      setCurrentIndex(bestsellerProducts.length);
+    }
+  };
+
+  useEffect(() => {
+    if (bestsellerProducts.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      setCurrentIndex((prev) => prev + 1);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [bestsellerProducts.length]);
+
+  const activeBestsellerRealIndex = bestsellerProducts.length > 0
+    ? (currentIndex - 1 + bestsellerProducts.length) % bestsellerProducts.length
+    : 0;
 
   const addToCart = (product: ProductItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -419,6 +490,203 @@ export default function Home() {
 
         </div>
       </section>
+
+      {/* ══════════════════════════════════════════
+          BESTSELLERS AUTOSCROLL SHOWCASE (3s INTERVAL)
+      ══════════════════════════════════════════ */}
+      {bestsellerProducts.length > 0 && (
+        <section className="w-full bg-[#FEFCFB] border-b border-amber-100/60 relative overflow-hidden">
+          {/* Section Title */}
+          <div className="w-full text-center pt-10 sm:pt-14 pb-6 sm:pb-8 px-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-heading font-bold text-gray-900 tracking-tight">
+              Most-Loved Formulations
+            </h2>
+          </div>
+
+          {/* Full Screen Width Showcase Container (Edge-to-Edge) */}
+          <div className="relative w-full h-[520px] sm:h-[600px] md:h-[680px] overflow-hidden bg-black group">
+            {/* Slider Track (1 image full screen width per slide with seamless forward loop) */}
+            <div
+              className="flex h-full"
+              style={{
+                transform: `translateX(-${currentIndex * 100}%)`,
+                transition: isTransitioning ? 'transform 700ms cubic-bezier(0.4, 0, 0.2, 1)' : 'none'
+              }}
+              onTransitionEnd={handleTransitionEnd}
+            >
+              {bestsellerSlides.map((prod, idx) => {
+                const isClone = idx === 0 || idx === bestsellerSlides.length - 1;
+                const slideKey = isClone ? `bestseller-clone-${idx}` : `bestseller-item-${prod.id}`;
+                const imageSrc =
+                  prod.image ||
+                  prod.primary_image ||
+                  prod.image_url ||
+                  'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop';
+                const priceDisplay = prod.sale_price
+                  ? `LKR ${Number(prod.sale_price).toLocaleString()}`
+                  : (prod.price || `LKR ${Number(prod.base_price).toLocaleString()}`);
+
+                return (
+                  <div
+                    key={slideKey}
+                    onClick={() => setSelectedProduct(prod)}
+                    className="w-full h-full flex-shrink-0 relative overflow-hidden cursor-pointer bg-neutral-950"
+                  >
+                    {/* Full Screen Width Product Image */}
+                    <img
+                      src={imageSrc}
+                      alt={prod.name}
+                      className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                      loading={idx <= 2 ? 'eager' : 'lazy'}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src =
+                          'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop';
+                      }}
+                    />
+
+                    {/* Top Badges: BESTSELLER Tag & Index counter */}
+                    <div className="absolute top-6 left-6 sm:top-8 sm:left-10 z-20">
+                      <span className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white text-xs sm:text-sm font-black tracking-widest uppercase shadow-xl flex items-center gap-2 border border-amber-300/40 backdrop-blur-md">
+                        <HiSparkles className="w-4 h-4 text-amber-200 animate-pulse" />
+                        BESTSELLER
+                      </span>
+                    </div>
+
+                    <div className="absolute top-6 right-6 sm:top-8 sm:right-10 z-20 flex items-center gap-2.5">
+                      <span className="px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white/90 text-xs sm:text-sm font-bold tracking-widest border border-white/20 shadow-md">
+                        0{activeBestsellerRealIndex + 1} / 0{bestsellerProducts.length}
+                      </span>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/60 backdrop-blur-md text-white/80 hover:text-brand-primary hover:bg-black/80 flex items-center justify-center border border-white/20 transition-all hover:scale-110 shadow-md"
+                        aria-label="Add to wishlist"
+                      >
+                        <HiOutlineHeart className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
+                    </div>
+
+                    {/* Bottom Gradient Overlay with Full Product Details */}
+                    <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/95 via-black/60 to-transparent p-6 sm:p-8 md:p-12 pb-10 sm:pb-12 pt-20 sm:pt-28 text-left">
+                      <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                        <div className="max-w-2xl">
+                          <div className="flex items-center gap-3 mb-2.5">
+                            <div className="flex items-center gap-1.5 text-amber-400">
+                              <HiStar className="w-4 h-4 fill-current" />
+                              <span className="text-sm font-bold text-white">{prod.rating || 4.9}</span>
+                              <span className="text-xs text-white/70">({prod.reviews || 42} reviews)</span>
+                            </div>
+                            {prod.category_name && (
+                              <span className="text-[10px] sm:text-xs font-bold text-amber-300 bg-amber-500/25 border border-amber-400/40 px-3 py-0.5 rounded-full uppercase tracking-wider">
+                                {prod.category_name}
+                              </span>
+                            )}
+                          </div>
+
+                          <h3 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl text-white leading-tight mb-2.5 group-hover:text-amber-200 transition-colors drop-shadow">
+                            {prod.name}
+                          </h3>
+
+                          <p className="text-xs sm:text-sm md:text-base text-white/85 line-clamp-2 leading-relaxed drop-shadow-xs max-w-xl">
+                            {prod.short_description || prod.full_description}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center sm:flex-col sm:items-end justify-between sm:justify-end gap-3.5 shrink-0 pt-3 sm:pt-0 border-t border-white/15 sm:border-0">
+                          <div className="text-left sm:text-right">
+                            <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white leading-none drop-shadow">
+                              {priceDisplay}
+                            </span>
+                            {prod.sale_price && prod.base_price && (
+                              <span className="block text-xs sm:text-sm text-white/60 line-through mt-1">
+                                LKR {Number(prod.base_price).toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2.5">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedProduct(prod);
+                              }}
+                              className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-white text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95 shadow-md"
+                            >
+                              Quick View
+                            </button>
+                            <button
+                              onClick={(e) => addToCart(prod, e)}
+                              className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-brand-primary hover:bg-brand-secondary text-white text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg flex items-center gap-2"
+                            >
+                              <HiShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
+                              <span>Add to Bag</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Floating Left Arrow */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                prevBestseller();
+              }}
+              className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/40 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 shadow-xl opacity-80 hover:opacity-100"
+              aria-label="Previous best seller"
+            >
+              <HiChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+
+            {/* Floating Right Arrow */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                nextBestseller();
+              }}
+              className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-black/40 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 shadow-xl opacity-80 hover:opacity-100"
+              aria-label="Next best seller"
+            >
+              <HiChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+
+            {/* Clickable Pagination Dots */}
+            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
+              {bestsellerProducts.map((_, dotIdx) => (
+                <button
+                  key={dotIdx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goToBestsellerSlide(dotIdx);
+                  }}
+                  aria-label={`Go to bestseller ${dotIdx + 1}`}
+                  className={`transition-all duration-300 rounded-full ${
+                    activeBestsellerRealIndex === dotIdx
+                      ? 'w-8 h-2 bg-gradient-to-r from-amber-400 to-brand-primary shadow-sm'
+                      : 'w-2 h-2 bg-white/40 hover:bg-white/80'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Bottom 3s Auto-scroll Progress Indicator Line */}
+            <div className="absolute bottom-0 inset-x-0 z-30 h-1 bg-white/20">
+              <div
+                key={activeBestsellerRealIndex}
+                className="h-full bg-gradient-to-r from-brand-primary to-amber-400 animate-[bestsellerProgress_3s_linear]"
+                style={{
+                  animationDuration: '3000ms',
+                  animationIterationCount: '1',
+                  animationFillMode: 'forwards'
+                }}
+              />
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ══════════════════════════════════════════
           3. SHOP BY CATEGORY
