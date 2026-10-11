@@ -77,38 +77,6 @@ interface OverallReviewsStats {
   rating_breakdown: Record<number, number>;
 }
 
-const CATEGORY_META_FALLBACK: Record<string, { title: string; tag: string; image: string; description: string }> = {
-  'shampoos': { 
-    title: "Shampoos & Cleansers", 
-    tag: "🧴 GENTLE CLEANSING", 
-    image: "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop",
-    description: "Sulfate-free botanical cleansers for silky smoothness and curl preservation."
-  },
-  'conditioners': { 
-    title: "Nourishing Conditioners", 
-    tag: "💧 DEEP HYDRATION", 
-    image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?q=80&w=800&auto=format&fit=crop",
-    description: "Slip-rich moisture and detangling formulas that seal shine and eliminate friction."
-  },
-  'hair-treatments': { 
-    title: "Hair Treatments & Oils", 
-    tag: "✨ INTENSIVE REPAIR", 
-    image: "https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=800&auto=format&fit=crop",
-    description: "Restorative keratin oil that reconstructs fibers and repairs damage."
-  },
-  'curl-care-styling': { 
-    title: "Curl Care & Styling", 
-    tag: "🌀 DEFINE & BOUNCE", 
-    image: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?q=80&w=800&auto=format&fit=crop",
-    description: "Miracle curling cream for bouncy, soft, touchable curls with zero crunch."
-  },
-  'hair-perfumes': { 
-    title: "Hair Perfumes & Mists", 
-    tag: "🌸 SIGNATURE ESSENCE", 
-    image: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?q=80&w=800&auto=format&fit=crop",
-    description: "Long-lasting botanical mists in exotic Ceylon Sandalwood and Damask Rose."
-  }
-};
 
 export default function Home() {
   const [categories, setCategories] = useState<CategoryItem[]>([]);
@@ -901,9 +869,7 @@ export default function Home() {
           {/* Categories Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
             {categories.map((category, idx) => {
-              const fallbackKey = category.slug || 'shampoos';
-              const meta = CATEGORY_META_FALLBACK[fallbackKey] || CATEGORY_META_FALLBACK['shampoos'];
-              const displayImage = category.image_url || category.image || meta.image;
+              const displayImage = category.image_url || category.image;
 
               return (
                 <Link
@@ -912,34 +878,28 @@ export default function Home() {
                   className="group relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer hover:-translate-y-2 bg-gray-950 aspect-[3/4] flex flex-col justify-end"
                 >
                   {/* Category Image */}
-                  <img
-                    src={displayImage}
-                    alt={category.name}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop';
-                    }}
-                  />
+                  {displayImage && (
+                    <img
+                      src={displayImage}
+                      alt={category.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                  )}
 
                   {/* High-contrast gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/60 to-transparent z-10" />
-
-                  {/* Pill Tag */}
-                  <div className="absolute top-4 left-4 z-20">
-                    <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-[9px] font-bold text-white tracking-widest uppercase shadow-xs">
-                      {meta.tag}
-                    </span>
-                  </div>
 
                   {/* Bottom Content */}
                   <div className="relative z-20 p-5 sm:p-6 text-left">
                     <h3 className="text-base sm:text-lg font-heading font-bold text-white mb-1.5 leading-tight group-hover:text-brand-primary transition-colors duration-200">
                       {category.name}
                     </h3>
-                    <p className="text-[11px] text-white/80 line-clamp-2 mb-3.5 leading-relaxed font-light">
-                      {category.description || meta.description}
-                    </p>
+                    {category.description && (
+                      <p className="text-[11px] text-white/80 line-clamp-2 mb-3.5 leading-relaxed font-light">
+                        {category.description}
+                      </p>
+                    )}
                     <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-white/95 tracking-wider uppercase group-hover:text-brand-primary transition-colors duration-200">
                       Explore Category <HiArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                     </span>
