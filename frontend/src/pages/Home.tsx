@@ -7,8 +7,7 @@ import {
   HiCheck,
   HiXMark,
   HiArrowRight,
-  HiOutlineHeart,
-  HiArrowUpTray
+  HiOutlineHeart
 } from 'react-icons/hi2';
 import { 
   FaInstagram, 
@@ -373,9 +372,8 @@ export default function Home() {
 
   // Video and Social Showcase State
   const videoRef = useRef<HTMLVideoElement>(null);
-  const videoFileInputRef = useRef<HTMLInputElement>(null);
   const [ritualVideoUrl, setRitualVideoUrl] = useState<string>('/ritual-video.mp4');
-  const [isUploadingVideo, setIsUploadingVideo] = useState<boolean>(false);
+  const [ritualVideoTitle, setRitualVideoTitle] = useState<string>('Ceylon Keratin Curl Elixir');
   const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(true);
   const [isVideoMuted, setIsVideoMuted] = useState<boolean>(true);
   const [videoProgress, setVideoProgress] = useState<number>(0);
@@ -419,39 +417,6 @@ export default function Home() {
     }));
   };
 
-  // Upload video directly to MySQL database
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsUploadingVideo(true);
-    const formData = new FormData();
-    formData.append('video', file);
-
-    try {
-      const res = await fetch('http://localhost:5001/api/settings/ritual-video', {
-        method: 'POST',
-        body: formData
-      });
-      const data = await res.json();
-      if (data.success && data.data?.video_url) {
-        setRitualVideoUrl(data.data.video_url);
-        setToastMessage('✅ 16:9 Ritual Video saved to database successfully!');
-        setTimeout(() => setToastMessage(null), 4000);
-      } else {
-        setToastMessage(data.message || 'Failed to upload video');
-        setTimeout(() => setToastMessage(null), 4000);
-      }
-    } catch (err: any) {
-      console.error('Video upload error:', err);
-      setToastMessage('Error connecting to backend database');
-      setTimeout(() => setToastMessage(null), 4000);
-    } finally {
-      setIsUploadingVideo(false);
-      if (e.target) e.target.value = '';
-    }
-  };
-
   useEffect(() => {
     // Fetch dynamic ritual video from database
     fetch('http://localhost:5001/api/settings/ritual-video')
@@ -459,6 +424,9 @@ export default function Home() {
       .then((data) => {
         if (data.success && data.data?.video_url) {
           setRitualVideoUrl(data.data.video_url);
+        }
+        if (data.success && data.data?.video_title) {
+          setRitualVideoTitle(data.data.video_title);
         }
       })
       .catch((err) => console.log('Using default video setting:', err));
@@ -727,22 +695,12 @@ export default function Home() {
                 {/* Dark Vignette Overlay for High Legibility */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50 pointer-events-none" />
 
-                {/* Top Floating Header */}
-                <div className="relative z-20 p-3.5 sm:p-4.5 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-[11px] font-medium tracking-wide">
-                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                      <span>Live 16:9 Ritual</span>
-                    </span>
-                    <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/80 text-[10px] font-medium">
-                      Database Synced
-                    </span>
-                  </div>
-
+                {/* Top Floating Controls */}
+                <div className="relative z-20 p-3.5 sm:p-4.5 flex items-center justify-end">
                   <button
                     onClick={toggleVideoMute}
                     aria-label={isVideoMuted ? 'Unmute video' : 'Mute video'}
-                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95"
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95 shadow-md"
                   >
                     {isVideoMuted ? <FaVolumeXmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/90" /> : <FaVolumeHigh className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />}
                   </button>
@@ -775,50 +733,15 @@ export default function Home() {
 
               </div>
 
-              {/* Beneath the 16:9 Video: Product Tag & Database Upload Action Card */}
-              <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3.5">
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
-                    <img src="/logo-emblem.png" alt="SUSÁMÁ" className="h-7 w-auto object-contain" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-bold text-brand-secondary uppercase tracking-wider">Featured Ritual</span>
-                      <span className="text-[10px] text-gray-300">•</span>
-                      <span className="text-[10px] text-gray-500">16:9 Widescreen</span>
-                    </div>
-                    <h4 className="text-xs sm:text-sm font-bold text-gray-900">
-                      Ceylon Keratin Curl Elixir
-                    </h4>
-                  </div>
+              {/* Beneath the 16:9 Video: Video Name Card */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-3.5 sm:p-4 shadow-sm flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+                  <img src="/logo-emblem.png" alt="SUSÁMÁ" className="h-6 w-auto object-contain" />
                 </div>
-
-                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                  <Link
-                    to="/products"
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold uppercase tracking-wider transition-colors duration-200"
-                  >
-                    Shop Ritual
-                  </Link>
-
-                  {/* Hidden file input for uploading 16:9 video to database */}
-                  <input
-                    ref={videoFileInputRef}
-                    type="file"
-                    accept="video/mp4,video/webm,video/quicktime,video/ogg"
-                    onChange={handleVideoUpload}
-                    className="hidden"
-                  />
-
-                  {/* Upload button to trigger upload to database */}
-                  <button
-                    onClick={() => videoFileInputRef.current?.click()}
-                    disabled={isUploadingVideo}
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-primary hover:bg-brand-secondary text-white text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-xs hover:shadow-md disabled:opacity-50"
-                  >
-                    <HiArrowUpTray className="w-3.5 h-3.5" />
-                    <span>{isUploadingVideo ? 'Saving...' : 'Upload Video'}</span>
-                  </button>
+                <div className="min-w-0">
+                  <h4 className="text-xs sm:text-sm md:text-base font-bold text-gray-900 tracking-tight truncate">
+                    {ritualVideoTitle}
+                  </h4>
                 </div>
               </div>
 
