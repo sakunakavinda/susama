@@ -138,6 +138,10 @@ export default function Home() {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewSubmitSuccess, setReviewSubmitSuccess] = useState(false);
 
+  // Hero and Logo Smooth Load State
+  const [isHeroImageLoaded, setIsHeroImageLoaded] = useState<boolean>(false);
+  const [isLogoLoaded, setIsLogoLoaded] = useState<boolean>(false);
+
   // Video and Social Showcase State
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ritualVideoUrl, setRitualVideoUrl] = useState<string>('/ritual-video.mp4');
@@ -229,6 +233,20 @@ export default function Home() {
         }
       })
       .catch((err) => console.log('Overall reviews API error:', err));
+
+    // Preload & check if hero image is cached for immediate smooth animation
+    const heroImg = new Image();
+    heroImg.src = '/home.jpg';
+    if (heroImg.complete) {
+      setIsHeroImageLoaded(true);
+    } else {
+      heroImg.onload = () => setIsHeroImageLoaded(true);
+      heroImg.onerror = () => {
+        const fallback = new Image();
+        fallback.src = '/home.JPG';
+        fallback.onload = () => setIsHeroImageLoaded(true);
+      };
+    }
   }, []);
 
   // Submit an Overall Brand Experience Review
@@ -448,18 +466,25 @@ export default function Home() {
           1. HERO SECTION
       ══════════════════════════════════════════ */}
       <section className="relative w-full min-h-[92vh] lg:min-h-screen flex items-center justify-center bg-gray-950 overflow-hidden">
-        {/* Background image */}
-        <img
-          src="/home.jpg"
-          alt="SUSÁMÁ Botanical Hair Care"
-          onError={(e) => {
-            const target = e.currentTarget;
-            if (target.src.endsWith('/home.jpg')) {
-              target.src = '/home.JPG';
-            }
-          }}
-          className="absolute inset-0 w-full h-full object-cover object-[center_20%] scale-105"
-        />
+        {/* Background image container with smooth luxury load transition */}
+        <div className="absolute inset-0 bg-stone-950 overflow-hidden">
+          <img
+            src="/home.jpg"
+            alt="SUSÁMÁ Botanical Hair Care"
+            onLoad={() => setIsHeroImageLoaded(true)}
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (target.src.endsWith('/home.jpg')) {
+                target.src = '/home.JPG';
+              }
+            }}
+            className={`w-full h-full object-cover object-[center_20%] transition-all duration-1200 ease-out transform ${
+              isHeroImageLoaded
+                ? 'opacity-100 scale-105 filter-none animate-hero-zoom'
+                : 'opacity-0 scale-115 blur-lg'
+            }`}
+          />
+        </div>
 
         {/* Sophisticated luxury lighting overlays */}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-black/60 z-10" />
@@ -469,21 +494,28 @@ export default function Home() {
         {/* Hero content */}
         <div className="relative z-20 flex flex-col items-center text-center px-4 sm:px-6 md:px-8 w-full max-w-4xl mx-auto pt-28 sm:pt-36 pb-28">
 
-          {/* Emblem */}
-          <div className="mb-6 sm:mb-8 animate-fade-in animate-float">
+          {/* Emblem with smooth reveal */}
+          <div className="mb-6 sm:mb-8 animate-smooth-reveal">
             <img
               src="/logo-emblem.png"
               alt="SUSÁMÁ Emblem"
-              className="h-16 sm:h-20 md:h-24 w-auto object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)]"
+              onLoad={() => setIsLogoLoaded(true)}
+              className={`h-16 sm:h-20 md:h-24 w-auto object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.8)] animate-float transition-all duration-1000 ease-out ${
+                isLogoLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
+              }`}
             />
           </div>
 
-          {/* Brand Name Logo */}
-          <div className="mb-6 sm:mb-8 animate-fade-in delay-100">
+          {/* Brand Name Logo (SUSÁMÁ) - Pure White after loading */}
+          <div className="mb-6 sm:mb-8 animate-smooth-reveal delay-150">
             <img
               src="/font.png"
               alt="SUSÁMÁ"
-              className="h-10 sm:h-14 md:h-18 lg:h-20 w-auto max-w-[85vw] object-contain drop-shadow-[0_10px_35px_rgba(0,0,0,0.9)] mx-auto brightness-0 invert"
+              onLoad={() => setIsLogoLoaded(true)}
+              style={{ filter: 'brightness(0) invert(1) drop-shadow(0 10px 35px rgba(0,0,0,0.9))' }}
+              className={`h-10 sm:h-14 md:h-18 lg:h-20 w-auto max-w-[85vw] object-contain mx-auto transition-all duration-1000 delay-100 ease-out ${
+                isLogoLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
+              }`}
             />
           </div>
 
