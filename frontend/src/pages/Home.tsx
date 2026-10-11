@@ -439,10 +439,6 @@ export default function Home() {
           {/* Section Header */}
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-14 gap-5">
             <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100/70 border border-amber-200/80 text-amber-900 text-[11px] sm:text-xs font-semibold tracking-wider uppercase mb-3">
-                <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse" />
-                In Motion &amp; Social Community
-              </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-gray-900 tracking-tight">
                 The Ritual In Motion
               </h2>
