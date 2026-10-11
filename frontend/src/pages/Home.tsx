@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   HiStar, 
@@ -7,8 +7,100 @@ import {
   HiCheck,
   HiXMark,
   HiArrowRight,
-  HiOutlineHeart
+  HiOutlineHeart,
+  HiArrowUpTray
 } from 'react-icons/hi2';
+import { 
+  FaInstagram, 
+  FaTiktok, 
+  FaPlay, 
+  FaPause, 
+  FaVolumeHigh, 
+  FaVolumeXmark, 
+  FaHeart, 
+  FaRegHeart,
+  FaRegComment, 
+  FaArrowUpRightFromSquare 
+} from 'react-icons/fa6';
+
+interface SocialPost {
+  id: string;
+  platform: 'instagram' | 'tiktok';
+  author: string;
+  handle: string;
+  verified: boolean;
+  avatar: string;
+  image: string;
+  likes: number;
+  comments: number;
+  caption: string;
+  tags: string[];
+  productName: string;
+  productPrice: string;
+}
+
+const SOCIAL_POSTS: SocialPost[] = [
+  {
+    id: 'post-1',
+    platform: 'instagram',
+    author: 'Ananya Perera',
+    handle: '@ananya.curls',
+    verified: true,
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80',
+    image: '/social-card-1.jpg',
+    likes: 12480,
+    comments: 348,
+    caption: 'Day 14 using the @susama Botanical Curl Elixir. The frizz is completely gone and my curl definition has never felt this bouncy! 🌀✨',
+    tags: ['#SusamaRitual', '#CurlyHairCare', '#CeylonBotanicals'],
+    productName: 'Botanical Curl Elixir',
+    productPrice: 'LKR 4,200'
+  },
+  {
+    id: 'post-2',
+    platform: 'tiktok',
+    author: 'Kavindi Silva',
+    handle: '@kavindi_curls',
+    verified: true,
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=120&q=80',
+    image: '/social-card-2.jpg',
+    likes: 28940,
+    comments: 892,
+    caption: 'My complete wash-day routine with the Keratin Masque! The slip when detangling is unmatched. 10/10 Holy Grail 💆‍♀️🧴',
+    tags: ['#HairCareRoutine', '#CurlCheck', '#NaturalHair'],
+    productName: 'Nourishing Curl Masque',
+    productPrice: 'LKR 3,850'
+  },
+  {
+    id: 'post-3',
+    platform: 'instagram',
+    author: 'Salon Elixir Colombo',
+    handle: '@salon_elixir.lk',
+    verified: true,
+    avatar: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=120&q=80',
+    image: '/social-card-3.jpg',
+    likes: 15320,
+    comments: 412,
+    caption: 'Salon client transformation! Before & after Ceylon Keratin Infusion. Intense mirror shine without weighing down fine curls.',
+    tags: ['#SalonMasterclass', '#CeylonKeratin', '#SilkyCurls'],
+    productName: 'Keratin Repair Serum',
+    productPrice: 'LKR 4,800'
+  },
+  {
+    id: 'post-4',
+    platform: 'instagram',
+    author: 'Ruwi Alwis',
+    handle: '@ruwi.botanicals',
+    verified: false,
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&q=80',
+    image: '/social-card-4.jpg',
+    likes: 9840,
+    comments: 195,
+    caption: 'Obsessed with the botanical fragrance of lotus & vetiver. Finally a clean Sri Lankan haircare brand made for tropical humidity! 🌸🌿',
+    tags: ['#CleanBeautyLK', '#SusamaGlow', '#BotanicalCare'],
+    productName: 'Botanical Scalp Elixir',
+    productPrice: 'LKR 3,900'
+  }
+];
 
 
 interface CategoryItem {
@@ -279,7 +371,97 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Video and Social Showcase State
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoFileInputRef = useRef<HTMLInputElement>(null);
+  const [ritualVideoUrl, setRitualVideoUrl] = useState<string>('/ritual-video.mp4');
+  const [isUploadingVideo, setIsUploadingVideo] = useState<boolean>(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState<boolean>(true);
+  const [isVideoMuted, setIsVideoMuted] = useState<boolean>(true);
+  const [videoProgress, setVideoProgress] = useState<number>(0);
+  const [activeSocialTab, setActiveSocialTab] = useState<'all' | 'instagram' | 'tiktok'>('all');
+  const [likedPosts, setLikedPosts] = useState<Record<string, boolean>>({});
+  const [likeCounts, setLikeCounts] = useState<Record<string, number>>(() => {
+    const initial: Record<string, number> = {};
+    SOCIAL_POSTS.forEach(p => { initial[p.id] = p.likes; });
+    return initial;
+  });
+
+  const toggleVideoPlay = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.paused) {
+      videoRef.current.play();
+      setIsVideoPlaying(true);
+    } else {
+      videoRef.current.pause();
+      setIsVideoPlaying(false);
+    }
+  };
+
+  const toggleVideoMute = () => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !videoRef.current.muted;
+    setIsVideoMuted(videoRef.current.muted);
+  };
+
+  const handleVideoTimeUpdate = () => {
+    if (!videoRef.current || !videoRef.current.duration) return;
+    const progress = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+    setVideoProgress(isNaN(progress) ? 0 : progress);
+  };
+
+  const toggleLikePost = (id: string) => {
+    const isLiked = !!likedPosts[id];
+    setLikedPosts(prev => ({ ...prev, [id]: !isLiked }));
+    setLikeCounts(prev => ({
+      ...prev,
+      [id]: isLiked ? (prev[id] || 0) - 1 : (prev[id] || 0) + 1
+    }));
+  };
+
+  // Upload video directly to MySQL database
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingVideo(true);
+    const formData = new FormData();
+    formData.append('video', file);
+
+    try {
+      const res = await fetch('http://localhost:5001/api/settings/ritual-video', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success && data.data?.video_url) {
+        setRitualVideoUrl(data.data.video_url);
+        setToastMessage('✅ 16:9 Ritual Video saved to database successfully!');
+        setTimeout(() => setToastMessage(null), 4000);
+      } else {
+        setToastMessage(data.message || 'Failed to upload video');
+        setTimeout(() => setToastMessage(null), 4000);
+      }
+    } catch (err: any) {
+      console.error('Video upload error:', err);
+      setToastMessage('Error connecting to backend database');
+      setTimeout(() => setToastMessage(null), 4000);
+    } finally {
+      setIsUploadingVideo(false);
+      if (e.target) e.target.value = '';
+    }
+  };
+
   useEffect(() => {
+    // Fetch dynamic ritual video from database
+    fetch('http://localhost:5001/api/settings/ritual-video')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data?.video_url) {
+          setRitualVideoUrl(data.data.video_url);
+        }
+      })
+      .catch((err) => console.log('Using default video setting:', err));
     // Fetch categories from API
     fetch('http://localhost:5001/api/categories')
       .then((res) => res.json())
@@ -348,9 +530,15 @@ export default function Home() {
       <section className="relative w-full min-h-[92vh] lg:min-h-screen flex items-center justify-center bg-gray-950 overflow-hidden">
         {/* Background image */}
         <img
-          src="/hero-bg.jpg"
+          src="/home.jpg"
           alt="SUSÁMÁ Botanical Hair Care"
-          className="absolute inset-0 w-full h-full object-cover object-center scale-105"
+          onError={(e) => {
+            const target = e.currentTarget;
+            if (target.src.endsWith('/home.jpg')) {
+              target.src = '/home.JPG';
+            }
+          }}
+          className="absolute inset-0 w-full h-full object-cover object-[center_20%] scale-105"
         />
 
         {/* Sophisticated luxury lighting overlays */}
@@ -462,6 +650,361 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          2.5. IN MOTION & SOCIAL MEDIA CONTENT CARDS
+      ══════════════════════════════════════════ */}
+      <section className="w-full py-16 sm:py-20 md:py-24 bg-gradient-to-b from-white via-amber-50/20 to-white relative overflow-hidden border-b border-gray-100">
+        {/* Subtle atmospheric ambient glows */}
+        <div className="absolute top-1/4 left-10 w-80 h-80 bg-brand-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 right-10 w-80 h-80 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          
+          {/* Section Header */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 sm:mb-14 gap-5">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-100/70 border border-amber-200/80 text-amber-900 text-[11px] sm:text-xs font-semibold tracking-wider uppercase mb-3">
+                <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse" />
+                In Motion &amp; Social Community
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-heading font-bold text-gray-900 tracking-tight">
+                The Ritual In Motion
+              </h2>
+              <p className="text-xs sm:text-sm md:text-base text-gray-500 max-w-xl mt-2 font-light leading-relaxed">
+                Watch the botanical curl transformation in action and explore real results shared across social media by our growing island community.
+              </p>
+            </div>
+
+            {/* Social Platform Filter Tabs */}
+            <div className="flex items-center gap-1.5 bg-gray-100/90 p-1.5 rounded-full w-fit border border-gray-200/60 self-start md:self-auto">
+              {[
+                { id: 'all', label: 'All Community' },
+                { id: 'instagram', label: 'Instagram', icon: <FaInstagram className="w-3.5 h-3.5 text-pink-600" /> },
+                { id: 'tiktok', label: 'TikTok', icon: <FaTiktok className="w-3 h-3 text-gray-900" /> }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveSocialTab(tab.id as any)}
+                  className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold transition-all duration-300 ${
+                    activeSocialTab === tab.id
+                      ? 'bg-white text-gray-900 shadow-sm border border-gray-100'
+                      : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 2-Column Responsive Showcase Layout: Video Left, Social Cards Right */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
+            
+            {/* ── LEFT COLUMN (6 Cols): 16:9 Cinematic Video Feature ── */}
+            <div className="lg:col-span-6 flex flex-col gap-4">
+              
+              {/* 16:9 Aspect Ratio Video Player Card */}
+              <div className="w-full aspect-video rounded-2xl sm:rounded-3xl overflow-hidden bg-gray-950 shadow-2xl border border-gray-800/80 group relative flex flex-col justify-between">
+                
+                {/* HTML5 16:9 Video element */}
+                <video
+                  ref={videoRef}
+                  src={ritualVideoUrl}
+                  poster="/home.jpg"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  onTimeUpdate={handleVideoTimeUpdate}
+                  className="absolute inset-0 w-full h-full aspect-video object-cover object-center transition-transform duration-700 group-hover:scale-102"
+                />
+
+                {/* Dark Vignette Overlay for High Legibility */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/50 pointer-events-none" />
+
+                {/* Top Floating Header */}
+                <div className="relative z-20 p-3.5 sm:p-4.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-[11px] font-medium tracking-wide">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                      <span>Live 16:9 Ritual</span>
+                    </span>
+                    <span className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-white/80 text-[10px] font-medium">
+                      Database Synced
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={toggleVideoMute}
+                    aria-label={isVideoMuted ? 'Unmute video' : 'Mute video'}
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white flex items-center justify-center transition-transform duration-200 hover:scale-105 active:scale-95"
+                  >
+                    {isVideoMuted ? <FaVolumeXmark className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/90" /> : <FaVolumeHigh className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />}
+                  </button>
+                </div>
+
+                {/* Center Play / Pause Floating Toggle */}
+                <div className="relative z-20 flex items-center justify-center my-auto">
+                  <button
+                    onClick={toggleVideoPlay}
+                    aria-label={isVideoPlaying ? 'Pause ritual video' : 'Play ritual video'}
+                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-xl border border-white/40 text-white flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 shadow-2xl ${
+                      isVideoPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100 ring-4 ring-white/30'
+                    }`}
+                  >
+                    {isVideoPlaying ? (
+                      <FaPause className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                    ) : (
+                      <FaPlay className="w-5 h-5 sm:w-6 sm:h-6 text-white translate-x-0.5" />
+                    )}
+                  </button>
+                </div>
+
+                {/* Bottom Scrub Progress Line */}
+                <div className="relative z-20 w-full h-1 bg-white/20">
+                  <div 
+                    className="h-full bg-gradient-to-r from-brand-primary to-amber-400 transition-all duration-150"
+                    style={{ width: `${videoProgress}%` }}
+                  />
+                </div>
+
+              </div>
+
+              {/* Beneath the 16:9 Video: Product Tag & Database Upload Action Card */}
+              <div className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3.5">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center shrink-0">
+                    <img src="/logo-emblem.png" alt="SUSÁMÁ" className="h-7 w-auto object-contain" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold text-brand-secondary uppercase tracking-wider">Featured Ritual</span>
+                      <span className="text-[10px] text-gray-300">•</span>
+                      <span className="text-[10px] text-gray-500">16:9 Widescreen</span>
+                    </div>
+                    <h4 className="text-xs sm:text-sm font-bold text-gray-900">
+                      Ceylon Keratin Curl Elixir
+                    </h4>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                  <Link
+                    to="/products"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold uppercase tracking-wider transition-colors duration-200"
+                  >
+                    Shop Ritual
+                  </Link>
+
+                  {/* Hidden file input for uploading 16:9 video to database */}
+                  <input
+                    ref={videoFileInputRef}
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime,video/ogg"
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                  />
+
+                  {/* Upload button to trigger upload to database */}
+                  <button
+                    onClick={() => videoFileInputRef.current?.click()}
+                    disabled={isUploadingVideo}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand-primary hover:bg-brand-secondary text-white text-xs font-bold uppercase tracking-wider transition-all duration-200 shadow-xs hover:shadow-md disabled:opacity-50"
+                  >
+                    <HiArrowUpTray className="w-3.5 h-3.5" />
+                    <span>{isUploadingVideo ? 'Saving...' : 'Upload Video'}</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            {/* ── RIGHT COLUMN (6 Cols): Social Media Content Cards ── */}
+            <div className="lg:col-span-6 flex flex-col justify-between">
+              
+              {/* Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 flex-1">
+                {SOCIAL_POSTS
+                  .filter(post => activeSocialTab === 'all' || post.platform === activeSocialTab)
+                  .map((post) => {
+                    const isLiked = !!likedPosts[post.id];
+                    const currentLikes = likeCounts[post.id] || post.likes;
+
+                    return (
+                      <div
+                        key={post.id}
+                        className="group bg-white rounded-2xl border border-gray-100 hover:border-amber-200/80 shadow-xs hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col overflow-hidden"
+                      >
+                        {/* Card Header: Author Profile & Platform Pill */}
+                        <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3 border-b border-gray-50 bg-gray-50/40">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <img
+                              src={post.avatar}
+                              alt={post.author}
+                              className="w-8 h-8 rounded-full object-cover border border-gray-200 shrink-0"
+                            />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1">
+                                <h5 className="text-xs font-bold text-gray-900 truncate">
+                                  {post.author}
+                                </h5>
+                                {post.verified && (
+                                  <span className="w-3.5 h-3.5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] shrink-0 font-bold">
+                                    ✓
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[10px] text-gray-400 truncate">
+                                {post.handle}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Platform Pill */}
+                          <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 shrink-0 ${
+                            post.platform === 'instagram'
+                              ? 'bg-gradient-to-r from-purple-50 to-pink-50 text-pink-700 border border-pink-100'
+                              : 'bg-gray-100 text-gray-900 border border-gray-200'
+                          }`}>
+                            {post.platform === 'instagram' ? (
+                              <FaInstagram className="w-3 h-3 text-pink-600" />
+                            ) : (
+                              <FaTiktok className="w-2.5 h-2.5 text-black" />
+                            )}
+                            <span className="capitalize">{post.platform}</span>
+                          </div>
+                        </div>
+
+                        {/* Card Visual / Thumbnail */}
+                        <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-gray-100">
+                          <img
+                            src={post.image}
+                            alt={post.caption}
+                            className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+                          />
+
+                          {/* Hover Play Pill */}
+                          <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <span className="w-10 h-10 rounded-full bg-white/95 backdrop-blur-md text-gray-900 flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform duration-300">
+                              <FaPlay className="w-3.5 h-3.5 translate-x-0.5 text-gray-900" />
+                            </span>
+                          </div>
+
+                          {/* Tagged Product Pill on Image */}
+                          <div className="absolute bottom-2.5 left-2.5 right-2.5">
+                            <div className="bg-black/65 backdrop-blur-md border border-white/20 rounded-xl px-2.5 py-1.5 text-white flex items-center justify-between text-[10px]">
+                              <span className="font-semibold truncate">
+                                🌿 {post.productName}
+                              </span>
+                              <span className="text-amber-300 font-bold shrink-0 ml-1.5">
+                                {post.productPrice}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Card Body & Caption */}
+                        <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between">
+                          <div>
+                            <p className="text-xs text-gray-700 line-clamp-2 leading-relaxed">
+                              {post.caption}
+                            </p>
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {post.tags.map((tag, tIdx) => (
+                                <span
+                                  key={tIdx}
+                                  className="text-[10px] font-semibold text-brand-secondary/90 hover:underline cursor-pointer"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Card Footer: Engagement Actions */}
+                          <div className="pt-3 mt-3 border-t border-gray-100 flex items-center justify-between text-gray-500 text-xs">
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => toggleLikePost(post.id)}
+                                className={`flex items-center gap-1.5 transition-all duration-200 ${
+                                  isLiked ? 'text-rose-600 scale-105' : 'hover:text-rose-600'
+                                }`}
+                              >
+                                {isLiked ? (
+                                  <FaHeart className="w-3.5 h-3.5 text-rose-600" />
+                                ) : (
+                                  <FaRegHeart className="w-3.5 h-3.5" />
+                                )}
+                                <span className="font-medium text-[11px]">
+                                  {currentLikes.toLocaleString()}
+                                </span>
+                              </button>
+
+                              <span className="flex items-center gap-1 text-[11px] text-gray-400">
+                                <FaRegComment className="w-3 h-3" />
+                                {post.comments}
+                              </span>
+                            </div>
+
+                            <Link
+                              to="/products"
+                              className="text-[10px] font-bold text-gray-400 hover:text-brand-primary flex items-center gap-1 transition-colors"
+                            >
+                              Shop Tagged <FaArrowUpRightFromSquare className="w-2.5 h-2.5" />
+                            </Link>
+                          </div>
+                        </div>
+
+                      </div>
+                    );
+                  })}
+              </div>
+
+              {/* Bottom Community Banner */}
+              <div className="mt-5 p-4 rounded-2xl bg-amber-50/70 border border-amber-200/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-900 text-base shrink-0">
+                    📸
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-gray-900">
+                      Tag @susama.lk or #SusamaRitual
+                    </h5>
+                    <p className="text-[11px] text-gray-500">
+                      Share your curl journey on Instagram &amp; TikTok to be featured in our collective.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <a
+                    href="https://instagram.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-gray-50 border border-gray-200 text-xs font-bold text-gray-700 transition-colors shadow-xs"
+                  >
+                    <FaInstagram className="w-3 h-3 text-pink-600" />
+                    <span>Follow</span>
+                  </a>
+                  <a
+                    href="https://tiktok.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-gray-50 border border-gray-200 text-xs font-bold text-gray-700 transition-colors shadow-xs"
+                  >
+                    <FaTiktok className="w-2.5 h-2.5 text-black" />
+                    <span>Follow</span>
+                  </a>
+                </div>
+              </div>
+
+            </div>
+
           </div>
         </div>
       </section>

@@ -65,6 +65,84 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
   });
 });
 
+// Ritual Video Database API Routes
+app.get('/api/settings/ritual-video', async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS store_settings (
+        id VARCHAR(36) PRIMARY KEY,
+        setting_key VARCHAR(100) NOT NULL UNIQUE,
+        setting_value TEXT NOT NULL
+      )
+    `);
+
+    const [rows]: any = await pool.query(
+      `SELECT setting_value FROM store_settings WHERE setting_key = 'ritual_video_url' LIMIT 1`
+    );
+
+    let videoUrl = '/ritual-video.mp4';
+    if (rows && rows.length > 0 && rows[0].setting_value) {
+      videoUrl = rows[0].setting_value;
+    }
+
+    res.json({
+      success: true,
+      data: {
+        video_url: videoUrl
+      }
+    });
+  } catch (error: any) {
+    console.error('Error reading ritual video setting:', error);
+    res.json({
+      success: true,
+      data: {
+        video_url: '/ritual-video.mp4'
+      }
+    });
+  }
+});
+
+app.post('/api/settings/ritual-video', upload.single('video'), async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS store_settings (
+        id VARCHAR(36) PRIMARY KEY,
+        setting_key VARCHAR(100) NOT NULL UNIQUE,
+        setting_value TEXT NOT NULL
+      )
+    `);
+
+    let videoUrl = req.body?.video_url;
+    if (req.file) {
+      videoUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    }
+
+    if (!videoUrl) {
+      return res.status(400).json({ success: false, message: 'No video file or URL provided' });
+    }
+
+    // Save or update in store_settings table in database
+    await pool.query(`
+      INSERT INTO store_settings (id, setting_key, setting_value)
+      VALUES (UUID(), 'ritual_video_url', ?)
+      ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+    `, [videoUrl]);
+
+    console.log('✅ Ritual video updated in database:', videoUrl);
+
+    res.json({
+      success: true,
+      message: 'Ritual video successfully saved to database',
+      data: {
+        video_url: videoUrl
+      }
+    });
+  } catch (error: any) {
+    console.error('Error saving ritual video to database:', error);
+    res.status(500).json({ success: false, message: 'Database error', error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
