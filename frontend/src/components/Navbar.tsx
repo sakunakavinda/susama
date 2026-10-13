@@ -7,8 +7,10 @@ import {
   HiOutlineXMark,
   HiOutlineHeart,
   HiOutlineUser,
-  HiChevronDown
+  HiChevronDown,
+  HiOutlineArrowRightOnRectangle
 } from 'react-icons/hi2';
+import { useAuthStore } from '../store/useAuthStore';
 
 interface Category {
   id: string;
@@ -22,7 +24,10 @@ export default function Navbar() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const location = useLocation();
+
+  const { customer, isAuthenticated, openAuthModal, logout } = useAuthStore();
 
   useEffect(() => {
     fetch('http://localhost:5001/api/categories')
@@ -142,15 +147,60 @@ export default function Navbar() {
             </span>
           </Link>
 
-          {/* Profile Icon */}
-          <Link 
-            to="/profile" 
-            className="hidden md:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 items-center justify-center text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all drop-shadow" 
-            title="Account"
-            aria-label="Account"
-          >
-            <HiOutlineUser className="w-4 h-4 sm:w-5 sm:h-5" />
-          </Link>
+          {/* Profile Icon / Dropdown */}
+          {isAuthenticated ? (
+            <div 
+              className="relative hidden md:block"
+              onMouseEnter={() => setIsProfileDropdownOpen(true)}
+              onMouseLeave={() => setIsProfileDropdownOpen(false)}
+            >
+              <button 
+                onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-brand-primary/20 border border-brand-primary/50 flex items-center justify-center text-brand-primary hover:bg-brand-primary hover:text-white transition-all drop-shadow font-semibold text-sm cursor-pointer relative" 
+                title={customer?.name || "Account"}
+                aria-label="Account Menu"
+              >
+                {customer?.name ? customer.name.charAt(0).toUpperCase() : <HiOutlineUser className="w-4 h-4 sm:w-5 sm:h-5" />}
+                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-stone-900 rounded-full"></span>
+              </button>
+
+              {/* Profile Dropdown Menu */}
+              {isProfileDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-56 bg-stone-900/95 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl py-2 z-50 text-white animate-fade-in">
+                  <div className="px-4 py-2 border-b border-white/10">
+                    <p className="text-xs font-semibold text-amber-50 truncate">{customer?.name}</p>
+                    <p className="text-[11px] text-stone-400 truncate">{customer?.email}</p>
+                  </div>
+                  <Link
+                    to="/profile"
+                    onClick={() => setIsProfileDropdownOpen(false)}
+                    className="block px-4 py-2 text-xs text-stone-300 hover:bg-white/10 hover:text-brand-primary transition-colors"
+                  >
+                    My Account & Addresses
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsProfileDropdownOpen(false);
+                      logout();
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs text-red-400 hover:bg-red-950/40 hover:text-red-300 transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <HiOutlineArrowRightOnRectangle className="w-3.5 h-3.5" />
+                    Sign Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button 
+              onClick={() => openAuthModal('signin')}
+              className="hidden md:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 items-center justify-center text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all drop-shadow cursor-pointer" 
+              title="Sign In / Register"
+              aria-label="Sign In or Register"
+            >
+              <HiOutlineUser className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          )}
 
           {/* Cart Icon */}
           <button 
@@ -198,13 +248,33 @@ export default function Navbar() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-white/10 flex items-center justify-around sm:justify-start sm:gap-6 text-xs text-gray-300">
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs text-gray-300">
               <Link to="/wishlist" className="flex items-center gap-1.5 hover:text-white py-1">
                 <HiOutlineHeart className="w-4 h-4 text-brand-primary" /> Favourites (0)
               </Link>
-              <Link to="/profile" className="flex items-center gap-1.5 hover:text-white py-1">
-                <HiOutlineUser className="w-4 h-4 text-brand-primary" /> My Account
-              </Link>
+              {isAuthenticated ? (
+                <div className="flex items-center gap-3">
+                  <Link to="/profile" className="flex items-center gap-1.5 hover:text-white py-1">
+                    <HiOutlineUser className="w-4 h-4 text-brand-primary" /> {customer?.name?.split(' ')[0] || 'Profile'}
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="text-red-400 text-xs hover:text-red-300 cursor-pointer"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    openAuthModal('signin');
+                  }}
+                  className="flex items-center gap-1.5 text-brand-primary hover:text-white py-1 font-medium cursor-pointer"
+                >
+                  <HiOutlineUser className="w-4 h-4" /> Sign In / Join
+                </button>
+              )}
             </div>
           </div>
         )}

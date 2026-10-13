@@ -39,12 +39,16 @@ import categoryRoutes from './routes/categoryRoutes';
 import productRoutes from './routes/productRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import newsletterRoutes from './routes/newsletterRoutes';
+import customerAuthRoutes from './routes/customerAuthRoutes';
 import { scrapeSocialPost } from './services/socialScraper';
 
 // Routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'SUSAMA Backend is running!' });
 });
+
+// Auth API Routes (Customer Registration, Login, Profile)
+app.use('/api/auth', customerAuthRoutes);
 
 // Category API Routes
 app.use('/api/categories', categoryRoutes);

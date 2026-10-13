@@ -38,11 +38,14 @@ const categoryRoutes_1 = __importDefault(require("./routes/categoryRoutes"));
 const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
 const reviewRoutes_1 = __importDefault(require("./routes/reviewRoutes"));
 const newsletterRoutes_1 = __importDefault(require("./routes/newsletterRoutes"));
+const customerAuthRoutes_1 = __importDefault(require("./routes/customerAuthRoutes"));
 const socialScraper_1 = require("./services/socialScraper");
 // Routes
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'SUSAMA Backend is running!' });
 });
+// Auth API Routes (Customer Registration, Login, Profile)
+app.use('/api/auth', customerAuthRoutes_1.default);
 // Category API Routes
 app.use('/api/categories', categoryRoutes_1.default);
 // Product API Routes
