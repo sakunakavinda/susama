@@ -1095,23 +1095,23 @@ export default function Home() {
 
             {/* Editorial Image */}
             <div className="relative order-2 lg:order-1">
-              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl aspect-[4/5] sm:aspect-[5/6]">
+              <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl aspect-square">
                 <img
-                  src="https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=800&auto=format&fit=crop"
+                  src="/images/branding/susama-beauty-craftsmanship.jpg"
                   alt="SUSÁMÁ Beauty Craftsmanship"
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
-                {/* Floating Stat Card */}
-                <div className="absolute bottom-5 right-5 sm:bottom-7 sm:right-7 bg-white/95 backdrop-blur-xl p-4 sm:p-5 rounded-2xl shadow-xl border border-white/60">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <HiSparkles className="w-4 h-4 text-brand-primary" />
-                    <span className="text-2xl font-heading font-extrabold text-gray-900">100%</span>
-                  </div>
-                  <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-gray-500 leading-tight block max-w-[130px]">
-                    Botanical Oils &amp; Pure Keratin
-                  </span>
+              </div>
+              {/* Floating Stat Card */}
+              <div className="absolute -top-4 -right-3 sm:-top-6 sm:-right-6 z-10 bg-white/95 backdrop-blur-xl p-4 sm:p-5 rounded-2xl shadow-2xl border border-gray-100/80">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <HiSparkles className="w-4 h-4 text-brand-primary" />
+                  <span className="text-2xl font-heading font-extrabold text-gray-900">100%</span>
                 </div>
+                <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-gray-500 leading-tight block max-w-[130px]">
+                  Botanical Oils &amp; Pure Keratin
+                </span>
               </div>
               {/* Decorative Subtle Accent */}
               <div className="absolute -bottom-4 -left-4 w-28 h-28 opacity-20 pointer-events-none" style={{
