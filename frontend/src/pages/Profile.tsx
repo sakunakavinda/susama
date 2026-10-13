@@ -88,7 +88,7 @@ export default function Profile() {
             <HiOutlineUser className="w-8 h-8" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-heading font-medium text-amber-50 mb-2">
-            Customer Sanctuary
+            Customer Account
           </h1>
           <p className="text-stone-400 text-sm mb-8 leading-relaxed">
             Please sign in to access your personal ritual profile, order history, and saved addresses.

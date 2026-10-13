@@ -6,8 +6,7 @@ import {
   HiOutlineUser, 
   HiOutlineEye, 
   HiOutlineEyeSlash,
-  HiCheck,
-  HiSparkles
+  HiCheck
 } from 'react-icons/hi2';
 import { useAuthStore } from '../store/useAuthStore';
 
@@ -131,10 +130,11 @@ export default function AuthModal() {
 
         {/* Brand Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-brand-primary/10 border border-brand-primary/30 text-brand-primary text-xs font-semibold tracking-wider uppercase mb-3">
-            <HiSparkles className="w-3.5 h-3.5" />
-            SUSÁMÁ Sanctuary
-          </div>
+          <img 
+            src="/images/branding/logo.png" 
+            alt="SUSÁMÁ" 
+            className="h-8 w-auto mx-auto mb-3 object-contain drop-shadow" 
+          />
           
           <h2 className="text-2xl sm:text-3xl font-heading font-medium tracking-tight text-amber-50">
             {authModalMode === 'signin' ? 'Welcome Back' : 'Create Customer Account'}
