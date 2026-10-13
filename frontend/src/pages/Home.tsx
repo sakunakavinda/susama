@@ -109,6 +109,9 @@ export default function Home() {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [reviewSubmitSuccess, setReviewSubmitSuccess] = useState(false);
 
+  // VIP Newsletter Club State
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   // Video and Social Showcase State
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -403,6 +406,32 @@ export default function Home() {
     setTimeout(() => {
       setToastMessage(null);
     }, 3000);
+  };
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) return;
+    setIsSubscribing(true);
+    try {
+      const res = await fetch('http://localhost:5001/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsletterEmail.trim(), source: 'homepage_vip' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setToastMessage(data.message || 'Welcome to the SUSÁMÁ VIP Club! ✨');
+        setNewsletterEmail('');
+      } else {
+        setToastMessage(data.message || 'Subscription failed. Please try again.');
+      }
+    } catch (err) {
+      console.error('Newsletter subscription error:', err);
+      setToastMessage('Unable to subscribe. Please check your connection.');
+    } finally {
+      setIsSubscribing(false);
+      setTimeout(() => setToastMessage(null), 4000);
+    }
   };
 
   return (
@@ -1461,22 +1490,22 @@ export default function Home() {
               Subscribe for exclusive botanical hair rituals, seasonal care guides, and VIP-only invitations.
             </p>
 
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              setToastMessage('Thank you for subscribing to the SUSÁMÁ VIP Club!');
-              setTimeout(() => setToastMessage(null), 3000);
-            }} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+            <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <input
                 type="email"
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
                 placeholder="Enter your email address"
                 className="flex-1 px-5 py-3.5 rounded-full text-gray-900 placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary bg-white shadow-sm"
                 required
+                disabled={isSubscribing}
               />
               <button
                 type="submit"
-                className="bg-brand-primary text-white font-bold px-8 py-3.5 rounded-full hover:bg-brand-secondary transition-all duration-300 text-xs tracking-widest uppercase shadow-xl hover:scale-105 active:scale-95 whitespace-nowrap cursor-pointer"
+                disabled={isSubscribing}
+                className="bg-brand-primary text-white font-bold px-8 py-3.5 rounded-full hover:bg-brand-secondary transition-all duration-300 text-xs tracking-widest uppercase shadow-xl hover:scale-105 active:scale-95 whitespace-nowrap cursor-pointer disabled:opacity-60"
               >
-                Join Now
+                {isSubscribing ? 'Joining...' : 'Join Now'}
               </button>
             </form>
 

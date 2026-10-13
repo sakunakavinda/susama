@@ -172,3 +172,17 @@ CREATE TABLE IF NOT EXISTS reviews (
   INDEX idx_rating (rating)
 );
 
+-- 12. Newsletter Subscribers
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id VARCHAR(36) PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  source VARCHAR(100) DEFAULT 'homepage_vip',
+  is_active BOOLEAN DEFAULT TRUE,
+  subscribed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  unsubscribed_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_subscriber_email (email),
+  INDEX idx_subscriber_active (is_active)
+);
+

@@ -38,6 +38,7 @@ const upload = multer({ storage });
 import categoryRoutes from './routes/categoryRoutes';
 import productRoutes from './routes/productRoutes';
 import reviewRoutes from './routes/reviewRoutes';
+import newsletterRoutes from './routes/newsletterRoutes';
 import { scrapeSocialPost } from './services/socialScraper';
 
 // Routes
@@ -53,6 +54,9 @@ app.use('/api/products', productRoutes);
 
 // Review API Routes
 app.use('/api/reviews', reviewRoutes);
+
+// Newsletter API Routes
+app.use('/api/newsletter', newsletterRoutes);
 
 // Example Product Image Upload Route
 app.post('/api/upload', upload.single('image'), (req, res) => {
