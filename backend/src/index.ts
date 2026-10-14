@@ -42,6 +42,43 @@ import newsletterRoutes from './routes/newsletterRoutes';
 import customerAuthRoutes from './routes/customerAuthRoutes';
 import orderRoutes from './routes/orderRoutes';
 import { scrapeSocialPost } from './services/socialScraper';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { verifyAdminToken } from './middleware/authMiddleware';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'susama_luxury_secret_jwt_key_2026_ceylon';
+
+// Ensure default admin user exists in admin_users table (Strictly separated from customers table)
+const ensureDefaultAdmin = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id VARCHAR(36) PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        name VARCHAR(100) NOT NULL,
+        role VARCHAR(50) DEFAULT 'admin',
+        last_login DATETIME NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    const [rows]: any = await pool.query('SELECT id FROM admin_users LIMIT 1');
+    if (!rows || rows.length === 0) {
+      const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'admin123';
+      const hash = await bcrypt.hash(defaultPassword, 10);
+      await pool.query(`
+        INSERT INTO admin_users (id, email, password, name, role)
+        VALUES (UUID(), 'admin@susama.lk', ?, 'SUSÁMÁ Executive Admin', 'admin')
+      `, [hash]);
+      console.log('✅ Default administrator account initialized (admin@susama.lk)');
+    }
+  } catch (err) {
+    console.error('Admin table check notice:', err);
+  }
+};
+ensureDefaultAdmin();
 
 // Routes
 app.get('/api/health', (req, res) => {
@@ -350,7 +387,68 @@ app.get('/api/settings/shipping', async (req, res) => {
   }
 });
 
-app.post('/api/settings/shipping', async (req, res) => {
+// Admin Authentication Routes (Separated from customer accounts)
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide administrator email and password.' });
+    }
+
+    const trimmedEmail = String(email).trim().toLowerCase();
+
+    // Query admin_users specifically (customers table cannot authenticate as admin)
+    const [rows]: any = await pool.query(
+      'SELECT id, email, password, name, role FROM admin_users WHERE LOWER(email) = ? LIMIT 1',
+      [trimmedEmail]
+    );
+
+    if (!rows || rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid administrator credentials.' });
+    }
+
+    const admin = rows[0];
+    const isMatch = await bcrypt.compare(String(password), admin.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid administrator credentials.' });
+    }
+
+    await pool.query('UPDATE admin_users SET last_login = NOW() WHERE id = ?', [admin.id]);
+
+    const token = jwt.sign(
+      { id: admin.id, email: admin.email, name: admin.name, role: 'admin' },
+      JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    res.json({
+      success: true,
+      message: 'Admin authentication successful.',
+      data: {
+        token,
+        admin: {
+          id: admin.id,
+          name: admin.name,
+          email: admin.email,
+          role: 'admin'
+        }
+      }
+    });
+  } catch (error: any) {
+    console.error('Error during admin login:', error);
+    res.status(500).json({ success: false, message: 'Server error during authentication.', error: error.message });
+  }
+});
+
+app.get('/api/admin/verify', verifyAdminToken, (req: any, res) => {
+  res.json({
+    success: true,
+    admin: req.admin
+  });
+});
+
+app.post('/api/settings/shipping', verifyAdminToken, async (req, res) => {
   try {
     const { free_shipping_threshold, standard_shipping_fee } = req.body;
 
@@ -451,7 +549,7 @@ app.get('/api/settings/bank', async (req, res) => {
   }
 });
 
-app.post('/api/settings/bank', async (req, res) => {
+app.post('/api/settings/bank', verifyAdminToken, async (req, res) => {
   try {
     const { bank_name, account_name, account_number, branch, instructions } = req.body;
 
