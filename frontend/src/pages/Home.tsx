@@ -6,7 +6,7 @@ import {
 } from 'react-icons/fa6';
 
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   HiStar, 
   HiShoppingBag, 
@@ -19,7 +19,8 @@ import {
   HiChevronRight,
   HiShieldCheck,
   HiTruck,
-  HiHeart
+  HiHeart,
+  HiOutlineMagnifyingGlass
 } from 'react-icons/hi2';
 import { useCartStore } from '../store/useCartStore';
 import { useWishlistStore } from '../store/useWishlistStore';
@@ -125,11 +126,13 @@ const DEFAULT_OVERALL_REVIEWS: ReviewItem[] = [
 ];
 
 export default function Home() {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [heroSearchQuery, setHeroSearchQuery] = useState('');
   const { addItem } = useCartStore();
   const { toggleWishlist, isInWishlist } = useWishlistStore();
 
@@ -517,6 +520,12 @@ export default function Home() {
     }
   };
 
+  const handleHeroSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!heroSearchQuery.trim()) return;
+    navigate(`/products?search=${encodeURIComponent(heroSearchQuery.trim())}`);
+  };
+
   return (
     <div className="flex flex-col min-h-screen w-full bg-[#FEFCFB] text-gray-900 overflow-x-hidden">
 
@@ -587,9 +596,58 @@ export default function Home() {
           </div>
 
           {/* Subtitle */}
-          <p className="text-xs sm:text-sm md:text-base text-white/80 max-w-lg mb-8 sm:mb-10 font-light leading-relaxed animate-fade-in delay-200 drop-shadow">
+          <p className="text-xs sm:text-sm md:text-base text-white/80 max-w-lg mb-6 sm:mb-8 font-light leading-relaxed animate-fade-in delay-200 drop-shadow">
             Active keratin peptides and cold-pressed Ceylon island botanicals, formulated to restore vibrant strength, bounce, and mirror shine.
           </p>
+
+          {/* Hero Interactive Search Bar */}
+          <form
+            onSubmit={handleHeroSearch}
+            className="w-full max-w-md sm:max-w-lg mb-8 relative z-20 group animate-fade-in delay-250"
+          >
+            <div className="relative flex items-center bg-white/15 hover:bg-white/20 focus-within:bg-white/25 backdrop-blur-md border border-white/25 focus-within:border-white/60 rounded-full p-1.5 sm:p-2 transition-all shadow-2xl">
+              <div className="pl-3.5 pr-1.5 text-white/70">
+                <HiOutlineMagnifyingGlass className="w-4 h-4 sm:w-5 sm:h-5 text-white/80" />
+              </div>
+              <input
+                type="text"
+                value={heroSearchQuery}
+                onChange={(e) => setHeroSearchQuery(e.target.value)}
+                placeholder="Search shampoos, keratin, sprays, oils..."
+                className="w-full bg-transparent text-white placeholder-white/60 text-xs sm:text-sm focus:outline-none px-2 font-light"
+              />
+              {heroSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setHeroSearchQuery('')}
+                  className="p-1 text-white/60 hover:text-white mr-1 cursor-pointer"
+                  title="Clear search"
+                >
+                  <HiXMark className="w-4 h-4" />
+                </button>
+              )}
+              <button
+                type="submit"
+                className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full bg-brand-primary hover:bg-brand-secondary text-white text-xs font-bold tracking-wider uppercase transition-all shadow-md shrink-0 flex items-center gap-1.5 cursor-pointer hover:scale-105 active:scale-95"
+              >
+                <span>Search</span>
+              </button>
+            </div>
+            {/* Quick trending tags */}
+            <div className="flex items-center justify-center flex-wrap gap-2 mt-3 text-[11px] text-white/80">
+              <span className="text-white/60 text-[10px] uppercase tracking-wider font-semibold">Popular:</span>
+              {['Keratin', 'Rose Water', 'Hair Oil', 'Scalp Care'].map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => navigate(`/products?search=${encodeURIComponent(tag)}`)}
+                  className="px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 transition-colors text-[10px] cursor-pointer"
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </form>
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row items-center gap-3.5 sm:gap-4 w-full sm:w-auto animate-fade-in delay-300">
