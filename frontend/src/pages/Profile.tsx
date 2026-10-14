@@ -20,7 +20,8 @@ export default function Profile() {
     logout, 
     updateProfile, 
     isLoading,
-    checkAuth 
+    checkAuth,
+    token
   } = useAuthStore();
   
   const navigate = useNavigate();
@@ -35,6 +36,28 @@ export default function Profile() {
   const [postalCode, setPostalCode] = useState('');
   
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Orders State
+  const [orders, setOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
+  // Fetch orders when orders tab is active
+  useEffect(() => {
+    if (activeTab === 'orders' && token) {
+      setOrdersLoading(true);
+      fetch('http://localhost:5001/api/orders/my-orders', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.data)) {
+            setOrders(data.data);
+          }
+        })
+        .catch((err) => console.error('Error fetching customer orders:', err))
+        .finally(() => setOrdersLoading(false));
+    }
+  }, [activeTab, token]);
 
   // Sync profile data into form state
   useEffect(() => {
@@ -355,24 +378,89 @@ export default function Profile() {
             </form>
           </div>
         ) : (
-          <div className="bg-stone-900 border border-white/10 rounded-3xl p-12 text-center shadow-xl space-y-4">
-            <div className="w-16 h-16 rounded-full bg-stone-800 border border-white/10 flex items-center justify-center mx-auto text-brand-primary">
-              <HiOutlineShoppingBag className="w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-heading font-medium text-amber-50">
-              No orders placed yet
-            </h3>
-            <p className="text-stone-400 text-sm max-w-sm mx-auto">
-              Your recent ritual orders and doorstep deliveries across Sri Lanka will appear right here.
-            </p>
-            <div className="pt-2">
-              <Link
-                to="/products"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-primary text-white text-sm font-semibold hover:bg-brand-secondary transition-all shadow-md"
-              >
-                Discover Formulations →
-              </Link>
-            </div>
+          <div className="space-y-4">
+            {ordersLoading ? (
+              <div className="bg-stone-900 border border-white/10 rounded-3xl p-12 text-center text-stone-400">
+                <span className="inline-block w-6 h-6 border-2 border-brand-primary border-t-transparent rounded-full animate-spin mb-3" />
+                <p className="text-sm">Loading your orders...</p>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="bg-stone-900 border border-white/10 rounded-3xl p-12 text-center shadow-xl space-y-4">
+                <div className="w-16 h-16 rounded-full bg-stone-800 border border-white/10 flex items-center justify-center mx-auto text-brand-primary">
+                  <HiOutlineShoppingBag className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-heading font-medium text-amber-50">
+                  No orders placed yet
+                </h3>
+                <p className="text-stone-400 text-sm max-w-sm mx-auto">
+                  Your recent ritual orders and doorstep deliveries across Sri Lanka will appear right here.
+                </p>
+                <div className="pt-2">
+                  <Link
+                    to="/products"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-primary text-white text-sm font-semibold hover:bg-brand-secondary transition-all shadow-md"
+                  >
+                    Discover Formulations →
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {orders.map((ord) => (
+                  <div 
+                    key={ord.id} 
+                    className="bg-stone-900 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl space-y-4"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-white/10 gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm font-bold text-brand-primary">
+                            {ord.order_number}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 text-brand-primary border border-brand-primary/30">
+                            {ord.order_status || 'Confirmed'}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-stone-400">
+                          Placed on {new Date(ord.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </span>
+                      </div>
+
+                      <div className="text-left sm:text-right">
+                        <span className="text-xs text-stone-400 block">Total Amount</span>
+                        <span className="text-base font-bold text-amber-50">
+                          LKR {Number(ord.total_amount).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Order items */}
+                    <div className="space-y-2 text-xs">
+                      {ord.items && ord.items.map((item: any) => (
+                        <div key={item.id} className="flex justify-between items-center text-stone-300">
+                          <span className="truncate pr-3">
+                            {item.product_name} <span className="text-stone-500">× {item.quantity}</span>
+                          </span>
+                          <span className="font-medium whitespace-nowrap">
+                            LKR {Number(item.line_total).toLocaleString()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs text-stone-400">
+                      <span>Payment: <strong className="text-stone-200 capitalize">{ord.payment_method === 'cod' ? 'Cash on Delivery' : 'Bank Transfer'}</strong></span>
+                      <Link 
+                        to={`/order-success/${ord.order_number}`}
+                        className="text-brand-primary hover:underline font-semibold"
+                      >
+                        View Receipt →
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

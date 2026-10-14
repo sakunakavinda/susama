@@ -40,6 +40,7 @@ import productRoutes from './routes/productRoutes';
 import reviewRoutes from './routes/reviewRoutes';
 import newsletterRoutes from './routes/newsletterRoutes';
 import customerAuthRoutes from './routes/customerAuthRoutes';
+import orderRoutes from './routes/orderRoutes';
 import { scrapeSocialPost } from './services/socialScraper';
 
 // Routes
@@ -49,6 +50,9 @@ app.get('/api/health', (req, res) => {
 
 // Auth API Routes (Customer Registration, Login, Profile)
 app.use('/api/auth', customerAuthRoutes);
+
+// Order API Routes (Checkout & Past Orders)
+app.use('/api/orders', orderRoutes);
 
 // Category API Routes
 app.use('/api/categories', categoryRoutes);

@@ -39,6 +39,7 @@ const productRoutes_1 = __importDefault(require("./routes/productRoutes"));
 const reviewRoutes_1 = __importDefault(require("./routes/reviewRoutes"));
 const newsletterRoutes_1 = __importDefault(require("./routes/newsletterRoutes"));
 const customerAuthRoutes_1 = __importDefault(require("./routes/customerAuthRoutes"));
+const orderRoutes_1 = __importDefault(require("./routes/orderRoutes"));
 const socialScraper_1 = require("./services/socialScraper");
 // Routes
 app.get('/api/health', (req, res) => {
@@ -46,6 +47,8 @@ app.get('/api/health', (req, res) => {
 });
 // Auth API Routes (Customer Registration, Login, Profile)
 app.use('/api/auth', customerAuthRoutes_1.default);
+// Order API Routes (Checkout & Past Orders)
+app.use('/api/orders', orderRoutes_1.default);
 // Category API Routes
 app.use('/api/categories', categoryRoutes_1.default);
 // Product API Routes

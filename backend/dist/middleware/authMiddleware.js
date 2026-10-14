@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyCustomerToken = void 0;
+exports.optionalCustomerToken = exports.verifyCustomerToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const JWT_SECRET = process.env.JWT_SECRET || 'susama_luxury_secret_jwt_key_2026_ceylon';
 const verifyCustomerToken = (req, res, next) => {
@@ -28,3 +28,18 @@ const verifyCustomerToken = (req, res, next) => {
     }
 };
 exports.verifyCustomerToken = verifyCustomerToken;
+const optionalCustomerToken = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.split(' ')[1];
+        try {
+            const decoded = jsonwebtoken_1.default.verify(token, JWT_SECRET);
+            req.customer = decoded;
+        }
+        catch {
+            // Continue without user if token is invalid or expired
+        }
+    }
+    next();
+};
+exports.optionalCustomerToken = optionalCustomerToken;

@@ -40,3 +40,21 @@ export const verifyCustomerToken = (
     });
   }
 };
+
+export const optionalCustomerToken = (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedCustomer;
+      req.customer = decoded;
+    } catch {
+      // Continue without user if token is invalid or expired
+    }
+  }
+  next();
+};

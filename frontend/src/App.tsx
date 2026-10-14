@@ -5,6 +5,8 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import Profile from './pages/Profile';
+import Checkout from './pages/Checkout';
+import OrderSuccess from './pages/OrderSuccess';
 import AuthModal from './components/AuthModal';
 import CartDrawer from './components/CartDrawer';
 import { useAuthStore } from './store/useAuthStore';
@@ -33,6 +35,8 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-success/:orderNumber" element={<OrderSuccess />} />
             <Route path="/about" element={<PlaceholderPage title="About Us (Coming Soon)" />} />
           </Routes>
         </main>

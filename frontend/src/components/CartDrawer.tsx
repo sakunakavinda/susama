@@ -68,8 +68,7 @@ export default function CartDrawer() {
 
   const handleCheckout = () => {
     closeCart();
-    // Navigate to checkout or profile
-    navigate('/profile');
+    navigate('/checkout');
   };
 
   return (
