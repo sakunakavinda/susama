@@ -50,6 +50,18 @@ export default function AuthModal() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAuthModalOpen, closeAuthModal]);
 
+  // Prevent background scrolling when auth modal is open
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isAuthModalOpen]);
+
   if (!isAuthModalOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   HiOutlineHeart, 
@@ -20,6 +20,18 @@ export default function Wishlist() {
 
   const [selectedProduct, setSelectedProduct] = useState<WishlistItem | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+
+  // Prevent background scrolling when product quick view modal is open
+  useEffect(() => {
+    if (selectedProduct) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedProduct]);
 
   const showNotification = (msg: string) => {
     setNotification(msg);

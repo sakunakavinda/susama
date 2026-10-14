@@ -83,6 +83,18 @@ export default function Navbar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isSearchModalOpen]);
 
+  // Prevent background scrolling when search modal is open
+  useEffect(() => {
+    if (isSearchModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isSearchModalOpen]);
+
   // Close mobile menu and search modal on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);

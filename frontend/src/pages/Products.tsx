@@ -126,6 +126,18 @@ export default function Products() {
       .catch((err) => console.log('Products API error:', err));
   }, []);
 
+  // Prevent background scrolling when product quick view modal is open
+  useEffect(() => {
+    if (selectedProduct) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedProduct]);
+
   // Fetch reviews for selected product in Quick View
   useEffect(() => {
     if (selectedProduct) {

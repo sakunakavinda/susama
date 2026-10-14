@@ -359,6 +359,18 @@ export default function Home() {
     }
   };
 
+  // Prevent background scrolling when product quick view or overall review modal is open
+  useEffect(() => {
+    if (selectedProduct || isOverallModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedProduct, isOverallModalOpen]);
+
   // Fetch reviews whenever a product is opened in Quick View
   useEffect(() => {
     if (selectedProduct) {
