@@ -40,6 +40,7 @@ const reviewRoutes_1 = __importDefault(require("./routes/reviewRoutes"));
 const newsletterRoutes_1 = __importDefault(require("./routes/newsletterRoutes"));
 const customerAuthRoutes_1 = __importDefault(require("./routes/customerAuthRoutes"));
 const orderRoutes_1 = __importDefault(require("./routes/orderRoutes"));
+const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
 const socialScraper_1 = require("./services/socialScraper");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
@@ -378,6 +379,8 @@ app.get('/api/admin/verify', authMiddleware_1.verifyAdminToken, (req, res) => {
         admin: req.admin
     });
 });
+// Admin Management APIs (Protected by verifyAdminToken)
+app.use('/api/admin', adminRoutes_1.default);
 app.post('/api/settings/shipping', authMiddleware_1.verifyAdminToken, async (req, res) => {
     try {
         const { free_shipping_threshold, standard_shipping_fee } = req.body;

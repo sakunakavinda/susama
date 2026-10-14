@@ -41,6 +41,7 @@ import reviewRoutes from './routes/reviewRoutes';
 import newsletterRoutes from './routes/newsletterRoutes';
 import customerAuthRoutes from './routes/customerAuthRoutes';
 import orderRoutes from './routes/orderRoutes';
+import adminRoutes from './routes/adminRoutes';
 import { scrapeSocialPost } from './services/socialScraper';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -447,6 +448,9 @@ app.get('/api/admin/verify', verifyAdminToken, (req: any, res) => {
     admin: req.admin
   });
 });
+
+// Admin Management APIs (Protected by verifyAdminToken)
+app.use('/api/admin', adminRoutes);
 
 app.post('/api/settings/shipping', verifyAdminToken, async (req, res) => {
   try {
