@@ -7,6 +7,7 @@ import Products from './pages/Products';
 import Profile from './pages/Profile';
 import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
+import AdminSettings from './pages/AdminSettings';
 import AuthModal from './components/AuthModal';
 import CartDrawer from './components/CartDrawer';
 import { useAuthStore } from './store/useAuthStore';
@@ -37,6 +38,8 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-success/:orderNumber" element={<OrderSuccess />} />
+            <Route path="/admin" element={<AdminSettings />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/about" element={<PlaceholderPage title="About Us (Coming Soon)" />} />
           </Routes>
         </main>

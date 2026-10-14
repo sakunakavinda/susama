@@ -8,6 +8,7 @@ import {
   HiOutlineShoppingBag,
   HiOutlineArrowRightOnRectangle,
   HiOutlineCheckCircle,
+  HiOutlineBuildingLibrary,
   HiSparkles
 } from 'react-icons/hi2';
 import { useAuthStore } from '../store/useAuthStore';
@@ -235,7 +236,7 @@ export default function Profile() {
           </div>
 
           {/* Navigation Sub-Tabs */}
-          <div className="flex items-center gap-2 mt-6 pt-5 border-t border-stone-200">
+          <div className="flex flex-wrap items-center gap-2 mt-6 pt-5 border-t border-stone-200">
             <button
               onClick={() => setActiveTab('profile')}
               className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
@@ -256,6 +257,14 @@ export default function Profile() {
             >
               My Orders & Rituals
             </button>
+
+            <Link
+              to="/admin"
+              className="px-4 py-2 rounded-lg text-xs font-semibold text-brand-secondary bg-amber-50 hover:bg-amber-100/80 border border-amber-200 transition-all flex items-center gap-1.5 sm:ml-auto cursor-pointer"
+            >
+              <HiOutlineBuildingLibrary className="w-3.5 h-3.5" />
+              <span>Store Admin & Bank Settings →</span>
+            </Link>
           </div>
         </div>
 

@@ -49,6 +49,13 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bank_transfer'>('cod');
   const [bankRef, setBankRef] = useState('');
   const [copiedAccount, setCopiedAccount] = useState(false);
+  const [bankDetails, setBankDetails] = useState({
+    bank_name: 'Commercial Bank',
+    account_name: 'SUSÁMÁ (PVT) LTD',
+    account_number: '1000 8492 4110',
+    branch: 'Torrington (07)',
+    instructions: 'Transfer directly to our corporate bank account and attach your reference slip.'
+  });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -57,6 +64,20 @@ export default function Checkout() {
   useEffect(() => {
     fetchShippingSettings();
   }, [fetchShippingSettings]);
+
+  // Sync latest corporate bank settings from database
+  useEffect(() => {
+    fetch('http://localhost:5001/api/settings/bank')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data) {
+          setBankDetails(data.data);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load bank settings from database:', err);
+      });
+  }, []);
 
   // Pre-fill fields if customer is logged in
   useEffect(() => {
@@ -79,7 +100,8 @@ export default function Checkout() {
   const threshold = shippingSettings.freeShippingThreshold;
 
   const handleCopyAccount = () => {
-    navigator.clipboard.writeText('100084924110');
+    const rawNumber = bankDetails.account_number ? bankDetails.account_number.replace(/\s+/g, '') : '100084924110';
+    navigator.clipboard.writeText(rawNumber);
     setCopiedAccount(true);
     setTimeout(() => setCopiedAccount(false), 2000);
   };
@@ -519,31 +541,31 @@ export default function Checkout() {
                             Direct Bank Transfer / Deposit
                           </span>
                           <span className="text-[10px] text-amber-900 font-medium px-2 py-0.5 rounded bg-amber-100/70 border border-amber-200">
-                            Commercial Bank
+                            {bankDetails.bank_name || 'Commercial Bank'}
                           </span>
                         </div>
                         <p className="text-[11px] text-stone-500 mt-0.5">
-                          Transfer directly to our corporate bank account and attach your reference slip.
+                          {bankDetails.instructions || 'Transfer directly to our corporate bank account and attach your reference slip.'}
                         </p>
                       </div>
                     </label>
 
-                    {/* Compact Bank Account Credentials (Light) */}
+                    {/* Compact Bank Account Credentials (Light, Live from Database) */}
                     {paymentMethod === 'bank_transfer' && (
                       <div className="px-4 pb-4 pt-2 border-t border-amber-100 space-y-3">
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-2.5 bg-white rounded border border-stone-200 text-[11px] shadow-2xs">
                           <div>
                             <span className="text-stone-500 block text-[10px]">Bank</span>
-                            <span className="font-semibold text-stone-800">Commercial Bank</span>
+                            <span className="font-semibold text-stone-800">{bankDetails.bank_name}</span>
                           </div>
                           <div>
                             <span className="text-stone-500 block text-[10px]">Account Name</span>
-                            <span className="font-semibold text-stone-800">SUSAMA (PVT) LTD</span>
+                            <span className="font-semibold text-stone-800">{bankDetails.account_name}</span>
                           </div>
                           <div>
                             <span className="text-stone-500 block text-[10px]">Account Number</span>
                             <div className="flex items-center gap-1.5 font-mono font-bold text-stone-900">
-                              <span>1000 8492 4110</span>
+                              <span>{bankDetails.account_number}</span>
                               <button
                                 type="button"
                                 onClick={handleCopyAccount}
@@ -560,7 +582,7 @@ export default function Checkout() {
                           </div>
                           <div>
                             <span className="text-stone-500 block text-[10px]">Branch</span>
-                            <span className="font-semibold text-stone-800">Torrington (07)</span>
+                            <span className="font-semibold text-stone-800">{bankDetails.branch}</span>
                           </div>
                         </div>
 

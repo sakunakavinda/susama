@@ -337,6 +337,125 @@ app.post('/api/settings/shipping', async (req, res) => {
         res.status(500).json({ success: false, message: 'Database error', error: error.message });
     }
 });
+// Bank Transfer Settings API Routes (Admin Managed & Database Persisted)
+app.get('/api/settings/bank', async (req, res) => {
+    try {
+        await db_1.pool.query(`
+      CREATE TABLE IF NOT EXISTS store_settings (
+        id VARCHAR(36) PRIMARY KEY,
+        setting_key VARCHAR(100) NOT NULL UNIQUE,
+        setting_value TEXT NOT NULL
+      )
+    `);
+        const [rows] = await db_1.pool.query(`SELECT setting_key, setting_value FROM store_settings WHERE setting_key IN (
+        'bank_name', 'bank_account_name', 'bank_account_number', 'bank_branch', 'bank_transfer_instructions'
+      )`);
+        let bank_name = 'Commercial Bank';
+        let account_name = 'SUSÁMÁ (PVT) LTD';
+        let account_number = '1000 8492 4110';
+        let branch = 'Torrington (07)';
+        let instructions = 'Transfer directly to our corporate bank account and attach your reference slip or transaction ID.';
+        if (rows && rows.length > 0) {
+            rows.forEach((r) => {
+                if (r.setting_key === 'bank_name' && r.setting_value)
+                    bank_name = r.setting_value;
+                if (r.setting_key === 'bank_account_name' && r.setting_value)
+                    account_name = r.setting_value;
+                if (r.setting_key === 'bank_account_number' && r.setting_value)
+                    account_number = r.setting_value;
+                if (r.setting_key === 'bank_branch' && r.setting_value)
+                    branch = r.setting_value;
+                if (r.setting_key === 'bank_transfer_instructions' && r.setting_value)
+                    instructions = r.setting_value;
+            });
+        }
+        res.json({
+            success: true,
+            data: {
+                bank_name,
+                account_name,
+                account_number,
+                branch,
+                instructions
+            }
+        });
+    }
+    catch (error) {
+        console.error('Error fetching bank settings:', error);
+        res.json({
+            success: true,
+            data: {
+                bank_name: 'Commercial Bank',
+                account_name: 'SUSÁMÁ (PVT) LTD',
+                account_number: '1000 8492 4110',
+                branch: 'Torrington (07)',
+                instructions: 'Transfer directly to our corporate bank account and attach your reference slip or transaction ID.'
+            }
+        });
+    }
+});
+app.post('/api/settings/bank', async (req, res) => {
+    try {
+        const { bank_name, account_name, account_number, branch, instructions } = req.body;
+        await db_1.pool.query(`
+      CREATE TABLE IF NOT EXISTS store_settings (
+        id VARCHAR(36) PRIMARY KEY,
+        setting_key VARCHAR(100) NOT NULL UNIQUE,
+        setting_value TEXT NOT NULL
+      )
+    `);
+        const updateMap = {
+            bank_name: bank_name !== undefined ? String(bank_name).trim() : undefined,
+            bank_account_name: account_name !== undefined ? String(account_name).trim() : undefined,
+            bank_account_number: account_number !== undefined ? String(account_number).trim() : undefined,
+            bank_branch: branch !== undefined ? String(branch).trim() : undefined,
+            bank_transfer_instructions: instructions !== undefined ? String(instructions).trim() : undefined
+        };
+        for (const [key, val] of Object.entries(updateMap)) {
+            if (val !== undefined) {
+                await db_1.pool.query(`
+          INSERT INTO store_settings (id, setting_key, setting_value)
+          VALUES (UUID(), ?, ?)
+          ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+        `, [key, val]);
+            }
+        }
+        // Return current updated settings from database
+        const [rows] = await db_1.pool.query(`SELECT setting_key, setting_value FROM store_settings WHERE setting_key IN (
+        'bank_name', 'bank_account_name', 'bank_account_number', 'bank_branch', 'bank_transfer_instructions'
+      )`);
+        let updatedBank = {
+            bank_name: bank_name || 'Commercial Bank',
+            account_name: account_name || 'SUSÁMÁ (PVT) LTD',
+            account_number: account_number || '1000 8492 4110',
+            branch: branch || 'Torrington (07)',
+            instructions: instructions || 'Transfer directly to our corporate bank account and attach your reference slip or transaction ID.'
+        };
+        if (rows && rows.length > 0) {
+            rows.forEach((r) => {
+                if (r.setting_key === 'bank_name')
+                    updatedBank.bank_name = r.setting_value;
+                if (r.setting_key === 'bank_account_name')
+                    updatedBank.account_name = r.setting_value;
+                if (r.setting_key === 'bank_account_number')
+                    updatedBank.account_number = r.setting_value;
+                if (r.setting_key === 'bank_branch')
+                    updatedBank.branch = r.setting_value;
+                if (r.setting_key === 'bank_transfer_instructions')
+                    updatedBank.instructions = r.setting_value;
+            });
+        }
+        res.json({
+            success: true,
+            message: 'Bank details saved to database successfully!',
+            data: updatedBank
+        });
+    }
+    catch (error) {
+        console.error('Error saving bank settings:', error);
+        res.status(500).json({ success: false, message: 'Database error', error: error.message });
+    }
+});
 app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });

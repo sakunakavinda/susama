@@ -198,6 +198,14 @@ export default function Navbar() {
                   >
                     My Account & Addresses
                   </Link>
+                  <Link
+                    to="/admin"
+                    onClick={() => setIsProfileDropdownOpen(false)}
+                    className="flex items-center justify-between px-4 py-2 text-xs text-amber-200/90 hover:bg-white/10 hover:text-brand-primary transition-colors"
+                  >
+                    <span>Store Admin Settings</span>
+                    <span className="text-[9px] bg-brand-primary/20 text-brand-primary font-bold px-1.5 py-0.2 rounded border border-brand-primary/30">Admin</span>
+                  </Link>
                   <button
                     onClick={() => {
                       setIsProfileDropdownOpen(false);
