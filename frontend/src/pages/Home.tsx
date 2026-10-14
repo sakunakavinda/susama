@@ -133,6 +133,7 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [heroSearchQuery, setHeroSearchQuery] = useState('');
+  const [heroScrollY, setHeroScrollY] = useState(0);
   const { addItem } = useCartStore();
   const { toggleWishlist, isInWishlist } = useWishlistStore();
 
@@ -297,6 +298,22 @@ export default function Home() {
     // Preload hero image for instant rendering
     const heroImg = new Image();
     heroImg.src = '/images/hero/home.jpg';
+
+    // Hero parallax scroll listener with requestAnimationFrame throttling
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setHeroScrollY(window.scrollY);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    setHeroScrollY(window.scrollY);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Submit an Overall Brand Experience Review
@@ -526,6 +543,19 @@ export default function Home() {
     navigate(`/products?search=${encodeURIComponent(heroSearchQuery.trim())}`);
   };
 
+  // Hero components scroll earlier (translate up and fade out earlier than background)
+  const heroContentProgress = Math.min(1, Math.max(0, heroScrollY / 260));
+  const heroContentTranslateY = -heroContentProgress * 140; // moves up earlier
+  const heroContentOpacity = Math.max(0, 1 - heroContentProgress * 1.25);
+  const heroContentScale = 1 - heroContentProgress * 0.05;
+
+  // Background image subtly scales and stays pinned while components scroll
+  const heroImageScale = 1 + Math.min(0.08, (heroScrollY / 700) * 0.08);
+  const heroImageBrightness = Math.max(0.65, 1 - (heroScrollY / 700) * 0.35);
+
+  // Scroll indicator disappears immediately on initial scroll
+  const scrollIndicatorOpacity = Math.max(0, 1 - heroScrollY / 50);
+
   return (
     <div className="flex flex-col min-h-screen w-full bg-[#FEFCFB] text-gray-900 overflow-x-hidden">
 
@@ -542,11 +572,18 @@ export default function Home() {
       )}
 
       {/* ══════════════════════════════════════════
-          1. HERO SECTION
+          1. HERO SECTION (PARALLAX DUAL-SPEED SCROLL)
       ══════════════════════════════════════════ */}
       <section className="relative w-full min-h-screen min-h-[100dvh] flex items-center justify-center bg-gray-950 overflow-hidden">
-        {/* Background image container with smooth luxury load transition */}
-        <div className="absolute inset-0 bg-stone-950 overflow-hidden">
+        {/* Parallax Background image container (scrolls at slower 0.5x rate, creating depth) */}
+        <div 
+          className="absolute inset-x-0 -top-[12%] -bottom-[12%] bg-stone-950 overflow-hidden pointer-events-none"
+          style={{
+            transform: `translate3d(0, ${heroScrollY * 0.42}px, 0) scale(${heroImageScale})`,
+            filter: `brightness(${heroImageBrightness})`,
+            willChange: 'transform, filter'
+          }}
+        >
           <img
             src="/images/hero/home.jpg"
             alt="SUSÁMÁ Botanical Hair Care"
@@ -561,13 +598,20 @@ export default function Home() {
         </div>
 
         {/* Sophisticated luxury lighting overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-black/60 z-10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-black/50 z-10" />
-        <div className="absolute inset-0 bg-radial from-transparent via-amber-950/20 to-black/80 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/40 to-black/60 z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-transparent to-black/50 z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-radial from-transparent via-amber-950/20 to-black/80 z-10 pointer-events-none" />
 
-        {/* Hero content */}
-        <div className="relative z-20 flex flex-col items-center text-center px-4 sm:px-6 md:px-8 w-full max-w-4xl mx-auto pt-24 sm:pt-36 pb-20 sm:pb-28 my-auto">
-
+        {/* Hero components (scrolls earlier with accelerated translateY and smooth fade out) */}
+        <div 
+          style={{
+            transform: `translate3d(0, ${heroContentTranslateY}px, 0) scale(${heroContentScale})`,
+            opacity: heroContentOpacity,
+            pointerEvents: heroContentOpacity < 0.05 ? 'none' : 'auto',
+            willChange: 'transform, opacity'
+          }}
+          className="relative z-20 flex flex-col items-center text-center px-4 sm:px-6 md:px-8 w-full max-w-4xl mx-auto pt-24 sm:pt-36 pb-20 sm:pb-28 my-auto"
+        >
           {/* Emblem with smooth reveal */}
           <div className="mb-6 sm:mb-8 animate-smooth-reveal">
             <img
@@ -652,8 +696,14 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Scroll Indicator (Correctly pinned at section bottom) */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 pointer-events-none animate-fade-in delay-500">
+        {/* Scroll Indicator (Fades quickly on scroll) */}
+        <div 
+          style={{
+            opacity: scrollIndicatorOpacity,
+            transition: 'opacity 0.2s ease-out'
+          }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 pointer-events-none animate-fade-in delay-500"
+        >
           <span className="text-white/60 text-[9px] tracking-[0.25em] uppercase font-semibold">Scroll</span>
           <div className="w-px h-7 bg-gradient-to-b from-white/60 to-transparent" />
         </div>
@@ -662,7 +712,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════
           2. TRUST PILLARS BAR (SLEEK & PROFESSIONAL)
       ══════════════════════════════════════════ */}
-      <section className="w-full bg-[#FCFAF7] border-b border-stone-200/60 py-3 sm:py-3.5">
+      <section className="relative z-30 w-full bg-[#FCFAF7] border-b border-stone-200/60 py-3 sm:py-3.5 shadow-xl">
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {[
