@@ -6,7 +6,8 @@ import {
   HiOutlineTrash,
   HiOutlineXMark,
   HiOutlineCheckCircle,
-  HiOutlineTag
+  HiOutlineTag,
+  HiOutlineArrowUpTray
 } from 'react-icons/hi2';
 
 export default function AdminCategories() {
@@ -25,6 +26,31 @@ export default function AdminCategories() {
   const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    const bodyData = new FormData();
+    bodyData.append('image', file);
+
+    try {
+      const res = await fetch('http://localhost:5001/api/upload?type=category', {
+        method: 'POST',
+        body: bodyData
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        setImageUrl(data.url);
+      }
+    } catch (err) {
+      console.error('Category image upload failed:', err);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -275,15 +301,47 @@ export default function AdminCategories() {
                 />
               </div>
 
-              <div>
-                <label className="block font-mono uppercase text-stone-300 mb-1.5">Cover Image URL</label>
-                <input
-                  type="text"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="/categories/haircare.jpg or https://..."
-                  className="w-full bg-[#0E1015] border border-stone-700 rounded-xl p-3 text-stone-100 focus:outline-none focus:border-[#B48346]"
-                />
+              {/* Category Cover Image File Upload & Preview */}
+              <div className="p-4 bg-[#0E1015] rounded-xl border border-stone-800 space-y-3">
+                <label className="block font-mono uppercase text-stone-300">Category Cover Image</label>
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt="Category Preview"
+                      className="w-20 h-20 rounded-xl object-cover bg-stone-900 border border-stone-700 flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 rounded-xl bg-stone-800 flex items-center justify-center text-stone-300 border border-stone-700 flex-shrink-0">
+                      <HiOutlineTag className="w-6 h-6 text-stone-400" />
+                    </div>
+                  )}
+
+                  <div className="flex-1 w-full space-y-2">
+                    <input
+                      type="text"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="Image file path (e.g. /uploads/categories/...)"
+                      className="w-full bg-[#141820] border border-stone-700 rounded-xl p-2.5 text-stone-100 focus:outline-none focus:border-[#B48346]"
+                    />
+
+                    <div className="flex items-center gap-2">
+                      <label className="flex items-center gap-2 px-3 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-200 rounded-lg cursor-pointer border border-stone-700 transition-colors">
+                        <HiOutlineArrowUpTray className="w-4 h-4 text-[#B48346]" />
+                        <span>{uploadingImage ? 'Uploading File...' : 'Upload Image File'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileUpload}
+                          disabled={uploadingImage}
+                          className="hidden"
+                        />
+                      </label>
+                      <span className="text-[11px] text-stone-300">JPG, PNG, WEBP saved directly to server files</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="pt-4 border-t border-stone-800 flex justify-end gap-3">

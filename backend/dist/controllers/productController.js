@@ -205,17 +205,19 @@ const createProduct = async (req, res) => {
 exports.createProduct = createProduct;
 // PUT /api/products/:id - Update product
 const updateProduct = async (req, res) => {
+    const connection = await db_1.pool.getConnection();
     try {
         const { id } = req.params;
-        const { category_id, name, slug, sku, short_description, full_description, ingredients, how_to_use, base_price, sale_price, stock_quantity, is_in_stock, is_featured, is_new_arrival, tag, rating, reviews, is_active } = req.body;
-        const [existing] = await db_1.pool.query('SELECT id FROM products WHERE id = ?', [id]);
+        const { category_id, name, slug, sku, short_description, full_description, ingredients, how_to_use, base_price, sale_price, stock_quantity, is_in_stock, is_featured, is_new_arrival, tag, rating, reviews, is_active, images } = req.body;
+        const [existing] = await connection.query('SELECT id FROM products WHERE id = ?', [id]);
         if (existing.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Product not found'
             });
         }
-        await db_1.pool.execute(`UPDATE products
+        await connection.beginTransaction();
+        await connection.execute(`UPDATE products
        SET category_id = COALESCE(?, category_id),
            name = COALESCE(?, name),
            slug = COALESCE(?, slug),
@@ -233,7 +235,8 @@ const updateProduct = async (req, res) => {
            tag = COALESCE(?, tag),
            rating = COALESCE(?, rating),
            reviews = COALESCE(?, reviews),
-           is_active = COALESCE(?, is_active)
+           is_active = COALESCE(?, is_active),
+           updated_at = NOW()
        WHERE id = ?`, [
             category_id,
             name,
@@ -255,18 +258,36 @@ const updateProduct = async (req, res) => {
             is_active,
             id
         ]);
+        // Update product_images if images array provided
+        if (images !== undefined && Array.isArray(images)) {
+            await connection.execute(`DELETE FROM product_images WHERE product_id = ?`, [id]);
+            for (let i = 0; i < images.length; i++) {
+                const img = images[i];
+                const imgUrl = typeof img === 'string' ? img : img.image_url;
+                if (imgUrl && imgUrl.trim()) {
+                    const isPrimary = i === 0 || (typeof img === 'object' && img.is_primary);
+                    await connection.execute(`INSERT INTO product_images (id, product_id, image_url, sort_order, is_primary)
+             VALUES (?, ?, ?, ?, ?)`, [(0, crypto_1.randomUUID)(), id, imgUrl.trim(), i, isPrimary ? 1 : 0]);
+                }
+            }
+        }
+        await connection.commit();
         res.json({
             success: true,
             message: 'Product updated successfully'
         });
     }
     catch (error) {
+        await connection.rollback();
         console.error('Error updating product:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to update product',
             error: error.message
         });
+    }
+    finally {
+        connection.release();
     }
 };
 exports.updateProduct = updateProduct;

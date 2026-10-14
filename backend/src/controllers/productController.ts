@@ -254,6 +254,7 @@ export const createProduct = async (req: Request, res: Response) => {
 
 // PUT /api/products/:id - Update product
 export const updateProduct = async (req: Request, res: Response) => {
+  const connection = await pool.getConnection();
   try {
     const { id } = req.params;
     const {
@@ -274,10 +275,11 @@ export const updateProduct = async (req: Request, res: Response) => {
       tag,
       rating,
       reviews,
-      is_active
+      is_active,
+      images
     } = req.body;
 
-    const [existing]: any = await pool.query('SELECT id FROM products WHERE id = ?', [id]);
+    const [existing]: any = await connection.query('SELECT id FROM products WHERE id = ?', [id]);
     if (existing.length === 0) {
       return res.status(404).json({
         success: false,
@@ -285,7 +287,9 @@ export const updateProduct = async (req: Request, res: Response) => {
       });
     }
 
-    await pool.execute(
+    await connection.beginTransaction();
+
+    await connection.execute(
       `UPDATE products
        SET category_id = COALESCE(?, category_id),
            name = COALESCE(?, name),
@@ -304,7 +308,8 @@ export const updateProduct = async (req: Request, res: Response) => {
            tag = COALESCE(?, tag),
            rating = COALESCE(?, rating),
            reviews = COALESCE(?, reviews),
-           is_active = COALESCE(?, is_active)
+           is_active = COALESCE(?, is_active),
+           updated_at = NOW()
        WHERE id = ?`,
       [
         category_id,
@@ -329,17 +334,40 @@ export const updateProduct = async (req: Request, res: Response) => {
       ]
     );
 
+    // Update product_images if images array provided
+    if (images !== undefined && Array.isArray(images)) {
+      await connection.execute(`DELETE FROM product_images WHERE product_id = ?`, [id]);
+
+      for (let i = 0; i < images.length; i++) {
+        const img = images[i];
+        const imgUrl = typeof img === 'string' ? img : img.image_url;
+        if (imgUrl && imgUrl.trim()) {
+          const isPrimary = i === 0 || (typeof img === 'object' && img.is_primary);
+          await connection.execute(
+            `INSERT INTO product_images (id, product_id, image_url, sort_order, is_primary)
+             VALUES (?, ?, ?, ?, ?)`,
+            [randomUUID(), id, imgUrl.trim(), i, isPrimary ? 1 : 0]
+          );
+        }
+      }
+    }
+
+    await connection.commit();
+
     res.json({
       success: true,
       message: 'Product updated successfully'
     });
   } catch (error: any) {
+    await connection.rollback();
     console.error('Error updating product:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to update product',
       error: error.message
     });
+  } finally {
+    connection.release();
   }
 };
 

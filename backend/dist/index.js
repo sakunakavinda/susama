@@ -19,18 +19,31 @@ app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
 // Serve uploaded static files
 const uploadDir = path_1.default.join(__dirname, '../uploads');
-if (!fs_1.default.existsSync(uploadDir)) {
-    fs_1.default.mkdirSync(uploadDir, { recursive: true });
-}
+const productUploadDir = path_1.default.join(uploadDir, 'products');
+const categoryUploadDir = path_1.default.join(uploadDir, 'categories');
+[uploadDir, productUploadDir, categoryUploadDir].forEach((dir) => {
+    if (!fs_1.default.existsSync(dir)) {
+        fs_1.default.mkdirSync(dir, { recursive: true });
+    }
+});
 app.use('/uploads', express_1.default.static(uploadDir));
-// Multer Setup for Local File Uploads
+// Multer Setup for Local File Uploads (organized by type)
 const storage = multer_1.default.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, uploadDir);
+        const type = req.query.type || req.body.type;
+        if (type === 'category') {
+            cb(null, categoryUploadDir);
+        }
+        else if (type === 'product') {
+            cb(null, productUploadDir);
+        }
+        else {
+            cb(null, uploadDir);
+        }
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path_1.default.extname(file.originalname));
+        cb(null, uniqueSuffix + path_1.default.extname(file.originalname).toLowerCase());
     }
 });
 const upload = (0, multer_1.default)({ storage });
@@ -93,17 +106,21 @@ app.use('/api/products', productRoutes_1.default);
 app.use('/api/reviews', reviewRoutes_1.default);
 // Newsletter API Routes
 app.use('/api/newsletter', newsletterRoutes_1.default);
-// Example Product Image Upload Route
+// Image File Upload Route (Products, Categories, Content)
 app.post('/api/upload', upload.single('image'), (req, res) => {
     if (!req.file) {
         return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
-    // The URL to access the file from the frontend
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const type = req.query.type || req.body.type;
+    const sub = type === 'category' ? 'categories/' : type === 'product' ? 'products/' : '';
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${sub}${req.file.filename}`;
+    const relativeUrl = `/uploads/${sub}${req.file.filename}`;
     res.json({
         success: true,
         message: 'File uploaded successfully',
-        url: fileUrl
+        url: fileUrl,
+        relative_url: relativeUrl,
+        filename: req.file.filename
     });
 });
 // Community & Social Posts API Routes

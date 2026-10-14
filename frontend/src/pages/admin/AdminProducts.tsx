@@ -158,7 +158,7 @@ export default function AdminProducts() {
     bodyData.append('image', file);
 
     try {
-      const res = await fetch('http://localhost:5001/api/upload', {
+      const res = await fetch('http://localhost:5001/api/upload?type=product', {
         method: 'POST',
         body: bodyData
       });

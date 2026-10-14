@@ -18,19 +18,32 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded static files
 const uploadDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const productUploadDir = path.join(uploadDir, 'products');
+const categoryUploadDir = path.join(uploadDir, 'categories');
+
+[uploadDir, productUploadDir, categoryUploadDir].forEach((dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
 app.use('/uploads', express.static(uploadDir));
 
-// Multer Setup for Local File Uploads
+// Multer Setup for Local File Uploads (organized by type)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    const type = req.query.type || req.body.type;
+    if (type === 'category') {
+      cb(null, categoryUploadDir);
+    } else if (type === 'product') {
+      cb(null, productUploadDir);
+    } else {
+      cb(null, uploadDir);
+    }
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    cb(null, uniqueSuffix + path.extname(file.originalname).toLowerCase());
   }
 });
 const upload = multer({ storage });
@@ -104,19 +117,23 @@ app.use('/api/reviews', reviewRoutes);
 // Newsletter API Routes
 app.use('/api/newsletter', newsletterRoutes);
 
-// Example Product Image Upload Route
+// Image File Upload Route (Products, Categories, Content)
 app.post('/api/upload', upload.single('image'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }
   
-  // The URL to access the file from the frontend
-  const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
-  
+  const type = req.query.type || req.body.type;
+  const sub = type === 'category' ? 'categories/' : type === 'product' ? 'products/' : '';
+  const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${sub}${req.file.filename}`;
+  const relativeUrl = `/uploads/${sub}${req.file.filename}`;
+
   res.json({
     success: true,
     message: 'File uploaded successfully',
-    url: fileUrl
+    url: fileUrl,
+    relative_url: relativeUrl,
+    filename: req.file.filename
   });
 });
 
