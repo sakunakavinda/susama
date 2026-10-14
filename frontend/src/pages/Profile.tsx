@@ -69,6 +69,9 @@ export default function Profile() {
 
     if (res.success) {
       setStatusMsg({ type: 'success', text: 'Your profile and address details have been updated.' });
+      setTimeout(() => {
+        setStatusMsg(null);
+      }, 5000);
     } else {
       setStatusMsg({ type: 'error', text: res.message });
     }
@@ -197,20 +200,7 @@ export default function Profile() {
                 Keep your details updated for effortless 1-click island delivery.
               </p>
             </div>
-
-            {statusMsg && (
-              <div
-                className={`p-4 rounded-xl text-xs sm:text-sm flex items-center gap-2.5 ${
-                  statusMsg.type === 'success'
-                    ? 'bg-emerald-950/60 border border-emerald-500/40 text-emerald-200'
-                    : 'bg-red-950/60 border border-red-500/40 text-red-200'
-                }`}
-              >
-                {statusMsg.type === 'success' && <HiOutlineCheckCircle className="w-5 h-5 text-emerald-400" />}
-                <span>{statusMsg.text}</span>
-              </div>
-            )}
-
+            
             <form onSubmit={handleUpdate} className="space-y-6">
               {/* Section 1: Basic Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -335,12 +325,29 @@ export default function Profile() {
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <div className="pt-4 flex justify-end">
+              {/* Bottom Submit Area & Status Notification */}
+              <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                {statusMsg ? (
+                  <div
+                    className={`flex-1 p-3.5 rounded-xl text-xs sm:text-sm flex items-center gap-2.5 animate-fade-in ${
+                      statusMsg.type === 'success'
+                        ? 'bg-emerald-950/60 border border-emerald-500/40 text-emerald-200'
+                        : 'bg-red-950/60 border border-red-500/40 text-red-200'
+                    }`}
+                  >
+                    {statusMsg.type === 'success' && (
+                      <HiOutlineCheckCircle className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                    )}
+                    <span>{statusMsg.text}</span>
+                  </div>
+                ) : (
+                  <div className="hidden sm:block flex-1" />
+                )}
+
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-8 py-3.5 bg-brand-primary hover:bg-brand-secondary text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-brand-primary/20 cursor-pointer disabled:opacity-50"
+                  className="px-8 py-3.5 bg-brand-primary hover:bg-brand-secondary text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-brand-primary/20 cursor-pointer disabled:opacity-50 flex-shrink-0 text-center"
                 >
                   {isLoading ? 'Saving Changes...' : 'Save Profile Changes'}
                 </button>

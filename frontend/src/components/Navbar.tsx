@@ -11,6 +11,7 @@ import {
   HiOutlineArrowRightOnRectangle
 } from 'react-icons/hi2';
 import { useAuthStore } from '../store/useAuthStore';
+import { useCartStore } from '../store/useCartStore';
 
 interface Category {
   id: string;
@@ -28,6 +29,8 @@ export default function Navbar() {
   const location = useLocation();
 
   const { customer, isAuthenticated, openAuthModal, logout } = useAuthStore();
+  const { openCart, getTotalItems } = useCartStore();
+  const totalCartItems = getTotalItems();
 
   useEffect(() => {
     fetch('http://localhost:5001/api/categories')
@@ -204,14 +207,17 @@ export default function Navbar() {
 
           {/* Cart Icon */}
           <button 
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-brand-primary text-white flex items-center justify-center hover:bg-brand-secondary hover:scale-105 active:scale-95 transition-all shadow-lg relative" 
-            title="Shopping Cart"
-            aria-label="Shopping Cart"
+            onClick={openCart}
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-brand-primary text-white flex items-center justify-center hover:bg-brand-secondary hover:scale-105 active:scale-95 transition-all shadow-lg relative cursor-pointer" 
+            title="Shopping Bag"
+            aria-label="Shopping Bag"
           >
             <HiOutlineShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-white text-gray-900 text-[10px] font-extrabold rounded-full flex items-center justify-center shadow leading-none">
-              0
-            </span>
+            {totalCartItems > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-white text-gray-900 text-[10px] font-extrabold rounded-full flex items-center justify-center shadow leading-none">
+                {totalCartItems}
+              </span>
+            )}
           </button>
 
           {/* Mobile/Tablet Menu Button (visible below lg) */}

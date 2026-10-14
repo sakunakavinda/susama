@@ -21,6 +21,7 @@ import {
   HiTruck,
   HiHeart
 } from 'react-icons/hi2';
+import { useCartStore } from '../store/useCartStore';
 
 interface CategoryItem {
   id: string;
@@ -128,6 +129,7 @@ export default function Home() {
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { addItem } = useCartStore();
 
   // Overall Brand Reviews State
   const [overallStats, setOverallStats] = useState<OverallReviewsStats | null>(null);
@@ -484,10 +486,7 @@ export default function Home() {
 
   const addToCart = (product: ProductItem, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setToastMessage(`Added "${product.name}" to bag!`);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
+    addItem(product, 1);
   };
 
   const handleNewsletterSubmit = async (e: React.FormEvent) => {

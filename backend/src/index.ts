@@ -300,6 +300,95 @@ app.post('/api/settings/ritual-video', upload.single('video'), async (req, res) 
   }
 });
 
+// Shipping Settings API Routes (Free Delivery Threshold & Fee - Admin Managed)
+app.get('/api/settings/shipping', async (req, res) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS store_settings (
+        id VARCHAR(36) PRIMARY KEY,
+        setting_key VARCHAR(100) NOT NULL UNIQUE,
+        setting_value TEXT NOT NULL
+      )
+    `);
+
+    const [rows]: any = await pool.query(
+      `SELECT setting_key, setting_value FROM store_settings WHERE setting_key IN ('free_shipping_threshold', 'standard_shipping_fee')`
+    );
+
+    let freeThreshold = 7500;
+    let standardFee = 450;
+
+    if (rows && rows.length > 0) {
+      rows.forEach((r: any) => {
+        if (r.setting_key === 'free_shipping_threshold') freeThreshold = Number(r.setting_value) || 7500;
+        if (r.setting_key === 'standard_shipping_fee') standardFee = Number(r.setting_value) || 450;
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        free_shipping_threshold: freeThreshold,
+        standard_shipping_fee: standardFee,
+        currency: 'LKR'
+      }
+    });
+  } catch (error: any) {
+    console.error('Error fetching shipping settings:', error);
+    res.json({
+      success: true,
+      data: {
+        free_shipping_threshold: 7500,
+        standard_shipping_fee: 450,
+        currency: 'LKR'
+      }
+    });
+  }
+});
+
+app.post('/api/settings/shipping', async (req, res) => {
+  try {
+    const { free_shipping_threshold, standard_shipping_fee } = req.body;
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS store_settings (
+        id VARCHAR(36) PRIMARY KEY,
+        setting_key VARCHAR(100) NOT NULL UNIQUE,
+        setting_value TEXT NOT NULL
+      )
+    `);
+
+    if (free_shipping_threshold !== undefined) {
+      await pool.query(`
+        INSERT INTO store_settings (id, setting_key, setting_value)
+        VALUES (UUID(), 'free_shipping_threshold', ?)
+        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+      `, [String(free_shipping_threshold)]);
+    }
+
+    if (standard_shipping_fee !== undefined) {
+      await pool.query(`
+        INSERT INTO store_settings (id, setting_key, setting_value)
+        VALUES (UUID(), 'standard_shipping_fee', ?)
+        ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
+      `, [String(standard_shipping_fee)]);
+    }
+
+    res.json({
+      success: true,
+      message: 'Shipping settings updated successfully!',
+      data: {
+        free_shipping_threshold: Number(free_shipping_threshold) || 7500,
+        standard_shipping_fee: Number(standard_shipping_fee) || 450,
+        currency: 'LKR'
+      }
+    });
+  } catch (error: any) {
+    console.error('Error saving shipping settings:', error);
+    res.status(500).json({ success: false, message: 'Database error', error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });

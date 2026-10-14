@@ -9,6 +9,7 @@ import {
   HiCheck,
   HiOutlineHeart
 } from 'react-icons/hi2';
+import { useCartStore } from '../store/useCartStore';
 
 export interface Product {
   id: string;
@@ -64,7 +65,7 @@ export default function Products() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'featured' | 'price_asc' | 'price_desc' | 'name'>('featured');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const { addItem } = useCartStore();
 
   // Reviews State
   const [modalReviews, setModalReviews] = useState<Review[]>([]);
@@ -229,25 +230,12 @@ export default function Products() {
 
   const addToCart = (product: Product, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setToastMessage(`Added "${product.name}" to bag!`);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
+    addItem(product, 1);
   };
 
   return (
     <div className="min-h-screen bg-brand-light text-gray-900 font-sans pb-24">
       
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-gray-950 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-white/20 flex items-center gap-3 animate-fade-in">
-          <div className="w-7 h-7 rounded-full bg-brand-primary flex items-center justify-center text-white">
-            <HiCheck className="w-4 h-4 stroke-[3]" />
-          </div>
-          <span className="text-sm font-medium">{toastMessage}</span>
-        </div>
-      )}
-
       {/* Header Banner */}
       <section className="relative bg-gray-950 text-white pt-32 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-brand-secondary/90 to-brand-primary/80 z-10" />

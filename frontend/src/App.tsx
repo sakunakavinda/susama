@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Products from './pages/Products';
 import Profile from './pages/Profile';
 import AuthModal from './components/AuthModal';
+import CartDrawer from './components/CartDrawer';
 import { useAuthStore } from './store/useAuthStore';
 
 // Placeholder for other pages to avoid errors
@@ -40,6 +41,9 @@ function App() {
 
         {/* Global Auth Modal for Customer Login / Account Creation */}
         <AuthModal />
+
+        {/* Global Slide-over Shopping Bag Drawer */}
+        <CartDrawer />
       </div>
     </Router>
   );
