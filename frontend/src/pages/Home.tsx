@@ -544,7 +544,7 @@ export default function Home() {
       {/* ══════════════════════════════════════════
           1. HERO SECTION
       ══════════════════════════════════════════ */}
-      <section className="relative w-full min-h-[92vh] lg:min-h-screen flex items-center justify-center bg-gray-950 overflow-hidden">
+      <section className="relative w-full min-h-screen min-h-[100dvh] flex items-center justify-center bg-gray-950 overflow-hidden">
         {/* Background image container with smooth luxury load transition */}
         <div className="absolute inset-0 bg-stone-950 overflow-hidden">
           <img
@@ -566,7 +566,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-radial from-transparent via-amber-950/20 to-black/80 z-10" />
 
         {/* Hero content */}
-        <div className="relative z-20 flex flex-col items-center text-center px-4 sm:px-6 md:px-8 w-full max-w-4xl mx-auto pt-28 sm:pt-36 pb-28">
+        <div className="relative z-20 flex flex-col items-center text-center px-4 sm:px-6 md:px-8 w-full max-w-4xl mx-auto pt-24 sm:pt-36 pb-20 sm:pb-28 my-auto">
 
           {/* Emblem with smooth reveal */}
           <div className="mb-6 sm:mb-8 animate-smooth-reveal">
