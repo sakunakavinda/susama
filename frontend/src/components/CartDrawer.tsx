@@ -73,30 +73,30 @@ export default function CartDrawer() {
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end animate-fade-in">
-      {/* Blurred Backdrop */}
+      {/* Soft Blurred Backdrop */}
       <div 
-        className="fixed inset-0 bg-stone-950/70 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs transition-opacity"
         onClick={closeCart}
       />
 
-      {/* Slide-over Drawer */}
+      {/* Slide-over Drawer (Warm Light Luxury Theme) */}
       <div 
-        className="relative w-full max-w-md bg-stone-900 border-l border-amber-500/20 text-white shadow-2xl flex flex-col h-full z-10 overflow-hidden"
+        className="relative w-full max-w-md bg-[#FAF8F5] border-l border-stone-200 text-stone-900 shadow-2xl flex flex-col h-full z-10 overflow-hidden"
         style={{
-          boxShadow: '-10px 0 40px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(244, 154, 66, 0.1)'
+          boxShadow: '-12px 0 40px -10px rgba(44, 30, 20, 0.15), 0 0 25px rgba(244, 154, 66, 0.05)'
         }}
       >
         {/* Top Header */}
-        <div className="p-5 sm:p-6 border-b border-white/10 flex items-center justify-between bg-stone-950/40">
+        <div className="p-5 sm:p-6 border-b border-stone-200 flex items-center justify-between bg-white">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-brand-primary/10 border border-brand-primary/30 flex items-center justify-center text-brand-primary">
+            <div className="w-9 h-9 rounded-full bg-brand-primary/10 border border-brand-primary/25 flex items-center justify-center text-brand-secondary">
               <HiOutlineShoppingBag className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-heading font-semibold text-amber-50">
+              <h2 className="text-lg sm:text-xl font-heading font-semibold text-stone-900">
                 Your Shopping Bag
               </h2>
-              <p className="text-[11px] text-stone-400">
+              <p className="text-[11px] text-stone-500">
                 {totalCount} {totalCount === 1 ? 'item' : 'items'} in your cart
               </p>
             </div>
@@ -106,7 +106,7 @@ export default function CartDrawer() {
             {items.length > 0 && (
               <button
                 onClick={clearCart}
-                className="text-[11px] text-stone-400 hover:text-red-400 transition-colors cursor-pointer mr-2"
+                className="text-[11px] font-medium text-stone-500 hover:text-red-600 transition-colors cursor-pointer mr-2"
                 title="Clear all items"
               >
                 Clear
@@ -114,7 +114,7 @@ export default function CartDrawer() {
             )}
             <button
               onClick={closeCart}
-              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-stone-300 hover:text-white transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-600 hover:text-stone-900 transition-colors cursor-pointer"
               aria-label="Close cart"
             >
               <HiOutlineXMark className="w-5 h-5" />
@@ -124,32 +124,32 @@ export default function CartDrawer() {
 
         {/* Free Shipping Progress Bar (Admin Threshold Setting in LKR) */}
         {items.length > 0 && (
-          <div className="px-5 sm:px-6 py-3 bg-gradient-to-r from-stone-950 via-stone-900 to-amber-950/30 border-b border-white/10">
+          <div className="px-5 sm:px-6 py-3 bg-amber-50/70 border-b border-amber-200/80">
             <div className="flex items-center justify-between text-xs mb-1.5">
               <div className="flex items-center gap-1.5">
-                <HiOutlineTruck className="w-4 h-4 text-brand-primary" />
+                <HiOutlineTruck className="w-4 h-4 text-brand-secondary" />
                 {isFree ? (
-                  <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                    <HiCheck className="w-3.5 h-3.5" /> FREE Islandwide Delivery Unlocked!
+                  <span className="text-emerald-700 font-semibold flex items-center gap-1">
+                    <HiCheck className="w-3.5 h-3.5 text-emerald-600" /> FREE Islandwide Delivery Unlocked!
                   </span>
                 ) : (
-                  <span className="text-stone-300">
-                    Add <strong className="text-brand-primary font-bold">LKR {remaining.toLocaleString()}</strong> more for <strong className="text-amber-200">FREE Delivery</strong>
+                  <span className="text-stone-700">
+                    Add <strong className="text-brand-secondary font-bold">LKR {remaining.toLocaleString()}</strong> more for <strong className="text-stone-900">FREE Delivery</strong>
                   </span>
                 )}
               </div>
-              <span className="text-[10px] text-stone-400 font-medium">
+              <span className="text-[10px] text-stone-500 font-medium">
                 {percentage}%
               </span>
             </div>
 
             {/* Progress bar line */}
-            <div className="w-full h-1.5 bg-stone-800 rounded-full overflow-hidden">
+            <div className="w-full h-1.5 bg-amber-200/60 rounded-full overflow-hidden">
               <div 
                 className={`h-full transition-all duration-500 rounded-full ${
                   isFree 
-                    ? 'bg-gradient-to-r from-emerald-400 to-brand-primary shadow-sm shadow-emerald-400/50' 
-                    : 'bg-gradient-to-r from-brand-secondary to-brand-primary shadow-sm shadow-brand-primary/50'
+                    ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-xs' 
+                    : 'bg-gradient-to-r from-brand-secondary to-brand-primary shadow-xs'
                 }`}
                 style={{ width: `${percentage}%` }}
               />
@@ -159,30 +159,30 @@ export default function CartDrawer() {
 
         {/* Main Content Area */}
         {items.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-20 h-20 rounded-full bg-stone-950/60 border border-white/10 flex items-center justify-center mb-4 text-stone-500">
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[#FAF8F5]">
+            <div className="w-20 h-20 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mb-4 text-brand-secondary shadow-xs">
               <HiOutlineShoppingBag className="w-10 h-10" />
             </div>
-            <h3 className="text-xl font-heading font-medium text-amber-50 mb-2">
+            <h3 className="text-xl font-heading font-semibold text-stone-900 mb-2">
               Your bag is currently empty
             </h3>
-            <p className="text-stone-400 text-xs sm:text-sm max-w-xs mb-6 leading-relaxed">
+            <p className="text-stone-600 text-xs sm:text-sm max-w-xs mb-6 leading-relaxed">
               Experience authentic Sri Lankan botanical hair elixirs & ayurvedic haircare rituals.
             </p>
             <Link
               to="/products"
               onClick={closeCart}
-              className="py-3 px-8 rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary text-white font-semibold text-xs sm:text-sm shadow-lg hover:brightness-110 transition-all cursor-pointer"
+              className="py-3 px-8 rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary text-white font-semibold text-xs sm:text-sm shadow-md hover:brightness-105 transition-all cursor-pointer"
             >
               Discover Formulations →
             </Link>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 divide-y divide-white/5">
+          <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 divide-y divide-stone-200/70 bg-[#FAF8F5]">
             {items.map((item) => (
               <div key={item.id} className="pt-4 first:pt-0 flex gap-4 items-center">
                 {/* Thumbnail */}
-                <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-stone-950 border border-white/10 flex-shrink-0 relative group">
+                <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-white border border-stone-200 flex-shrink-0 relative group shadow-2xs">
                   <img 
                     src={item.image} 
                     alt={item.name} 
@@ -195,11 +195,11 @@ export default function CartDrawer() {
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <div>
                       {item.categoryName && (
-                        <span className="block text-[10px] font-bold text-brand-primary uppercase tracking-wider mb-0.5">
+                        <span className="block text-[10px] font-bold text-brand-secondary uppercase tracking-wider mb-0.5">
                           {item.categoryName}
                         </span>
                       )}
-                      <h4 className="text-sm font-semibold text-amber-50 truncate leading-snug">
+                      <h4 className="text-sm font-semibold text-stone-900 truncate leading-snug">
                         {item.name}
                       </h4>
                     </div>
@@ -207,7 +207,7 @@ export default function CartDrawer() {
                     {/* Delete button */}
                     <button
                       onClick={() => removeItem(item.id)}
-                      className="text-stone-400 hover:text-red-400 p-1 transition-colors cursor-pointer"
+                      className="text-stone-400 hover:text-red-500 p-1 transition-colors cursor-pointer"
                       title="Remove item"
                       aria-label={`Remove ${item.name}`}
                     >
@@ -217,11 +217,11 @@ export default function CartDrawer() {
 
                   {/* Price */}
                   <div className="flex items-baseline gap-2 mb-2.5">
-                    <span className="text-xs sm:text-sm font-bold text-brand-primary">
+                    <span className="text-xs sm:text-sm font-bold text-stone-900">
                       LKR {item.price.toLocaleString()}
                     </span>
                     {item.originalPrice && item.originalPrice > item.price && (
-                      <span className="text-[11px] text-stone-500 line-through">
+                      <span className="text-[11px] text-stone-400 line-through">
                         LKR {item.originalPrice.toLocaleString()}
                       </span>
                     )}
@@ -229,27 +229,27 @@ export default function CartDrawer() {
 
                   {/* Quantity selector and line total */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center bg-stone-950/80 border border-white/15 rounded-lg overflow-hidden">
+                    <div className="flex items-center bg-white border border-stone-300 rounded-md overflow-hidden shadow-2xs">
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="w-7 h-7 flex items-center justify-center text-stone-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors cursor-pointer"
                         aria-label="Decrease quantity"
                       >
                         <HiMinus className="w-3 h-3" />
                       </button>
-                      <span className="w-8 text-center text-xs font-semibold text-white select-none">
+                      <span className="w-8 text-center text-xs font-semibold text-stone-900 select-none">
                         {item.quantity}
                       </span>
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-7 h-7 flex items-center justify-center text-stone-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                        className="w-7 h-7 flex items-center justify-center text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors cursor-pointer"
                         aria-label="Increase quantity"
                       >
                         <HiPlus className="w-3 h-3" />
                       </button>
                     </div>
 
-                    <span className="text-xs font-extrabold text-amber-100">
+                    <span className="text-xs font-bold text-stone-900 font-mono">
                       LKR {(item.price * item.quantity).toLocaleString()}
                     </span>
                   </div>
@@ -261,35 +261,35 @@ export default function CartDrawer() {
 
         {/* Bottom Checkout Footer */}
         {items.length > 0 && (
-          <div className="p-5 sm:p-6 bg-stone-950/90 border-t border-white/10 space-y-3">
+          <div className="p-5 sm:p-6 bg-white border-t border-stone-200 space-y-3.5 shadow-lg">
             {/* Calculation Lines */}
-            <div className="space-y-1.5 text-xs text-stone-300">
+            <div className="space-y-1.5 text-xs text-stone-600">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span className="font-semibold text-white">LKR {subtotal.toLocaleString()}</span>
+                <span className="font-semibold text-stone-900 font-mono">LKR {subtotal.toLocaleString()}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1.5">
                   Estimated Island Delivery
                   {isFree && (
-                    <span className="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded">
+                    <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold rounded">
                       FREE
                     </span>
                   )}
                 </span>
-                <span className={`font-semibold ${isFree ? 'text-emerald-400' : 'text-white'}`}>
+                <span className={`font-semibold ${isFree ? 'text-emerald-700' : 'text-stone-900 font-mono'}`}>
                   {isFree ? 'LKR 0' : `LKR ${shippingFee.toLocaleString()}`}
                 </span>
               </div>
             </div>
 
             {/* Total Line */}
-            <div className="pt-2 border-t border-white/10 flex justify-between items-baseline">
+            <div className="pt-2.5 border-t border-stone-200 flex justify-between items-baseline">
               <div>
-                <span className="text-sm font-heading font-medium text-amber-50">Total</span>
-                <p className="text-[10px] text-stone-400">All islandwide taxes included</p>
+                <span className="text-sm font-heading font-semibold text-stone-900">Total</span>
+                <p className="text-[10px] text-stone-500">All islandwide taxes included</p>
               </div>
-              <span className="text-lg sm:text-xl font-heading font-bold text-brand-primary">
+              <span className="text-xl font-heading font-bold text-stone-900 font-mono">
                 LKR {grandTotal.toLocaleString()}
               </span>
             </div>
@@ -297,26 +297,26 @@ export default function CartDrawer() {
             {/* Checkout Action Button */}
             <button
               onClick={handleCheckout}
-              className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-brand-primary to-brand-secondary hover:brightness-110 text-white font-semibold text-sm shadow-xl shadow-brand-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+              className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-brand-primary to-brand-secondary hover:brightness-105 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
             >
               <span>Proceed to Checkout</span>
               <span>→</span>
             </button>
 
             {/* Trust Badges */}
-            <div className="pt-1 flex items-center justify-around text-[10px] text-stone-400 text-center">
+            <div className="pt-1 flex items-center justify-around text-[10px] text-stone-500 text-center">
               <span className="flex items-center gap-1">
-                <HiSparkles className="w-3 h-3 text-brand-primary" />
+                <HiSparkles className="w-3.5 h-3.5 text-brand-secondary" />
                 100% Botanical
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <HiOutlineTruck className="w-3 h-3 text-brand-primary" />
+                <HiOutlineTruck className="w-3.5 h-3.5 text-brand-secondary" />
                 Doorstep Courier
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <HiCheck className="w-3 h-3 text-brand-primary" />
+                <HiCheck className="w-3.5 h-3.5 text-brand-secondary" />
                 COD & Bank Transfer
               </span>
             </div>
