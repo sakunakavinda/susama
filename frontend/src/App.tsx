@@ -8,6 +8,7 @@ import Profile from './pages/Profile';
 import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
 import AdminSettings from './pages/AdminSettings';
+import Wishlist from './pages/Wishlist';
 import AuthModal from './components/AuthModal';
 import CartDrawer from './components/CartDrawer';
 import { useAuthStore } from './store/useAuthStore';
@@ -35,6 +36,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-success/:orderNumber" element={<OrderSuccess />} />

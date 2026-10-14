@@ -22,6 +22,7 @@ import {
   HiHeart
 } from 'react-icons/hi2';
 import { useCartStore } from '../store/useCartStore';
+import { useWishlistStore } from '../store/useWishlistStore';
 
 interface CategoryItem {
   id: string;
@@ -130,6 +131,7 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const { addItem } = useCartStore();
+  const { toggleWishlist, isInWishlist } = useWishlistStore();
 
   // Overall Brand Reviews State
   const [overallStats, setOverallStats] = useState<OverallReviewsStats | null>(null);
@@ -828,11 +830,34 @@ export default function Home() {
                         0{activeBestsellerRealIndex + 1} / 0{bestsellerProducts.length}
                       </span>
                       <button
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-black/60 backdrop-blur-md text-white/80 hover:text-brand-primary hover:bg-black/80 flex items-center justify-center border border-white/20 transition-all hover:scale-110 shadow-md"
-                        aria-label="Add to wishlist"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleWishlist({
+                            id: prod.id,
+                            name: prod.name,
+                            slug: prod.slug,
+                            base_price: prod.base_price,
+                            sale_price: prod.sale_price,
+                            primary_image: prod.primary_image || prod.image_url || prod.image,
+                            category_name: prod.category_name,
+                            tag: 'BESTSELLER',
+                            rating: prod.rating,
+                            reviews: prod.reviews
+                          });
+                        }}
+                        className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full backdrop-blur-md flex items-center justify-center border transition-all hover:scale-110 shadow-md cursor-pointer ${
+                          isInWishlist(prod.id)
+                            ? 'bg-white text-red-500 border-red-200'
+                            : 'bg-black/60 text-white/80 hover:text-red-400 hover:bg-black/80 border-white/20'
+                        }`}
+                        title={isInWishlist(prod.id) ? 'Remove from favourites' : 'Add to favourites'}
+                        aria-label={isInWishlist(prod.id) ? 'Remove from favourites' : 'Add to favourites'}
                       >
-                        <HiOutlineHeart className="w-4 h-4 sm:w-5 sm:h-5" />
+                        {isInWishlist(prod.id) ? (
+                          <HiHeart className="w-4 h-4 sm:w-5 sm:h-5 fill-current text-red-500" />
+                        ) : (
+                          <HiOutlineHeart className="w-4 h-4 sm:w-5 sm:h-5" />
+                        )}
                       </button>
                     </div>
 
@@ -1094,11 +1119,34 @@ export default function Home() {
                       {prod.tag || 'HAIR CARE'}
                     </span>
                     <button
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 text-gray-400 hover:text-brand-primary hover:bg-white flex items-center justify-center shadow-xs transition-all opacity-0 group-hover:opacity-100 hover:scale-110"
-                      aria-label="Add to wishlist"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleWishlist({
+                          id: prod.id,
+                          name: prod.name,
+                          slug: prod.slug,
+                          base_price: prod.base_price,
+                          sale_price: prod.sale_price,
+                          primary_image: prod.primary_image || prod.image_url || prod.image,
+                          category_name: prod.category_name,
+                          tag: prod.tag,
+                          rating: prod.rating,
+                          reviews: prod.reviews
+                        });
+                      }}
+                      className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center shadow-xs transition-all hover:scale-110 cursor-pointer ${
+                        isInWishlist(prod.id)
+                          ? 'bg-white text-red-500 opacity-100'
+                          : 'bg-white/90 text-gray-400 hover:text-red-500 hover:bg-white opacity-0 group-hover:opacity-100'
+                      }`}
+                      title={isInWishlist(prod.id) ? 'Remove from favourites' : 'Add to favourites'}
+                      aria-label={isInWishlist(prod.id) ? 'Remove from favourites' : 'Add to favourites'}
                     >
-                      <HiOutlineHeart className="w-4 h-4" />
+                      {isInWishlist(prod.id) ? (
+                        <HiHeart className="w-4 h-4 fill-current text-red-500" />
+                      ) : (
+                        <HiOutlineHeart className="w-4 h-4" />
+                      )}
                     </button>
                     <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <span className="px-4 py-2 rounded-full bg-white text-gray-900 text-[11px] font-bold tracking-wider uppercase shadow-xl hover:bg-brand-primary hover:text-white transition-colors">
@@ -1879,15 +1927,48 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="mt-auto pt-4 border-t border-gray-100">
+              <div className="mt-auto pt-4 border-t border-gray-100 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleWishlist({
+                      id: selectedProduct.id,
+                      name: selectedProduct.name,
+                      slug: selectedProduct.slug,
+                      base_price: selectedProduct.base_price,
+                      sale_price: selectedProduct.sale_price,
+                      primary_image: selectedProduct.primary_image || selectedProduct.image_url || selectedProduct.image,
+                      category_name: selectedProduct.category_name,
+                      tag: selectedProduct.tag,
+                      rating: selectedProduct.rating,
+                      reviews: selectedProduct.reviews,
+                      short_description: selectedProduct.short_description,
+                      ingredients: selectedProduct.ingredients,
+                      how_to_use: selectedProduct.how_to_use
+                    });
+                  }}
+                  className={`p-3.5 rounded-full border transition-all flex items-center justify-center cursor-pointer shadow-xs hover:scale-105 active:scale-95 ${
+                    isInWishlist(selectedProduct.id)
+                      ? 'bg-red-50 border-red-200 text-red-500 shadow-xs'
+                      : 'bg-stone-50 border-stone-200 text-stone-600 hover:text-red-500 hover:bg-white'
+                  }`}
+                  title={isInWishlist(selectedProduct.id) ? 'Remove from favourites' : 'Save to favourites'}
+                  aria-label="Toggle favourite"
+                >
+                  {isInWishlist(selectedProduct.id) ? (
+                    <HiHeart className="w-5 h-5 fill-current text-red-500" />
+                  ) : (
+                    <HiOutlineHeart className="w-5 h-5" />
+                  )}
+                </button>
                 <button
                   onClick={() => {
                     addToCart(selectedProduct);
                     setSelectedProduct(null);
                   }}
-                  className="w-full btn-primary py-4 rounded-full text-sm font-bold tracking-widest uppercase flex items-center justify-center gap-2 shadow-lg"
+                  className="flex-1 btn-primary py-3.5 rounded-full text-xs font-bold tracking-widest uppercase flex items-center justify-center gap-2 shadow-lg"
                 >
-                  <HiShoppingBag className="w-5 h-5" />
+                  <HiShoppingBag className="w-4 h-4" />
                   Add to Bag
                 </button>
               </div>

@@ -7,9 +7,11 @@ import {
   HiOutlineAdjustmentsHorizontal, 
   HiXMark, 
   HiCheck,
-  HiOutlineHeart
+  HiOutlineHeart,
+  HiHeart
 } from 'react-icons/hi2';
 import { useCartStore } from '../store/useCartStore';
+import { useWishlistStore } from '../store/useWishlistStore';
 
 export interface Product {
   id: string;
@@ -66,6 +68,7 @@ export default function Products() {
   const [sortBy, setSortBy] = useState<'featured' | 'price_asc' | 'price_desc' | 'name'>('featured');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { addItem } = useCartStore();
+  const { toggleWishlist, isInWishlist } = useWishlistStore();
 
   // Reviews State
   const [modalReviews, setModalReviews] = useState<Review[]>([]);
@@ -397,12 +400,35 @@ export default function Products() {
                       <button 
                         onClick={(e) => {
                           e.stopPropagation();
-                          // Wishlist toggle
+                          toggleWishlist({
+                            id: prod.id,
+                            name: prod.name,
+                            slug: prod.slug,
+                            base_price: prod.base_price,
+                            sale_price: prod.sale_price,
+                            primary_image: imageSrc,
+                            category_name: prod.category_name,
+                            tag: prod.tag,
+                            rating: prod.rating,
+                            reviews: prod.reviews,
+                            short_description: prod.short_description,
+                            ingredients: prod.ingredients,
+                            how_to_use: prod.how_to_use
+                          });
                         }}
-                        className="w-8 h-8 rounded-full bg-white/85 backdrop-blur-md text-gray-700 hover:text-red-500 hover:bg-white flex items-center justify-center transition-all shadow"
-                        aria-label="Save to wishlist"
+                        className={`w-8 h-8 rounded-full backdrop-blur-md flex items-center justify-center transition-all shadow cursor-pointer hover:scale-110 ${
+                          isInWishlist(prod.id)
+                            ? 'bg-white text-red-500 shadow-md'
+                            : 'bg-white/85 text-gray-700 hover:text-red-500 hover:bg-white'
+                        }`}
+                        title={isInWishlist(prod.id) ? 'Remove from favourites' : 'Save to favourites'}
+                        aria-label={isInWishlist(prod.id) ? 'Remove from favourites' : 'Save to favourites'}
                       >
-                        <HiOutlineHeart className="w-4 h-4" />
+                        {isInWishlist(prod.id) ? (
+                          <HiHeart className="w-4 h-4 fill-current text-red-500" />
+                        ) : (
+                          <HiOutlineHeart className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
 
@@ -726,11 +752,45 @@ export default function Products() {
               {/* Action Buttons */}
               <div className="pt-4 border-t border-gray-100 flex items-center gap-3">
                 <button
+                  type="button"
+                  onClick={() => {
+                    toggleWishlist({
+                      id: selectedProduct.id,
+                      name: selectedProduct.name,
+                      slug: selectedProduct.slug,
+                      base_price: selectedProduct.base_price,
+                      sale_price: selectedProduct.sale_price,
+                      primary_image: selectedProduct.primary_image || selectedProduct.image_url,
+                      category_name: selectedProduct.category_name,
+                      tag: selectedProduct.tag,
+                      rating: selectedProduct.rating,
+                      reviews: selectedProduct.reviews,
+                      short_description: selectedProduct.short_description,
+                      ingredients: selectedProduct.ingredients,
+                      how_to_use: selectedProduct.how_to_use
+                    });
+                  }}
+                  className={`p-3.5 rounded-full border transition-all flex items-center justify-center cursor-pointer shadow-xs hover:scale-105 active:scale-95 ${
+                    isInWishlist(selectedProduct.id)
+                      ? 'bg-red-50 border-red-200 text-red-500 shadow-xs'
+                      : 'bg-stone-50 border-stone-200 text-stone-600 hover:text-red-500 hover:bg-white'
+                  }`}
+                  title={isInWishlist(selectedProduct.id) ? 'Remove from favourites' : 'Save to favourites'}
+                  aria-label="Toggle favourite"
+                >
+                  {isInWishlist(selectedProduct.id) ? (
+                    <HiHeart className="w-5 h-5 fill-current text-red-500" />
+                  ) : (
+                    <HiOutlineHeart className="w-5 h-5" />
+                  )}
+                </button>
+
+                <button
                   onClick={() => {
                     addToCart(selectedProduct);
                     setSelectedProduct(null);
                   }}
-                  className="flex-1 btn-primary py-3.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all"
+                  className="flex-1 btn-primary py-3.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all cursor-pointer"
                 >
                   <HiShoppingBag className="w-4 h-4" />
                   Add to Bag

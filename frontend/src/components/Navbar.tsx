@@ -12,6 +12,7 @@ import {
 } from 'react-icons/hi2';
 import { useAuthStore } from '../store/useAuthStore';
 import { useCartStore } from '../store/useCartStore';
+import { useWishlistStore } from '../store/useWishlistStore';
 
 interface Category {
   id: string;
@@ -31,7 +32,9 @@ export default function Navbar() {
 
   const { customer, isAuthenticated, openAuthModal, logout } = useAuthStore();
   const { openCart, getTotalItems } = useCartStore();
+  const { getTotalItems: getTotalWishlistItems } = useWishlistStore();
   const totalCartItems = getTotalItems();
+  const totalWishlistItems = getTotalWishlistItems();
 
   useEffect(() => {
     fetch('http://localhost:5001/api/categories')
@@ -153,7 +156,7 @@ export default function Navbar() {
           {/* Favourites Icon */}
           <Link 
             to="/wishlist" 
-            className={`hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full backdrop-blur-md border items-center justify-center hover:scale-105 active:scale-95 transition-all relative drop-shadow-xs ${
+            className={`flex w-9 h-9 sm:w-10 sm:h-10 rounded-full backdrop-blur-md border items-center justify-center hover:scale-105 active:scale-95 transition-all relative drop-shadow-xs ${
               isLightPage 
                 ? 'bg-stone-200/70 border-stone-300 text-stone-700 hover:bg-stone-300/80 hover:text-stone-900' 
                 : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
@@ -162,9 +165,11 @@ export default function Navbar() {
             aria-label="Wishlist"
           >
             <HiOutlineHeart className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-md leading-none">
-              0
-            </span>
+            {totalWishlistItems > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-md leading-none animate-fade-in">
+                {totalWishlistItems}
+              </span>
+            )}
           </Link>
 
           {/* Profile Icon / Dropdown */}
@@ -281,7 +286,7 @@ export default function Navbar() {
 
             <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs text-gray-300">
               <Link to="/wishlist" className="flex items-center gap-1.5 hover:text-white py-1">
-                <HiOutlineHeart className="w-4 h-4 text-brand-primary" /> Favourites (0)
+                <HiOutlineHeart className="w-4 h-4 text-brand-primary" /> Favourites ({totalWishlistItems})
               </Link>
               {isAuthenticated ? (
                 <div className="flex items-center gap-3">
