@@ -27,6 +27,7 @@ export default function Navbar() {
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const location = useLocation();
+  const isLightPage = location.pathname.startsWith('/checkout') || location.pathname.startsWith('/order-success');
 
   const { customer, isAuthenticated, openAuthModal, logout } = useAuthStore();
   const { openCart, getTotalItems } = useCartStore();
@@ -67,7 +68,9 @@ export default function Navbar() {
         <nav className="hidden lg:flex items-center justify-center gap-8 xl:gap-12 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
           <Link 
             to="/" 
-            className="text-base text-white hover:text-brand-primary font-medium tracking-wide transition-colors py-2 drop-shadow"
+            className={`text-base font-medium tracking-wide transition-colors py-2 drop-shadow-xs ${
+              isLightPage ? 'text-stone-800 hover:text-brand-primary' : 'text-white hover:text-brand-primary'
+            }`}
           >
             Home
           </Link>
@@ -78,7 +81,9 @@ export default function Navbar() {
             onMouseEnter={() => setIsCategoryDropdownOpen(true)}
             onMouseLeave={() => setIsCategoryDropdownOpen(false)}
           >
-            <button className="flex items-center gap-1.5 text-base text-white hover:text-brand-primary font-medium tracking-wide transition-colors py-2 drop-shadow cursor-pointer">
+            <button className={`flex items-center gap-1.5 text-base font-medium tracking-wide transition-colors py-2 drop-shadow-xs cursor-pointer ${
+              isLightPage ? 'text-stone-800 hover:text-brand-primary' : 'text-white hover:text-brand-primary'
+            }`}>
               Categories
               <HiChevronDown className={`w-4 h-4 transition-transform duration-300 ${isCategoryDropdownOpen ? 'rotate-180 text-brand-primary' : ''}`} />
             </button>
@@ -114,13 +119,17 @@ export default function Navbar() {
 
           <Link 
             to="/products" 
-            className="text-base text-white hover:text-brand-primary font-medium tracking-wide transition-colors py-2 drop-shadow"
+            className={`text-base font-medium tracking-wide transition-colors py-2 drop-shadow-xs ${
+              isLightPage ? 'text-stone-800 hover:text-brand-primary' : 'text-white hover:text-brand-primary'
+            }`}
           >
             Shop
           </Link>
           <Link 
             to="/about" 
-            className="text-base text-white hover:text-brand-primary font-medium tracking-wide transition-colors py-2 drop-shadow"
+            className={`text-base font-medium tracking-wide transition-colors py-2 drop-shadow-xs ${
+              isLightPage ? 'text-stone-800 hover:text-brand-primary' : 'text-white hover:text-brand-primary'
+            }`}
           >
             Our Story
           </Link>
@@ -130,7 +139,11 @@ export default function Navbar() {
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Search Button */}
           <button 
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all drop-shadow" 
+            className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full backdrop-blur-md border flex items-center justify-center hover:scale-105 active:scale-95 transition-all drop-shadow-xs ${
+              isLightPage 
+                ? 'bg-stone-200/70 border-stone-300 text-stone-700 hover:bg-stone-300/80 hover:text-stone-900' 
+                : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+            }`} 
             title="Search"
             aria-label="Search"
           >
@@ -140,7 +153,11 @@ export default function Navbar() {
           {/* Favourites Icon */}
           <Link 
             to="/wishlist" 
-            className="hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 items-center justify-center text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all relative drop-shadow" 
+            className={`hidden sm:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full backdrop-blur-md border items-center justify-center hover:scale-105 active:scale-95 transition-all relative drop-shadow-xs ${
+              isLightPage 
+                ? 'bg-stone-200/70 border-stone-300 text-stone-700 hover:bg-stone-300/80 hover:text-stone-900' 
+                : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+            }`} 
             title="Favourites"
             aria-label="Wishlist"
           >
@@ -197,7 +214,11 @@ export default function Navbar() {
           ) : (
             <button 
               onClick={() => openAuthModal('signin')}
-              className="hidden md:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 items-center justify-center text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all drop-shadow cursor-pointer" 
+              className={`hidden md:flex w-9 h-9 sm:w-10 sm:h-10 rounded-full backdrop-blur-md border items-center justify-center hover:scale-105 active:scale-95 transition-all drop-shadow-xs cursor-pointer ${
+                isLightPage 
+                  ? 'bg-stone-200/70 border-stone-300 text-stone-700 hover:bg-stone-300/80 hover:text-stone-900' 
+                  : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+              }`} 
               title="Sign In / Register"
               aria-label="Sign In or Register"
             >
@@ -223,7 +244,11 @@ export default function Navbar() {
           {/* Mobile/Tablet Menu Button (visible below lg) */}
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 hover:scale-105 active:scale-95 transition-all"
+            className={`lg:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-full backdrop-blur-md border flex items-center justify-center hover:scale-105 active:scale-95 transition-all ${
+              isLightPage 
+                ? 'bg-stone-200/70 border-stone-300 text-stone-700 hover:bg-stone-300/80 hover:text-stone-900' 
+                : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+            }`}
             aria-label="Toggle navigation menu"
           >
             {isMobileMenuOpen ? <HiOutlineXMark className="w-5 h-5" /> : <HiOutlineBars3 className="w-5 h-5" />}

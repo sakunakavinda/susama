@@ -11,7 +11,10 @@ import {
   HiOutlineBuildingLibrary,
   HiOutlineShieldCheck,
   HiCheck,
-  HiOutlineArrowLeft
+  HiOutlineArrowLeft,
+  HiLockClosed,
+  HiOutlineClipboardDocumentCheck,
+  HiOutlineDocumentDuplicate
 } from 'react-icons/hi2';
 import { useCartStore } from '../store/useCartStore';
 import { useAuthStore } from '../store/useAuthStore';
@@ -25,7 +28,8 @@ export default function Checkout() {
     getGrandTotal, 
     getFreeShippingProgress,
     clearCart,
-    fetchShippingSettings
+    fetchShippingSettings,
+    shippingSettings
   } = useCartStore();
 
   const { customer, isAuthenticated, token } = useAuthStore();
@@ -44,11 +48,12 @@ export default function Checkout() {
   // Payment State: only 'cod' or 'bank_transfer'
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'bank_transfer'>('cod');
   const [bankRef, setBankRef] = useState('');
+  const [copiedAccount, setCopiedAccount] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Sync latest shipping threshold from admin settings
+  // Sync latest shipping settings on mount
   useEffect(() => {
     fetchShippingSettings();
   }, [fetchShippingSettings]);
@@ -70,28 +75,40 @@ export default function Checkout() {
   const subtotal = getSubtotal();
   const shippingFee = getShippingFee();
   const grandTotal = getGrandTotal();
-  const { isFree } = getFreeShippingProgress();
+  const { isFree, remaining } = getFreeShippingProgress();
+  const threshold = shippingSettings.freeShippingThreshold;
 
-  // Empty cart guard
+  const handleCopyAccount = () => {
+    navigator.clipboard.writeText('100084924110');
+    setCopiedAccount(true);
+    setTimeout(() => setCopiedAccount(false), 2000);
+  };
+
+  // Empty cart guard (Light Themed & Card-free)
   if (items.length === 0) {
     return (
-      <div className="flex-1 min-h-[75vh] flex items-center justify-center px-4 py-20 bg-stone-950 text-white">
-        <div className="max-w-md w-full text-center p-8 sm:p-12 bg-stone-900 border border-amber-500/20 rounded-3xl shadow-2xl">
-          <div className="w-16 h-16 rounded-full bg-stone-800 border border-white/10 flex items-center justify-center mx-auto mb-4 text-brand-primary">
-            <HiOutlineShoppingBag className="w-8 h-8" />
+      <div className="min-h-[75vh] flex items-center justify-center px-4 py-24 bg-[#FAF8F5] text-stone-900">
+        <div className="max-w-md w-full text-center space-y-4">
+          <div className="w-12 h-12 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center mx-auto text-brand-secondary">
+            <HiOutlineShoppingBag className="w-6 h-6" />
           </div>
-          <h2 className="text-2xl font-heading font-medium text-amber-50 mb-2">
-            Your shopping bag is empty
-          </h2>
-          <p className="text-stone-400 text-sm mb-6 leading-relaxed">
-            Please add your favorite botanical hair formulations to your bag before proceeding to checkout.
-          </p>
-          <Link
-            to="/products"
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full bg-brand-primary text-white text-sm font-semibold hover:bg-brand-secondary transition-all shadow-lg"
-          >
-            ← Explore Formulations
-          </Link>
+          <div>
+            <h2 className="text-xl font-heading font-semibold text-stone-900">
+              Your shopping bag is empty
+            </h2>
+            <p className="text-stone-500 text-xs mt-1">
+              Select your desired botanical haircare formulations to proceed.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              to="/products"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-primary text-white text-xs font-semibold hover:bg-brand-secondary transition-all shadow-xs"
+            >
+              <HiOutlineArrowLeft className="w-3.5 h-3.5" />
+              Return to Catalog
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -101,22 +118,21 @@ export default function Checkout() {
     e.preventDefault();
     setErrorMessage(null);
 
-    // Basic validation
+    // Validation
     if (!name.trim()) {
-      setErrorMessage('Please provide your full name.');
+      setErrorMessage('Please enter your full name.');
       return;
     }
     if (!phone.trim()) {
-      setErrorMessage('Please provide a contact phone number for courier delivery confirmation.');
+      setErrorMessage('Please enter a contact phone number for courier delivery confirmation.');
       return;
     }
     if (!addressLine1.trim() || !city.trim()) {
-      setErrorMessage('Please provide your delivery street address and city.');
+      setErrorMessage('Please enter your delivery street address and city.');
       return;
     }
-
     if (paymentMethod === 'bank_transfer' && !bankRef.trim()) {
-      setErrorMessage('Please enter your Bank Deposit Reference or Transaction ID.');
+      setErrorMessage('Please provide your Bank Deposit Reference or Transaction Slip ID.');
       return;
     }
 
@@ -164,83 +180,82 @@ export default function Checkout() {
         return;
       }
 
-      // Order created successfully!
       const orderNumber = data.data.order_number;
       clearCart();
       navigate(`/order-success/${orderNumber}`);
     } catch (err: any) {
       console.error('Checkout error:', err);
-      setErrorMessage('Network error. Please verify your connection and try again.');
+      setErrorMessage('Network connection error. Please try again.');
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 pt-28 pb-24 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 pt-24 pb-24">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Navigation Breadcrumb */}
-        <div className="mb-6 flex items-center justify-between">
+        {/* Compact Navigation Bar */}
+        <div className="flex items-center justify-between py-3 border-b border-stone-200 mb-8">
           <Link
             to="/products"
-            className="inline-flex items-center gap-1.5 text-xs text-stone-400 hover:text-brand-primary transition-colors font-medium"
+            className="inline-flex items-center gap-1.5 text-xs text-stone-600 hover:text-brand-secondary transition-colors font-medium"
           >
-            <HiOutlineArrowLeft className="w-4 h-4" />
-            Continue Shopping
+            <HiOutlineArrowLeft className="w-3.5 h-3.5" />
+            <span>Continue Shopping</span>
           </Link>
-          <span className="text-xs text-amber-200/80 uppercase tracking-widest font-semibold flex items-center gap-1.5">
-            <HiOutlineShieldCheck className="w-4 h-4 text-brand-primary" />
-            Secure Islandwide Checkout
-          </span>
-        </div>
 
-        <h1 className="text-2xl sm:text-3xl font-heading font-semibold text-amber-50 mb-8">
-          Complete Your Order
-        </h1>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-stone-900 font-semibold">Checkout</span>
+            <span className="text-stone-400">/</span>
+            <span className="text-stone-500">Receipt</span>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-stone-500">
+            <HiLockClosed className="w-3.5 h-3.5 text-stone-700" />
+            <span>256-Bit SSL Secure</span>
+          </div>
+        </div>
 
         {/* Error notification banner */}
         {errorMessage && (
-          <div className="mb-6 p-4 rounded-2xl bg-red-950/70 border border-red-500/40 text-red-200 text-sm flex items-start gap-2.5 animate-fade-in">
-            <span className="text-red-400 font-bold">!</span>
+          <div className="mb-6 p-3 rounded-md bg-red-50 border-l-3 border-red-500 text-red-800 text-xs flex items-start gap-2.5 animate-fade-in shadow-2xs">
+            <span className="font-bold text-red-600">!</span>
             <span>{errorMessage}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+        {/* 2-Column Professional Ledger Architecture (Light Themed, Card-Free) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
-          {/* Left Column: Form Details (7 cols) */}
-          <div className="lg:col-span-7 space-y-8">
-            <form id="checkout-form" onSubmit={handleSubmitOrder} className="space-y-8">
+          {/* Left Column: Seamless Customer Form (7 cols) */}
+          <div className="lg:col-span-7">
+            <form id="checkout-form" onSubmit={handleSubmitOrder} className="space-y-7">
               
-              {/* Step 1: Contact Information */}
-              <div className="bg-stone-900 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-brand-primary/20 text-brand-primary text-xs font-bold flex items-center justify-center border border-brand-primary/40">
-                      1
-                    </span>
-                    <h2 className="text-base sm:text-lg font-heading font-medium text-amber-50">
-                      Customer Contact
-                    </h2>
-                  </div>
+              {/* Section 1: Contact Information */}
+              <div>
+                <div className="flex items-center justify-between pb-2 mb-3 border-b border-stone-200">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-800 flex items-center gap-2">
+                    <span className="w-4 h-4 rounded-full bg-stone-200 text-stone-700 text-[10px] flex items-center justify-center font-bold">1</span>
+                    Contact Information
+                  </h2>
                   {isAuthenticated ? (
-                    <span className="text-[11px] text-emerald-400 font-medium flex items-center gap-1">
-                      <HiCheck className="w-3.5 h-3.5" /> Logged In
+                    <span className="text-[11px] text-emerald-700 flex items-center gap-1 font-medium bg-emerald-50 px-2 py-0.5 rounded">
+                      <HiCheck className="w-3 h-3 text-emerald-600" /> Logged In ({customer?.email})
                     </span>
                   ) : (
-                    <span className="text-[11px] text-stone-400">
+                    <span className="text-[11px] text-stone-500">
                       Guest Checkout
                     </span>
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-stone-300 mb-1.5">
-                      Full Name *
+                    <label className="block text-[11px] font-medium text-stone-700 mb-1">
+                      Full Name <span className="text-amber-600">*</span>
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
                         <HiOutlineUser className="w-4 h-4" />
                       </div>
                       <input
@@ -249,17 +264,17 @@ export default function Checkout() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="e.g. Dilini Senanayake"
-                        className="w-full pl-10 pr-4 py-3 bg-stone-950/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-brand-primary"
+                        className="w-full pl-9 pr-3 py-2 bg-white border border-stone-300 rounded-md text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 shadow-2xs transition-colors"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-stone-300 mb-1.5">
-                      Contact Phone * <span className="text-[10px] text-stone-500 normal-case">(Courier confirmation)</span>
+                    <label className="block text-[11px] font-medium text-stone-700 mb-1">
+                      Phone Number <span className="text-amber-600">*</span> <span className="text-[10px] text-stone-500">(For courier delivery)</span>
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
                         <HiOutlinePhone className="w-4 h-4" />
                       </div>
                       <input
@@ -268,49 +283,50 @@ export default function Checkout() {
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="077 123 4567"
-                        className="w-full pl-10 pr-4 py-3 bg-stone-950/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-brand-primary"
+                        className="w-full pl-9 pr-3 py-2 bg-white border border-stone-300 rounded-md text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 shadow-2xs transition-colors"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold uppercase tracking-wider text-stone-300 mb-1.5">
-                      Email Address <span className="text-[10px] text-stone-500 normal-case">(For receipt)</span>
+                    <label className="block text-[11px] font-medium text-stone-700 mb-1">
+                      Email Address <span className="text-[10px] text-stone-500">(For order confirmation)</span>
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
                         <HiOutlineEnvelope className="w-4 h-4" />
                       </div>
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        placeholder="you@domain.com"
-                        className="w-full pl-10 pr-4 py-3 bg-stone-950/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-brand-primary"
+                        placeholder="you@example.com"
+                        className="w-full pl-9 pr-3 py-2 bg-white border border-stone-300 rounded-md text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 shadow-2xs transition-colors"
                       />
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Step 2: Delivery Address */}
-              <div className="bg-stone-900 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
-                <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-                  <span className="w-6 h-6 rounded-full bg-brand-primary/20 text-brand-primary text-xs font-bold flex items-center justify-center border border-brand-primary/40">
-                    2
-                  </span>
-                  <h2 className="text-base sm:text-lg font-heading font-medium text-amber-50">
+              {/* Section 2: Delivery Address */}
+              <div>
+                <div className="flex items-center justify-between pb-2 mb-3 border-b border-stone-200">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-800 flex items-center gap-2">
+                    <span className="w-4 h-4 rounded-full bg-stone-200 text-stone-700 text-[10px] flex items-center justify-center font-bold">2</span>
                     Delivery Address
                   </h2>
+                  <span className="text-[11px] text-stone-500 flex items-center gap-1">
+                    <HiOutlineTruck className="w-3.5 h-3.5 text-stone-600" /> Islandwide Delivery
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs text-stone-300 mb-1">
-                      Street Address / Apartment *
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-3">
+                    <label className="block text-[11px] font-medium text-stone-700 mb-1">
+                      Street Address / House No. <span className="text-amber-600">*</span>
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
                         <HiOutlineMapPin className="w-4 h-4" />
                       </div>
                       <input
@@ -319,267 +335,316 @@ export default function Checkout() {
                         value={addressLine1}
                         onChange={(e) => setAddressLine1(e.target.value)}
                         placeholder="e.g. 45/2 Green Path, Colombo 03"
-                        className="w-full pl-10 pr-4 py-3 bg-stone-950/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-brand-primary"
+                        className="w-full pl-9 pr-3 py-2 bg-white border border-stone-300 rounded-md text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 shadow-2xs transition-colors"
                       />
                     </div>
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs text-stone-300 mb-1">
-                      Apartment, Floor, Landmark (Optional)
+                  <div className="sm:col-span-3">
+                    <label className="block text-[11px] font-medium text-stone-700 mb-1">
+                      Apartment, Floor, Landmark <span className="text-[10px] text-stone-500">(Optional)</span>
                     </label>
                     <input
                       type="text"
                       value={addressLine2}
                       onChange={(e) => setAddressLine2(e.target.value)}
-                      placeholder="e.g. Near Royal Gardens"
-                      className="w-full px-4 py-3 bg-stone-950/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-brand-primary"
+                      placeholder="e.g. Level 3, Pearl Residences"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-md text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 shadow-2xs transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs text-stone-300 mb-1">
-                      City / Town *
+                    <label className="block text-[11px] font-medium text-stone-700 mb-1">
+                      City / Town <span className="text-amber-600">*</span>
                     </label>
                     <input
                       type="text"
                       required
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      placeholder="e.g. Colombo, Kandy, Galle"
-                      className="w-full px-4 py-3 bg-stone-950/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-brand-primary"
+                      placeholder="e.g. Colombo"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-md text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 shadow-2xs transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs text-stone-300 mb-1">
+                    <label className="block text-[11px] font-medium text-stone-700 mb-1">
                       District / Province
                     </label>
                     <input
                       type="text"
                       value={district}
                       onChange={(e) => setDistrict(e.target.value)}
-                      placeholder="e.g. Western Province"
-                      className="w-full px-4 py-3 bg-stone-950/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-brand-primary"
+                      placeholder="e.g. Western"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-md text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 shadow-2xs transition-colors"
                     />
                   </div>
 
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs text-stone-300 mb-1">
-                      Special Courier Notes (Optional)
+                  <div>
+                    <label className="block text-[11px] font-medium text-stone-700 mb-1">
+                      Postal Code <span className="text-[10px] text-stone-500">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      placeholder="e.g. 00300"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-md text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 shadow-2xs transition-colors"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-3">
+                    <label className="block text-[11px] font-medium text-stone-700 mb-1">
+                      Special Delivery Instructions <span className="text-[10px] text-stone-500">(Optional)</span>
                     </label>
                     <input
                       type="text"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      placeholder="e.g. Please call before arriving or leave with security"
-                      className="w-full px-4 py-3 bg-stone-950/80 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-brand-primary"
+                      placeholder="e.g. Call before arrival or leave with reception"
+                      className="w-full px-3 py-2 bg-white border border-stone-300 rounded-md text-xs sm:text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary/20 shadow-2xs transition-colors"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Step 3: Payment Method (COD or Bank Transfer Only) */}
-              <div className="bg-stone-900 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
-                <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-                  <span className="w-6 h-6 rounded-full bg-brand-primary/20 text-brand-primary text-xs font-bold flex items-center justify-center border border-brand-primary/40">
-                    3
-                  </span>
-                  <h2 className="text-base sm:text-lg font-heading font-medium text-amber-50">
+              {/* Section 3: Payment Method (Light Theme, Zero Card Wrapper) */}
+              <div>
+                <div className="flex items-center justify-between pb-2 mb-3 border-b border-stone-200">
+                  <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-800 flex items-center gap-2">
+                    <span className="w-4 h-4 rounded-full bg-stone-200 text-stone-700 text-[10px] flex items-center justify-center font-bold">3</span>
                     Payment Method
                   </h2>
+                  <span className="text-[11px] text-stone-500">
+                    COD & Bank Deposit
+                  </span>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {/* Option 1: Cash on Delivery */}
                   <label 
-                    className={`block p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${
-                      paymentMethod === 'cod'
-                        ? 'bg-brand-primary/10 border-brand-primary shadow-lg shadow-brand-primary/10'
-                        : 'bg-stone-950/60 border-white/10 hover:border-white/20'
+                    className={`flex items-start gap-3 p-3 rounded-md border transition-all cursor-pointer ${
+                      paymentMethod === 'cod' 
+                        ? 'border-brand-primary bg-amber-50/40 shadow-xs ring-1 ring-brand-primary/20' 
+                        : 'border-stone-200 bg-white hover:border-stone-300'
                     }`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          checked={paymentMethod === 'cod'}
-                          onChange={() => setPaymentMethod('cod')}
-                          className="mt-1 accent-brand-primary w-4 h-4"
-                        />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <HiOutlineBanknotes className="w-5 h-5 text-brand-primary" />
-                            <span className="font-semibold text-sm sm:text-base text-amber-50">
-                              Cash on Delivery (COD)
-                            </span>
-                            <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
-                              Popular
-                            </span>
-                          </div>
-                          <p className="text-xs text-stone-400 mt-1">
-                            Pay securely in cash to the delivery rider when your package arrives at your doorstep.
-                          </p>
-                        </div>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      checked={paymentMethod === 'cod'}
+                      onChange={() => setPaymentMethod('cod')}
+                      className="mt-0.5 accent-brand-secondary w-4 h-4 cursor-pointer"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs sm:text-sm font-semibold text-stone-900 flex items-center gap-2">
+                          <HiOutlineBanknotes className="w-4 h-4 text-brand-secondary" />
+                          Cash on Delivery (COD)
+                        </span>
+                        <span className="text-[10px] text-emerald-800 font-medium px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200">
+                          Pay upon delivery
+                        </span>
                       </div>
+                      <p className="text-[11px] text-stone-500 mt-0.5">
+                        Pay cash directly to the courier rider upon package handover.
+                      </p>
                     </div>
                   </label>
 
-                  {/* Option 2: Bank Deposit / Online Transfer */}
-                  <label 
-                    className={`block p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer ${
-                      paymentMethod === 'bank_transfer'
-                        ? 'bg-brand-primary/10 border-brand-primary shadow-lg shadow-brand-primary/10'
-                        : 'bg-stone-950/60 border-white/10 hover:border-white/20'
+                  {/* Option 2: Bank Transfer */}
+                  <div 
+                    className={`rounded-md border transition-all ${
+                      paymentMethod === 'bank_transfer' 
+                        ? 'border-brand-primary bg-amber-50/40 shadow-xs ring-1 ring-brand-primary/20' 
+                        : 'border-stone-200 bg-white hover:border-stone-300'
                     }`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          checked={paymentMethod === 'bank_transfer'}
-                          onChange={() => setPaymentMethod('bank_transfer')}
-                          className="mt-1 accent-brand-primary w-4 h-4"
-                        />
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <HiOutlineBuildingLibrary className="w-5 h-5 text-brand-primary" />
-                            <span className="font-semibold text-sm sm:text-base text-amber-50">
-                              Direct Bank Transfer / Deposit
-                            </span>
-                          </div>
-                          <p className="text-xs text-stone-400 mt-1">
-                            Transfer directly to our corporate bank account and enter your deposit reference below.
-                          </p>
+                    <label className="flex items-start gap-3 p-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={paymentMethod === 'bank_transfer'}
+                        onChange={() => setPaymentMethod('bank_transfer')}
+                        className="mt-0.5 accent-brand-secondary w-4 h-4 cursor-pointer"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs sm:text-sm font-semibold text-stone-900 flex items-center gap-2">
+                            <HiOutlineBuildingLibrary className="w-4 h-4 text-brand-secondary" />
+                            Direct Bank Transfer / Deposit
+                          </span>
+                          <span className="text-[10px] text-amber-900 font-medium px-2 py-0.5 rounded bg-amber-100/70 border border-amber-200">
+                            Commercial Bank
+                          </span>
                         </div>
+                        <p className="text-[11px] text-stone-500 mt-0.5">
+                          Transfer directly to our corporate bank account and attach your reference slip.
+                        </p>
                       </div>
-                    </div>
+                    </label>
 
-                    {/* Bank Details Dropdown (When Selected) */}
+                    {/* Compact Bank Account Credentials (Light) */}
                     {paymentMethod === 'bank_transfer' && (
-                      <div className="mt-4 pt-4 border-t border-white/10 bg-stone-950/80 p-4 rounded-xl space-y-3 animate-fade-in text-xs">
-                        <div className="space-y-1 text-stone-300">
-                          <p><strong className="text-white">Bank:</strong> Commercial Bank of Ceylon</p>
-                          <p><strong className="text-white">Account Name:</strong> SUSAMA COSMETICS (PVT) LTD</p>
-                          <p><strong className="text-white">Account Number:</strong> 1000 8492 4110</p>
-                          <p><strong className="text-white">Branch:</strong> Colombo 07 (Torrington Branch)</p>
+                      <div className="px-4 pb-4 pt-2 border-t border-amber-100 space-y-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-2.5 bg-white rounded border border-stone-200 text-[11px] shadow-2xs">
+                          <div>
+                            <span className="text-stone-500 block text-[10px]">Bank</span>
+                            <span className="font-semibold text-stone-800">Commercial Bank</span>
+                          </div>
+                          <div>
+                            <span className="text-stone-500 block text-[10px]">Account Name</span>
+                            <span className="font-semibold text-stone-800">SUSAMA (PVT) LTD</span>
+                          </div>
+                          <div>
+                            <span className="text-stone-500 block text-[10px]">Account Number</span>
+                            <div className="flex items-center gap-1.5 font-mono font-bold text-stone-900">
+                              <span>1000 8492 4110</span>
+                              <button
+                                type="button"
+                                onClick={handleCopyAccount}
+                                title="Copy account number"
+                                className="text-stone-500 hover:text-brand-secondary transition-colors p-0.5"
+                              >
+                                {copiedAccount ? (
+                                  <HiOutlineClipboardDocumentCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                ) : (
+                                  <HiOutlineDocumentDuplicate className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+                          <div>
+                            <span className="text-stone-500 block text-[10px]">Branch</span>
+                            <span className="font-semibold text-stone-800">Torrington (07)</span>
+                          </div>
                         </div>
 
                         <div>
-                          <label className="block text-[11px] font-semibold uppercase tracking-wider text-amber-200 mb-1">
-                            Bank Reference / Transaction ID *
+                          <label className="block text-[11px] font-medium text-stone-700 mb-1">
+                            Bank Deposit Reference / Slip Number <span className="text-amber-600">*</span>
                           </label>
                           <input
                             type="text"
                             required={paymentMethod === 'bank_transfer'}
                             value={bankRef}
                             onChange={(e) => setBankRef(e.target.value)}
-                            placeholder="e.g. Ref #98124 or Slip Number"
-                            className="w-full px-3.5 py-2.5 bg-stone-900 border border-white/20 rounded-lg text-sm text-white focus:outline-none focus:border-brand-primary"
+                            placeholder="e.g. Ref #89201 or Deposit Slip Number"
+                            className="w-full px-3 py-2 bg-white border border-stone-300 rounded-md text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-brand-primary shadow-2xs"
                           />
                         </div>
                       </div>
                     )}
-                  </label>
+                  </div>
                 </div>
               </div>
+
             </form>
           </div>
 
-          {/* Right Column: Order Summary (5 cols) */}
-          <div className="lg:col-span-5">
-            <div className="bg-stone-900 border border-amber-500/20 rounded-3xl p-6 sm:p-8 shadow-2xl sticky top-28 space-y-6">
+          {/* Right Column: Seamless Ledger Order Summary (5 cols, anchored with clean border-l) */}
+          <div className="lg:col-span-5 lg:border-l lg:border-stone-200 lg:pl-10">
+            <div className="sticky top-24 space-y-5">
               
-              <div className="border-b border-white/10 pb-4 flex items-center justify-between">
-                <h2 className="text-lg font-heading font-semibold text-amber-50">
+              <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-stone-800">
                   Order Summary
-                </h2>
-                <span className="text-xs text-stone-400">
-                  {items.length} {items.length === 1 ? 'product' : 'products'}
+                </h3>
+                <span className="text-xs text-stone-500 font-medium">
+                  {items.length} {items.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
 
-              {/* Items List */}
-              <div className="max-h-72 overflow-y-auto space-y-3.5 pr-1 divide-y divide-white/5">
+              {/* Items List (Compact & Clean) */}
+              <div className="max-h-72 overflow-y-auto space-y-3 pr-1 divide-y divide-stone-100">
                 {items.map((item) => (
-                  <div key={item.id} className="pt-3 first:pt-0 flex items-center gap-3">
-                    <img 
-                      src={item.image} 
-                      alt={item.name} 
-                      className="w-14 h-14 rounded-xl object-cover bg-stone-950 border border-white/10 flex-shrink-0"
-                    />
+                  <div key={item.id} className="pt-2.5 first:pt-0 flex items-center gap-3">
+                    <div className="relative flex-shrink-0">
+                      <img 
+                        src={item.image} 
+                        alt={item.name} 
+                        className="w-11 h-11 rounded-md object-cover bg-stone-100 border border-stone-200"
+                      />
+                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-stone-800 text-white text-[10px] font-bold flex items-center justify-center border border-white">
+                        {item.quantity}
+                      </span>
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-xs font-semibold text-amber-50 truncate">
+                      <h4 className="text-xs font-semibold text-stone-900 truncate leading-snug">
                         {item.name}
                       </h4>
-                      <p className="text-[11px] text-stone-400">
-                        Qty: {item.quantity} × LKR {item.price.toLocaleString()}
+                      <p className="text-[11px] text-stone-500 mt-0.5">
+                        LKR {item.price.toLocaleString()}
                       </p>
                     </div>
-                    <span className="text-xs font-bold text-brand-primary flex-shrink-0">
+                    <span className="text-xs font-semibold text-stone-900 flex-shrink-0">
                       LKR {(item.price * item.quantity).toLocaleString()}
                     </span>
                   </div>
                 ))}
               </div>
 
-              {/* Financial Calculation Breakdown */}
-              <div className="pt-4 border-t border-white/10 space-y-2 text-xs text-stone-300">
+              {/* Free Shipping Dynamic Progress */}
+              {isFree ? (
+                <div className="py-2 px-3 rounded bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-800 flex items-center gap-2 font-medium">
+                  <HiOutlineTruck className="w-4 h-4 flex-shrink-0 text-emerald-600" />
+                  <span>Free Islandwide Courier unlocked!</span>
+                </div>
+              ) : remaining > 0 ? (
+                <div className="py-2 px-3 rounded bg-amber-50/70 border border-amber-200/80 text-[11px] text-stone-700 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <HiOutlineTruck className="w-3.5 h-3.5 text-brand-secondary" />
+                    Free delivery over LKR {threshold.toLocaleString()}
+                  </span>
+                  <span className="text-brand-secondary font-semibold">Add LKR {remaining.toLocaleString()}</span>
+                </div>
+              ) : null}
+
+              {/* Price Calculation (Clean Ledger Lines) */}
+              <div className="pt-3 border-t border-stone-200 space-y-2 text-xs text-stone-600">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span className="font-semibold text-white">LKR {subtotal.toLocaleString()}</span>
+                  <span className="text-stone-900 font-medium">LKR {subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="flex items-center gap-1.5">
-                    <HiOutlineTruck className="w-4 h-4 text-brand-primary" />
-                    Island Courier Delivery
+                    Delivery
                   </span>
-                  <span className={`font-semibold ${isFree ? 'text-emerald-400' : 'text-white'}`}>
+                  <span className={`font-semibold ${isFree ? 'text-emerald-700' : 'text-stone-900'}`}>
                     {isFree ? 'FREE' : `LKR ${shippingFee.toLocaleString()}`}
                   </span>
                 </div>
               </div>
 
-              {/* Grand Total */}
-              <div className="pt-4 border-t border-white/10 flex items-baseline justify-between">
-                <div>
-                  <span className="text-sm font-heading font-medium text-amber-50">Grand Total</span>
-                  <p className="text-[10px] text-stone-400">All islandwide taxes included</p>
-                </div>
-                <span className="text-xl sm:text-2xl font-heading font-bold text-brand-primary">
+              {/* Total Row */}
+              <div className="pt-3 border-t border-stone-200 flex items-baseline justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-stone-900">Total Due</span>
+                <span className="text-xl font-bold text-stone-900 font-mono">
                   LKR {grandTotal.toLocaleString()}
                 </span>
               </div>
 
-              {/* Place Order CTA Button */}
+              {/* Submit CTA Button */}
               <button
                 type="submit"
                 form="checkout-form"
                 disabled={isSubmitting}
-                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-brand-primary to-brand-secondary hover:brightness-110 text-white font-semibold text-sm shadow-xl shadow-brand-primary/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.99]"
+                className="w-full py-3 px-4 rounded-md bg-gradient-to-r from-brand-primary to-brand-secondary hover:brightness-105 text-white font-semibold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-md active:scale-[0.99]"
               >
                 {isSubmitting ? (
-                  <span className="inline-block w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <>
-                    <span>Place Order • LKR {grandTotal.toLocaleString()}</span>
-                    <span>→</span>
-                  </>
+                  <span>Confirm Order • LKR {grandTotal.toLocaleString()}</span>
                 )}
               </button>
 
-              {/* Trust & Guarantee Badges */}
-              <div className="pt-3 border-t border-white/10 space-y-2 text-[11px] text-stone-400">
-                <div className="flex items-center gap-2">
-                  <HiCheck className="w-4 h-4 text-brand-primary flex-shrink-0" />
-                  <span>Doorstep delivery to any address in Sri Lanka</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <HiCheck className="w-4 h-4 text-brand-primary flex-shrink-0" />
-                  <span>Sealed luxury packaging with authentic botanical extract seal</span>
-                </div>
+              {/* Compact Trust Footnote */}
+              <div className="pt-1 flex items-center justify-center gap-3 text-[10px] text-stone-500 text-center">
+                <span className="flex items-center gap-1">
+                  <HiOutlineShieldCheck className="w-3.5 h-3.5 text-brand-secondary" /> 100% Authentic Formulas
+                </span>
+                <span>•</span>
+                <span>Islandwide Express Courier</span>
               </div>
 
             </div>
