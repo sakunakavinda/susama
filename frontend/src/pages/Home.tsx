@@ -633,20 +633,6 @@ export default function Home() {
                 <span>Search</span>
               </button>
             </div>
-            {/* Quick trending tags */}
-            <div className="flex items-center justify-center flex-wrap gap-2 mt-3 text-[11px] text-white/80">
-              <span className="text-white/60 text-[10px] uppercase tracking-wider font-semibold">Popular:</span>
-              {['Keratin', 'Rose Water', 'Hair Oil', 'Scalp Care'].map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => navigate(`/products?search=${encodeURIComponent(tag)}`)}
-                  className="px-2.5 py-0.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white/90 transition-colors text-[10px] cursor-pointer"
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
           </form>
 
           {/* CTA Buttons */}
