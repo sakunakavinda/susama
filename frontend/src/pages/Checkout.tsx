@@ -84,26 +84,48 @@ export default function Checkout() {
     setTimeout(() => setCopiedAccount(false), 2000);
   };
 
-  // Empty cart guard (Light Themed & Card-free)
+  // Empty cart guard (With Orange Header Banner Matching Shop)
   if (items.length === 0) {
     return (
-      <div className="min-h-[75vh] flex items-center justify-center px-4 py-24 bg-[#FAF8F5] text-stone-900">
-        <div className="max-w-md w-full text-center space-y-4">
-          <div className="w-12 h-12 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center mx-auto text-brand-secondary">
-            <HiOutlineShoppingBag className="w-6 h-6" />
+      <div className="min-h-screen bg-[#FAF8F5] text-stone-900 pb-24">
+        {/* Orange Header Banner (Matching Shop) */}
+        <section className="relative bg-gray-950 text-white pt-32 sm:pt-36 pb-14 sm:pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-secondary/90 to-brand-primary/80 z-10" />
+          <img 
+            src="/images/hero/hero-bg.jpg" 
+            alt="SUSÁMÁ Haircare Checkout" 
+            className="absolute inset-0 w-full h-full object-cover object-center brightness-75"
+          />
+          <div className="relative z-20 max-w-5xl mx-auto text-center flex flex-col items-center">
+            <span className="text-[11px] sm:text-xs font-extrabold tracking-[0.25em] text-white/90 uppercase mb-2">
+              SECURE DOORSTEP DELIVERY
+            </span>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tight mb-3 drop-shadow-md text-white">
+              Checkout & Order
+            </h1>
+            <p className="max-w-xl text-xs sm:text-sm md:text-base text-white/90 font-light leading-relaxed mb-4">
+              Complete your order with cash on delivery or direct bank transfer across Sri Lanka.
+            </p>
+            <div className="w-16 h-1 bg-white/70 rounded-full" />
+          </div>
+        </section>
+
+        <div className="max-w-md w-full mx-auto text-center space-y-4 py-20 px-4">
+          <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto text-brand-secondary">
+            <HiOutlineShoppingBag className="w-7 h-7" />
           </div>
           <div>
             <h2 className="text-xl font-heading font-semibold text-stone-900">
               Your shopping bag is empty
             </h2>
-            <p className="text-stone-500 text-xs mt-1">
+            <p className="text-stone-500 text-xs sm:text-sm mt-1">
               Select your desired botanical haircare formulations to proceed.
             </p>
           </div>
           <div className="pt-2">
             <Link
               to="/products"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-primary text-white text-xs font-semibold hover:bg-brand-secondary transition-all shadow-xs"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-brand-primary text-white text-xs font-semibold hover:bg-brand-secondary transition-all shadow-md"
             >
               <HiOutlineArrowLeft className="w-3.5 h-3.5" />
               Return to Catalog
@@ -191,8 +213,30 @@ export default function Checkout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 pt-24 pb-24">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#FAF8F5] text-stone-900 pb-24">
+      {/* Orange Header Banner (Matching Shop) */}
+      <section className="relative bg-gray-950 text-white pt-32 sm:pt-36 pb-14 sm:pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-brand-secondary/90 to-brand-primary/80 z-10" />
+        <img 
+          src="/images/hero/hero-bg.jpg" 
+          alt="SUSÁMÁ Haircare Checkout" 
+          className="absolute inset-0 w-full h-full object-cover object-center brightness-75"
+        />
+        <div className="relative z-20 max-w-5xl mx-auto text-center flex flex-col items-center">
+          <span className="text-[11px] sm:text-xs font-extrabold tracking-[0.25em] text-white/90 uppercase mb-2">
+            SECURE DOORSTEP DELIVERY
+          </span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-heading font-extrabold tracking-tight mb-3 drop-shadow-md text-white">
+            Checkout & Order
+          </h1>
+          <p className="max-w-xl text-xs sm:text-sm md:text-base text-white/90 font-light leading-relaxed mb-4">
+            Complete your order with cash on delivery or direct bank transfer across Sri Lanka.
+          </p>
+          <div className="w-16 h-1 bg-white/70 rounded-full" />
+        </div>
+      </section>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         
         {/* Compact Navigation Bar */}
         <div className="flex items-center justify-between py-3 border-b border-stone-200 mb-8">

@@ -27,7 +27,7 @@ export default function Navbar() {
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const location = useLocation();
-  const isLightPage = location.pathname.startsWith('/checkout') || location.pathname.startsWith('/order-success');
+  const isLightPage = false;
 
   const { customer, isAuthenticated, openAuthModal, logout } = useAuthStore();
   const { openCart, getTotalItems } = useCartStore();
