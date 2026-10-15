@@ -10,7 +10,10 @@ import {
   HiMinus,
   HiSparkles,
   HiShieldCheck,
-  HiTruck
+  HiTruck,
+  HiArrowsPointingOut,
+  HiChevronLeft,
+  HiChevronRight
 } from 'react-icons/hi2';
 import { useCartStore } from '../store/useCartStore';
 import { useWishlistStore } from '../store/useWishlistStore';
@@ -74,6 +77,7 @@ export default function ProductDetailModal({
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'details' | 'ritual' | 'ingredients' | 'reviews'>('details');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isImageLightboxOpen, setIsImageLightboxOpen] = useState(false);
 
   // Reviews state
   const [reviews, setReviews] = useState<ProductReview[]>([]);
@@ -93,6 +97,7 @@ export default function ProductDetailModal({
       setQuantity(1);
       setActiveTab('details');
       setActiveImageIndex(0);
+      setIsImageLightboxOpen(false);
       setIsWritingReview(false);
       setReviewSubmitSuccess(false);
 
@@ -112,9 +117,9 @@ export default function ProductDetailModal({
     }
   }, [product]);
 
-  // Lock background scroll when modal is open
+  // Lock background scroll when modal or lightbox is open
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen || isImageLightboxOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -122,7 +127,19 @@ export default function ProductDetailModal({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [isOpen]);
+  }, [isOpen, isImageLightboxOpen]);
+
+  // Handle keyboard events (Escape to close lightbox)
+  useEffect(() => {
+    if (!isImageLightboxOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsImageLightboxOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isImageLightboxOpen]);
 
   if (!isOpen || !product) return null;
 
@@ -163,6 +180,7 @@ export default function ProductDetailModal({
   }
 
   const currentDisplayImage = allImages[activeImageIndex] || allImages[0];
+
 
   const handleIncrement = () => {
     if (isOutOfStock) return;
@@ -231,7 +249,7 @@ export default function ProductDetailModal({
     >
       {/* Modal Card: Mobile Bottom Sheet + Desktop Centered Dialog */}
       <div
-        className="bg-white w-full sm:max-w-4xl max-h-[92vh] sm:max-h-[88vh] rounded-t-[32px] sm:rounded-3xl shadow-2xl border border-stone-200/90 flex flex-col overflow-hidden relative animate-slide-up sm:animate-scale-up"
+        className="bg-white w-full sm:max-w-4xl h-[94vh] max-h-[94vh] sm:h-auto sm:max-h-[88vh] rounded-t-[32px] sm:rounded-3xl shadow-2xl border border-stone-200/90 flex flex-col overflow-hidden relative animate-slide-up sm:animate-scale-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Mobile Drag Indicator Bar */}
@@ -252,14 +270,17 @@ export default function ProductDetailModal({
           {/* ══════════════════════════════════════════
               LEFT: PRODUCT MEDIA SHOWCASE
           ══════════════════════════════════════════ */}
-          <div className="md:w-5/12 lg:w-1/2 p-3 sm:p-5 md:p-6 bg-stone-50/70 flex flex-col justify-between shrink-0">
+          <div className="md:w-5/12 lg:w-1/2 p-2 sm:p-5 md:p-6 bg-stone-50/70 flex flex-col justify-between shrink-0">
             <div>
-              {/* Main Image Frame (compact on mobile so title & price are visible above fold) */}
-              <div className="relative h-56 sm:h-72 md:h-auto md:aspect-square w-full rounded-2xl overflow-hidden bg-white border border-stone-200/80 shadow-xs">
+              {/* Main Image Frame (clickable to pop up image) */}
+              <div
+                className="relative h-40 sm:h-60 md:h-auto md:aspect-square w-full rounded-2xl overflow-hidden bg-white border border-stone-200/80 shadow-xs cursor-pointer group"
+                onClick={() => setIsImageLightboxOpen(true)}
+              >
                 <img
                   src={currentDisplayImage}
                   alt={product.name}
-                  className={`w-full h-full object-cover transition-transform duration-500 hover:scale-105 ${
+                  className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${
                     isOutOfStock ? 'opacity-85 grayscale-[15%]' : ''
                   }`}
                   loading="eager"
@@ -327,6 +348,21 @@ export default function ProductDetailModal({
                     )}
                   </button>
                 </div>
+
+                {/* View Product Image Pill Button */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsImageLightboxOpen(true);
+                  }}
+                  className="absolute bottom-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-stone-900/80 hover:bg-stone-900 text-white backdrop-blur-md text-[10px] font-semibold tracking-wide flex items-center gap-1.5 shadow-md transition-all hover:scale-105 active:scale-95 cursor-pointer pointer-events-auto"
+                  title="Click to view full image popup"
+                  aria-label="View product image"
+                >
+                  <HiArrowsPointingOut className="w-3.5 h-3.5" />
+                  <span>View Image</span>
+                </button>
               </div>
 
               {/* Multiple Images Gallery Thumbnails (if > 1) */}
@@ -365,42 +401,42 @@ export default function ProductDetailModal({
           {/* ══════════════════════════════════════════
               RIGHT: PRODUCT DETAILS & TABS
           ══════════════════════════════════════════ */}
-          <div className="md:w-7/12 lg:w-1/2 p-5 sm:p-6 md:p-8 flex flex-col justify-between overflow-y-auto">
+          <div className="md:w-7/12 lg:w-1/2 p-3.5 sm:p-6 md:p-8 flex flex-col justify-between overflow-y-auto">
             <div>
-              {/* Category Eyebrow & Stock Badge */}
-              <div className="flex items-center justify-between gap-2 mb-2 pr-8 sm:pr-0">
-                <span className="text-[11px] font-bold text-brand-secondary tracking-widest uppercase">
+              {/* Category Eyebrow & Stock Count Display (Simple, borderless) */}
+              <div className="flex items-center justify-between gap-2 mb-1.5 pr-8 sm:pr-0">
+                <span className="text-[10px] sm:text-[11px] font-bold text-brand-secondary tracking-widest uppercase">
                   {product.category_name || (product as any).categoryName || 'Ayurvedic Ritual'}
                 </span>
 
-                {/* Stock Status Chip */}
+                {/* Simple borderless stock count */}
                 {isOutOfStock ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold uppercase tracking-wider shrink-0 whitespace-nowrap">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                  <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-rose-600 shrink-0 whitespace-nowrap">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
                     Out of stock
                   </span>
                 ) : isLowStock ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase tracking-wider shrink-0 whitespace-nowrap">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                    Only {stockQuantity} left
+                  <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-amber-600 shrink-0 whitespace-nowrap">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                    Only {stockQuantity} in stock
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider shrink-0 whitespace-nowrap">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    In Stock ({stockQuantity} available)
+                  <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-semibold text-emerald-600 shrink-0 whitespace-nowrap">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    {stockQuantity > 0 ? `${stockQuantity} in stock` : 'In stock'}
                   </span>
                 )}
               </div>
 
               {/* Product Title */}
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-heading font-extrabold text-stone-900 leading-snug tracking-tight mb-2">
+              <h2 className="text-lg sm:text-2xl md:text-3xl font-heading font-extrabold text-stone-900 leading-snug tracking-tight mb-1 sm:mb-2">
                 {product.name}
               </h2>
 
               {/* SKU & Star Rating Row */}
-              <div className="flex flex-wrap items-center gap-3 mb-4 text-xs">
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 mb-2.5 sm:mb-3 text-xs">
                 {product.sku && (
-                  <span className="font-mono text-stone-400 uppercase text-[11px] bg-stone-100 px-2 py-0.5 rounded-md">
+                  <span className="font-mono text-stone-400 uppercase text-[10px] sm:text-[11px] bg-stone-100 px-2 py-0.5 rounded-md">
                     SKU: {product.sku}
                   </span>
                 )}
@@ -412,30 +448,30 @@ export default function ProductDetailModal({
                   <HiStar className="w-4 h-4 fill-current text-amber-400" />
                   <span className="font-bold text-stone-800">{product.rating || 5.0}</span>
                   <span className="text-brand-primary underline ml-0.5 font-medium">
-                    ({reviews.length || product.reviews || 0} customer reviews)
+                    ({reviews.length || product.reviews || 0} reviews)
                   </span>
                 </button>
               </div>
 
-              {/* Price Banner */}
-              <div className="flex items-baseline gap-3 p-3.5 rounded-2xl bg-stone-50 border border-stone-200/70 mb-5">
-                <span className="text-2xl sm:text-3xl font-extrabold text-brand-secondary font-mono">
+              {/* Simple, compact price row without bulky bordered boxes */}
+              <div className="flex items-baseline gap-2.5 sm:gap-3 mb-3 sm:mb-4">
+                <span className="text-xl sm:text-2xl md:text-3xl font-extrabold text-brand-secondary font-mono">
                   LKR {effectivePrice.toLocaleString()}
                 </span>
                 {hasDiscount && (
-                  <span className="text-sm text-stone-400 line-through font-mono">
+                  <span className="text-xs sm:text-sm text-stone-400 line-through font-mono">
                     LKR {basePriceNum.toLocaleString()}
                   </span>
                 )}
                 {hasDiscount && (
-                  <span className="ml-auto text-[11px] font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                     Save LKR {(basePriceNum - effectivePrice).toLocaleString()}
                   </span>
                 )}
               </div>
 
               {/* Segmented Mobile-Friendly Navigation Tabs */}
-              <div className="grid grid-cols-4 gap-1 p-1 bg-stone-100 rounded-2xl mb-4 text-[11px] sm:text-xs font-bold text-center">
+              <div className="grid grid-cols-4 gap-1 p-1 bg-stone-100 rounded-2xl mb-3 sm:mb-4 text-[11px] sm:text-xs font-bold text-center">
                 <button
                   type="button"
                   onClick={() => setActiveTab('details')}
@@ -488,20 +524,20 @@ export default function ProductDetailModal({
 
               {/* Tab 1: Overview */}
               {activeTab === 'details' && (
-                <div className="space-y-4 animate-fade-in text-xs sm:text-sm text-stone-600 leading-relaxed font-light">
+                <div className="space-y-3 sm:space-y-4 animate-fade-in text-xs sm:text-sm text-stone-600 leading-relaxed font-light">
                   <p className="whitespace-pre-line">
                     {product.full_description || product.short_description || 'Handcrafted luxury Ayurvedic hair formulation enriched with pristine Ceylon herbal essences.'}
                   </p>
 
                   {/* Highlight Botanical Features */}
-                  <div className="grid grid-cols-2 gap-2 pt-2">
-                    <div className="p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/60 flex items-center gap-2">
-                      <HiSparkles className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span className="text-[11px] font-semibold text-stone-800">Pure Botanicals</span>
+                  <div className="grid grid-cols-2 gap-2 pt-1 sm:pt-2">
+                    <div className="p-2 sm:p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/60 flex items-center gap-1.5 sm:gap-2">
+                      <HiSparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-600 shrink-0" />
+                      <span className="text-[10px] sm:text-[11px] font-semibold text-stone-800">Pure Botanicals</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-stone-50 border border-stone-200 flex items-center gap-2">
-                      <HiCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span className="text-[11px] font-semibold text-stone-800">Sulfate & Paraben Free</span>
+                    <div className="p-2 sm:p-2.5 rounded-xl bg-stone-50 border border-stone-200 flex items-center gap-1.5 sm:gap-2">
+                      <HiCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600 shrink-0" />
+                      <span className="text-[10px] sm:text-[11px] font-semibold text-stone-800">Sulfate & Paraben Free</span>
                     </div>
                   </div>
                 </div>
@@ -509,9 +545,9 @@ export default function ProductDetailModal({
 
               {/* Tab 2: Ritual & How to Use */}
               {activeTab === 'ritual' && (
-                <div className="space-y-3 animate-fade-in">
-                  <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80">
-                    <span className="text-xs font-bold text-brand-secondary uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
+                <div className="space-y-2.5 sm:space-y-3 animate-fade-in">
+                  <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-amber-50/70 border border-amber-200/80">
+                    <span className="text-[11px] sm:text-xs font-bold text-brand-secondary uppercase tracking-wider block mb-1 flex items-center gap-1.5">
                       <span>💡</span> Recommended Daily Ritual:
                     </span>
                     <p className="text-xs sm:text-sm text-stone-700 leading-relaxed font-light whitespace-pre-line">
@@ -523,9 +559,9 @@ export default function ProductDetailModal({
 
               {/* Tab 3: Ingredients */}
               {activeTab === 'ingredients' && (
-                <div className="space-y-3 animate-fade-in">
-                  <div className="p-4 rounded-2xl bg-stone-50 border border-stone-200">
-                    <span className="text-xs font-bold text-stone-800 uppercase tracking-wider block mb-2 flex items-center gap-1.5">
+                <div className="space-y-2.5 sm:space-y-3 animate-fade-in">
+                  <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-stone-50 border border-stone-200">
+                    <span className="text-[11px] sm:text-xs font-bold text-stone-800 uppercase tracking-wider block mb-1 flex items-center gap-1.5">
                       <span>🌿</span> Active Ingredients & Essence:
                     </span>
                     <p className="text-xs sm:text-sm text-stone-600 leading-relaxed font-light whitespace-pre-line">
@@ -681,7 +717,7 @@ export default function ProductDetailModal({
         {/* ══════════════════════════════════════════
             STICKY BOTTOM ACTION BAR (Ultra-mobile optimized)
         ══════════════════════════════════════════ */}
-        <div className="sticky bottom-0 z-20 bg-white/95 backdrop-blur-md border-t border-stone-200 p-3.5 sm:p-5 flex items-center gap-3 sm:gap-4 shrink-0 shadow-lg sm:shadow-none">
+        <div className="sticky bottom-0 z-20 bg-white/95 backdrop-blur-md border-t border-stone-200 p-2.5 sm:p-4 md:p-5 flex items-center gap-2.5 sm:gap-4 shrink-0 shadow-lg sm:shadow-none">
           {/* Quantity Stepper */}
           {!isOutOfStock && (
             <div className="flex items-center border border-stone-200 rounded-full bg-stone-50 p-1 shrink-0">
@@ -689,19 +725,19 @@ export default function ProductDetailModal({
                 type="button"
                 onClick={handleDecrement}
                 disabled={quantity <= 1}
-                className="w-8 h-8 rounded-full bg-white hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-all disabled:opacity-30 cursor-pointer shadow-2xs active:scale-90"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-all disabled:opacity-30 cursor-pointer shadow-2xs active:scale-90"
                 aria-label="Decrease quantity"
               >
                 <HiMinus className="w-3.5 h-3.5" />
               </button>
-              <span className="w-8 text-center text-xs font-bold text-stone-900 font-mono">
+              <span className="w-7 sm:w-8 text-center text-xs font-bold text-stone-900 font-mono">
                 {quantity}
               </span>
               <button
                 type="button"
                 onClick={handleIncrement}
                 disabled={stockQuantity > 0 && quantity >= stockQuantity}
-                className="w-8 h-8 rounded-full bg-white hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-all disabled:opacity-30 cursor-pointer shadow-2xs active:scale-90"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-all disabled:opacity-30 cursor-pointer shadow-2xs active:scale-90"
                 aria-label="Increase quantity"
               >
                 <HiPlus className="w-3.5 h-3.5" />
@@ -713,7 +749,7 @@ export default function ProductDetailModal({
           {isOutOfStock ? (
             <button
               disabled
-              className="flex-1 py-3.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed select-none shadow-none"
+              className="flex-1 py-3 sm:py-3.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed select-none shadow-none"
             >
               <HiShoppingBag className="w-4 h-4" />
               <span>Out of stock</span>
@@ -721,7 +757,7 @@ export default function ProductDetailModal({
           ) : (
             <button
               onClick={handleAddToCart}
-              className="flex-1 py-3.5 px-6 rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:brightness-105 active:scale-[0.99] text-white text-xs sm:text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all cursor-pointer"
+              className="flex-1 py-3 sm:py-3.5 px-5 rounded-full bg-gradient-to-r from-brand-primary to-brand-secondary hover:brightness-105 active:scale-[0.99] text-white text-xs sm:text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all cursor-pointer"
             >
               <HiShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>Add to Bag</span>
@@ -732,6 +768,96 @@ export default function ProductDetailModal({
           )}
         </div>
       </div>
+
+      {/* ══════════════════════════════════════════
+          FULLSCREEN POPUP IMAGE LIGHTBOX
+      ══════════════════════════════════════════ */}
+      {isImageLightboxOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-md animate-fade-in"
+          onClick={() => setIsImageLightboxOpen(false)}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setIsImageLightboxOpen(false)}
+            className="absolute top-4 right-4 z-[110] w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95"
+            aria-label="Close image popup"
+          >
+            <HiXMark className="w-6 h-6" />
+          </button>
+
+          {/* Previous Arrow (if multi-image) */}
+          {allImages.length > 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveImageIndex((prev) => (prev > 0 ? prev - 1 : allImages.length - 1));
+              }}
+              className="absolute left-3 sm:left-6 z-[110] w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95"
+              aria-label="Previous image"
+            >
+              <HiChevronLeft className="w-6 h-6" />
+            </button>
+          )}
+
+          {/* Next Arrow (if multi-image) */}
+          {allImages.length > 1 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveImageIndex((prev) => (prev < allImages.length - 1 ? prev + 1 : 0));
+              }}
+              className="absolute right-3 sm:right-6 z-[110] w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95"
+              aria-label="Next image"
+            >
+              <HiChevronRight className="w-6 h-6" />
+            </button>
+          )}
+
+          {/* Popup Image Container */}
+          <div
+            className="relative max-w-2xl sm:max-w-3xl max-h-[85vh] flex flex-col items-center justify-center animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={currentDisplayImage}
+              alt={product.name}
+              className="max-w-full max-h-[72vh] object-contain rounded-2xl shadow-2xl select-none"
+            />
+
+            {/* Caption & Image Counter */}
+            <div className="mt-3 text-center">
+              <h3 className="text-white text-sm sm:text-base font-semibold truncate max-w-xs sm:max-w-md">
+                {product.name}
+              </h3>
+              {allImages.length > 1 && (
+                <span className="text-white/60 text-xs font-mono mt-0.5 block">
+                  {activeImageIndex + 1} of {allImages.length}
+                </span>
+              )}
+            </div>
+
+            {/* Thumbnails in popup if multi-image */}
+            {allImages.length > 1 && (
+              <div className="flex items-center gap-2 mt-3 overflow-x-auto pb-1 max-w-xs sm:max-w-md scrollbar-none">
+                {allImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${
+                      activeImageIndex === idx
+                        ? 'border-white scale-105 shadow-md'
+                        : 'border-white/30 opacity-60 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={img} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
