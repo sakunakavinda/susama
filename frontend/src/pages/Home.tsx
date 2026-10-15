@@ -24,6 +24,7 @@ import {
 } from 'react-icons/hi2';
 import { useCartStore } from '../store/useCartStore';
 import { useWishlistStore } from '../store/useWishlistStore';
+import ProductDetailModal from '../components/ProductDetailModal';
 
 interface CategoryItem {
   id: string;
@@ -190,17 +191,6 @@ export default function Home() {
     }
   };
 
-  // Product Reviews State
-  const [modalReviews, setModalReviews] = useState<ReviewItem[]>([]);
-  const [modalReviewsLoading, setModalReviewsLoading] = useState<boolean>(false);
-  const [activeModalTab, setActiveModalTab] = useState<'details' | 'reviews'>('details');
-  const [newReviewAuthor, setNewReviewAuthor] = useState('');
-  const [newReviewEmail, setNewReviewEmail] = useState('');
-  const [newReviewRating, setNewReviewRating] = useState(5);
-  const [newReviewTitle, setNewReviewTitle] = useState('');
-  const [newReviewComment, setNewReviewComment] = useState('');
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  const [reviewSubmitSuccess, setReviewSubmitSuccess] = useState(false);
 
   // VIP Newsletter Club State
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -365,9 +355,9 @@ export default function Home() {
     }
   };
 
-  // Prevent background scrolling when product quick view or overall review modal is open
+  // Prevent background scrolling when overall review modal is open
   useEffect(() => {
-    if (selectedProduct || isOverallModalOpen) {
+    if (isOverallModalOpen) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -375,80 +365,7 @@ export default function Home() {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [selectedProduct, isOverallModalOpen]);
-
-  // Fetch reviews whenever a product is opened in Quick View
-  useEffect(() => {
-    if (selectedProduct) {
-      setModalReviewsLoading(true);
-      setActiveModalTab('details');
-      setReviewSubmitSuccess(false);
-      fetch(`http://localhost:5001/api/reviews/product/${selectedProduct.id}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && Array.isArray(data.data)) {
-            setModalReviews(data.data);
-          } else {
-            setModalReviews([]);
-          }
-        })
-        .catch(() => setModalReviews([]))
-        .finally(() => setModalReviewsLoading(false));
-    } else {
-      setModalReviews([]);
-    }
-  }, [selectedProduct]);
-
-  // Submit a customer review
-  const handleSubmitReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedProduct || !newReviewAuthor.trim() || !newReviewComment.trim()) return;
-    setIsSubmittingReview(true);
-    try {
-      const res = await fetch('http://localhost:5001/api/reviews/product', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product_id: selectedProduct.id,
-          customer_name: newReviewAuthor.trim(),
-          customer_email: newReviewEmail.trim() || undefined,
-          rating: newReviewRating,
-          title: newReviewTitle.trim() || undefined,
-          comment: newReviewComment.trim()
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setReviewSubmitSuccess(true);
-        setNewReviewAuthor('');
-        setNewReviewEmail('');
-        setNewReviewTitle('');
-        setNewReviewComment('');
-        // Refresh product reviews and update product rating/reviews in state
-        const refreshed = await fetch(`http://localhost:5001/api/reviews/product/${selectedProduct.id}`);
-        const refData = await refreshed.json();
-        if (refData.success && Array.isArray(refData.data)) {
-          setModalReviews(refData.data);
-          if (refData.product) {
-            setSelectedProduct((prev) => prev ? {
-              ...prev,
-              rating: refData.product.average_rating,
-              reviews: refData.product.total_reviews
-            } : null);
-            setProducts((prev) => prev.map((p) => p.id === selectedProduct.id ? {
-              ...p,
-              rating: refData.product.average_rating,
-              reviews: refData.product.total_reviews
-            } : p));
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Failed to submit review:', err);
-    } finally {
-      setIsSubmittingReview(false);
-    }
-  };
+  }, [isOverallModalOpen]);
 
   const filteredProducts = products.filter((prod) => {
     if (prod.display_on_home === false || prod.display_on_home === 0) return false;
@@ -1848,324 +1765,11 @@ export default function Home() {
       </section>
 
       {/* ── Quick View Modal ── */}
-      {selectedProduct && (() => {
-        const isModalOutOfStock = (selectedProduct.stock_quantity !== undefined && Number(selectedProduct.stock_quantity) <= 0) || selectedProduct.is_in_stock === false;
-
-        return (
-        <div
-          className="fixed inset-0 z-[55] flex items-center justify-center p-4 sm:p-6 bg-black/65 backdrop-blur-sm animate-fade-in"
-          onClick={() => setSelectedProduct(null)}
-        >
-          <div
-            className="bg-white rounded-2xl sm:rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl max-h-[90vh] flex flex-col md:flex-row relative animate-scale-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close Button */}
-            <button
-              onClick={() => setSelectedProduct(null)}
-              className="absolute top-4 right-4 z-20 w-9 h-9 rounded-full bg-white shadow-md border border-gray-100 text-gray-500 hover:text-gray-900 flex items-center justify-center transition-all cursor-pointer hover:scale-110"
-              aria-label="Close modal"
-            >
-              <HiXMark className="w-5 h-5" />
-            </button>
-
-            {/* Product Image */}
-            <div className="md:w-5/12 relative bg-gray-50 min-h-[240px] md:min-h-auto shrink-0">
-              <img
-                src={selectedProduct.image || selectedProduct.primary_image || 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop'}
-                alt={selectedProduct.name}
-                className={`w-full h-full object-cover ${isModalOutOfStock ? 'opacity-85 grayscale-[15%]' : ''}`}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop';
-                }}
-              />
-              <div className="absolute top-4 left-4 flex flex-col gap-1 items-start">
-                {isModalOutOfStock ? (
-                  <span className="px-3 py-1 rounded-full bg-stone-900/90 backdrop-blur-md text-amber-300 border border-amber-400/30 text-[10px] font-bold tracking-widest uppercase shadow flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                    Out of stock
-                  </span>
-                ) : (
-                  <span className="px-3 py-1 rounded-full bg-brand-primary text-white text-[10px] font-bold tracking-widest uppercase shadow-xs">
-                    {selectedProduct.tag || 'HAIR CARE'}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Modal Body */}
-            <div className="flex-1 p-6 sm:p-8 overflow-y-auto flex flex-col gap-4 max-h-[60vh] md:max-h-none">
-              <div>
-                <div className="flex items-center justify-between gap-2 mb-1 pr-8">
-                  <span className="text-[10px] font-bold text-brand-secondary tracking-widest uppercase truncate">
-                    {selectedProduct.category_name || 'Hair Care'}
-                  </span>
-                  {isModalOutOfStock ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-bold uppercase tracking-wider shrink-0 whitespace-nowrap">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                      Out of stock
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider shrink-0 whitespace-nowrap">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                      In stock ({selectedProduct.stock_quantity ?? 'Available'})
-                    </span>
-                  )}
-                </div>
-                <h2 className="text-xl sm:text-2xl font-heading font-bold text-gray-900 mt-1 leading-snug">
-                  {selectedProduct.name}
-                </h2>
-                {selectedProduct.sku && (
-                  <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wider mt-1 block">
-                    SKU: {selectedProduct.sku}
-                  </span>
-                )}
-              </div>
-
-              <div className="flex items-center gap-1.5 cursor-pointer" onClick={() => setActiveModalTab('reviews')}>
-                <HiStar className="w-4 h-4 text-amber-400 fill-current" />
-                <span className="text-xs font-bold text-gray-700">{selectedProduct.rating || 4.9}</span>
-                <span className="text-xs text-brand-primary underline ml-1">
-                  ({modalReviews.length || selectedProduct.reviews || 0} reviews)
-                </span>
-              </div>
-
-              {/* Tabs Switcher */}
-              <div className="flex border-b border-gray-100 gap-4 text-xs font-semibold">
-                <button
-                  type="button"
-                  onClick={() => setActiveModalTab('details')}
-                  className={`pb-2 border-b-2 transition-colors cursor-pointer ${
-                    activeModalTab === 'details'
-                      ? 'border-brand-primary text-brand-primary'
-                      : 'border-transparent text-gray-400 hover:text-gray-600'
-                  }`}
-                >
-                  Overview &amp; Ritual
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveModalTab('reviews')}
-                  className={`pb-2 border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 ${
-                    activeModalTab === 'reviews'
-                      ? 'border-brand-primary text-brand-primary'
-                      : 'border-transparent text-gray-400 hover:text-gray-600'
-                  }`}
-                >
-                  Verified Reviews ({modalReviews.length})
-                </button>
-              </div>
-
-              {activeModalTab === 'details' ? (
-                <>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-2xl sm:text-3xl font-extrabold text-brand-secondary">
-                      {selectedProduct.sale_price
-                        ? `LKR ${Number(selectedProduct.sale_price).toLocaleString()}`
-                        : (selectedProduct.price || `LKR ${Number(selectedProduct.base_price).toLocaleString()}`)}
-                    </span>
-                    {selectedProduct.sale_price && (
-                      <span className="text-sm text-gray-400 line-through">
-                        LKR {Number(selectedProduct.base_price).toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-
-                  <p className="text-sm text-gray-500 leading-relaxed font-light">
-                    {selectedProduct.full_description || selectedProduct.short_description}
-                  </p>
-
-                  {selectedProduct.how_to_use && (
-                    <div className="bg-amber-50/70 rounded-xl p-4 border border-amber-100">
-                      <span className="text-[10px] font-bold text-brand-primary uppercase tracking-wider block mb-1">
-                        💡 How to Use
-                      </span>
-                      <p className="text-xs text-gray-600 leading-relaxed">{selectedProduct.how_to_use}</p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="flex flex-col gap-4 overflow-y-auto max-h-[38vh] pr-1">
-                  {modalReviewsLoading ? (
-                    <div className="py-8 text-center text-xs text-gray-400">Loading verified customer reviews...</div>
-                  ) : modalReviews.length === 0 ? (
-                    <div className="py-6 text-center text-xs text-gray-400">
-                      No reviews yet for this product. Be the first to share your experience!
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-3">
-                      {modalReviews.map((rev) => (
-                        <div key={rev.id} className="p-3.5 rounded-xl bg-stone-50 border border-gray-100/90 text-left">
-                          <div className="flex items-center justify-between mb-1.5">
-                            <span className="text-xs font-bold text-gray-900">{rev.customer_name}</span>
-                            <div className="flex items-center gap-0.5 text-amber-400">
-                              {[...Array(5)].map((_, i) => (
-                                <HiStar
-                                  key={i}
-                                  className={`w-3.5 h-3.5 ${
-                                    i < Math.round(rev.rating) ? 'fill-current text-amber-400' : 'text-gray-200'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          {rev.title && (
-                            <h5 className="text-xs font-semibold text-gray-800 mb-1">"{rev.title}"</h5>
-                          )}
-                          <p className="text-xs text-gray-600 leading-relaxed font-light">{rev.comment}</p>
-                          <div className="flex items-center gap-2 mt-2 pt-1.5 border-t border-gray-200/50 text-[10px] text-gray-400">
-                            <span className="text-emerald-700 font-semibold flex items-center gap-1">
-                              <HiCheck className="w-2.5 h-2.5" /> Verified Buyer
-                            </span>
-                            {rev.created_at && (
-                              <span>• {new Date(rev.created_at).toLocaleDateString()}</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Add Review Form */}
-                  <div className="mt-2 pt-3 border-t border-gray-100">
-                    <span className="text-[11px] font-bold text-gray-800 uppercase tracking-wider block mb-2">
-                      Write a Review
-                    </span>
-                    {reviewSubmitSuccess ? (
-                      <div className="p-3 rounded-xl bg-emerald-50 text-emerald-800 text-xs flex items-center gap-2 font-medium">
-                        <HiCheck className="w-4 h-4 shrink-0 text-emerald-600" />
-                        Thank you! Your verified review has been published.
-                      </div>
-                    ) : (
-                      <form onSubmit={handleSubmitReview} className="flex flex-col gap-2.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-600">Your Rating:</span>
-                          <div className="flex gap-1 text-amber-400">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <button
-                                key={star}
-                                type="button"
-                                onClick={() => setNewReviewRating(star)}
-                                className="cursor-pointer focus:outline-hidden"
-                              >
-                                <HiStar
-                                  className={`w-4 h-4 ${
-                                    star <= newReviewRating ? 'fill-current text-amber-400' : 'text-gray-200'
-                                  }`}
-                                />
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          <input
-                            type="text"
-                            required
-                            placeholder="Your Name *"
-                            value={newReviewAuthor}
-                            onChange={(e) => setNewReviewAuthor(e.target.value)}
-                            className="text-xs px-3 py-2 border border-gray-200 rounded-lg focus:outline-brand-primary"
-                          />
-                          <input
-                            type="email"
-                            placeholder="Email (optional)"
-                            value={newReviewEmail}
-                            onChange={(e) => setNewReviewEmail(e.target.value)}
-                            className="text-xs px-3 py-2 border border-gray-200 rounded-lg focus:outline-brand-primary"
-                          />
-                        </div>
-
-                        <input
-                          type="text"
-                          placeholder="Review Headline (e.g. Best curl cream!)"
-                          value={newReviewTitle}
-                          onChange={(e) => setNewReviewTitle(e.target.value)}
-                          className="text-xs px-3 py-2 border border-gray-200 rounded-lg focus:outline-brand-primary"
-                        />
-
-                        <textarea
-                          required
-                          rows={2}
-                          placeholder="Share your experience with this product... *"
-                          value={newReviewComment}
-                          onChange={(e) => setNewReviewComment(e.target.value)}
-                          className="text-xs px-3 py-2 border border-gray-200 rounded-lg focus:outline-brand-primary resize-none"
-                        />
-
-                        <button
-                          type="submit"
-                          disabled={isSubmittingReview}
-                          className="self-start text-[11px] font-bold tracking-wider uppercase px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
-                        >
-                          {isSubmittingReview ? 'Submitting...' : 'Post Review'}
-                        </button>
-                      </form>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-auto pt-4 border-t border-gray-100 flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    toggleWishlist({
-                      id: selectedProduct.id,
-                      name: selectedProduct.name,
-                      slug: selectedProduct.slug,
-                      base_price: selectedProduct.base_price,
-                      sale_price: selectedProduct.sale_price,
-                      primary_image: selectedProduct.primary_image || selectedProduct.image_url || selectedProduct.image,
-                      category_name: selectedProduct.category_name,
-                      tag: selectedProduct.tag,
-                      rating: selectedProduct.rating,
-                      reviews: selectedProduct.reviews,
-                      short_description: selectedProduct.short_description,
-                      ingredients: selectedProduct.ingredients,
-                      how_to_use: selectedProduct.how_to_use
-                    });
-                  }}
-                  className={`p-3.5 rounded-full border transition-all flex items-center justify-center cursor-pointer shadow-xs hover:scale-105 active:scale-95 ${
-                    isInWishlist(selectedProduct.id)
-                      ? 'bg-red-50 border-red-200 text-red-500 shadow-xs'
-                      : 'bg-stone-50 border-stone-200 text-stone-600 hover:text-red-500 hover:bg-white'
-                  }`}
-                  title={isInWishlist(selectedProduct.id) ? 'Remove from favourites' : 'Save to favourites'}
-                  aria-label="Toggle favourite"
-                >
-                  {isInWishlist(selectedProduct.id) ? (
-                    <HiHeart className="w-5 h-5 fill-current text-red-500" />
-                  ) : (
-                    <HiOutlineHeart className="w-5 h-5" />
-                  )}
-                </button>
-                {isModalOutOfStock ? (
-                  <button
-                    disabled
-                    className="flex-1 py-3.5 rounded-full text-xs font-bold tracking-widest uppercase flex items-center justify-center gap-2 bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed select-none"
-                  >
-                    <HiShoppingBag className="w-4 h-4" />
-                    Out of stock
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      addToCart(selectedProduct);
-                      setSelectedProduct(null);
-                    }}
-                    className="flex-1 btn-primary py-3.5 rounded-full text-xs font-bold tracking-widest uppercase flex items-center justify-center gap-2 shadow-lg cursor-pointer"
-                  >
-                    <HiShoppingBag className="w-4 h-4" />
-                    Add to Bag
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        );
-      })()}
+      <ProductDetailModal
+        product={selectedProduct}
+        isOpen={Boolean(selectedProduct)}
+        onClose={() => setSelectedProduct(null)}
+      />
 
     </div>
   );

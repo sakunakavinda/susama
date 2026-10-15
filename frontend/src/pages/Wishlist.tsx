@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   HiOutlineHeart, 
@@ -8,11 +8,11 @@ import {
   HiStar, 
   HiOutlineArrowLeft,
   HiOutlineXMark,
-  HiShoppingBag,
   HiCheck
 } from 'react-icons/hi2';
 import { useWishlistStore, type WishlistItem } from '../store/useWishlistStore';
 import { useCartStore } from '../store/useCartStore';
+import ProductDetailModal from '../components/ProductDetailModal';
 
 export default function Wishlist() {
   const { items, removeItem, clearWishlist } = useWishlistStore();
@@ -21,17 +21,6 @@ export default function Wishlist() {
   const [selectedProduct, setSelectedProduct] = useState<WishlistItem | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
 
-  // Prevent background scrolling when product quick view modal is open
-  useEffect(() => {
-    if (selectedProduct) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [selectedProduct]);
 
   const showNotification = (msg: string) => {
     setNotification(msg);
@@ -313,129 +302,15 @@ export default function Wishlist() {
       </div>
 
       {/* Quick View Product Modal */}
-      {selectedProduct && (() => {
-        const isModalOutOfStock = (selectedProduct.stock_quantity !== undefined && Number(selectedProduct.stock_quantity) <= 0) || selectedProduct.is_in_stock === false;
-
-        return (
-          <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/70 backdrop-blur-sm animate-fade-in"
-            onClick={() => setSelectedProduct(null)}
-          >
-            <div 
-              className="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-stone-200 flex flex-col md:flex-row relative animate-scale-up"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Button */}
-              <button 
-                onClick={() => setSelectedProduct(null)}
-                className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 flex items-center justify-center transition-colors cursor-pointer"
-              >
-                <HiOutlineXMark className="w-5 h-5" />
-              </button>
-
-              {/* Modal Image */}
-              <div className="md:w-1/2 aspect-square md:aspect-auto bg-stone-100 relative">
-                <img 
-                  src={selectedProduct.image} 
-                  alt={selectedProduct.name} 
-                  className={`w-full h-full object-cover ${isModalOutOfStock ? 'opacity-85 grayscale-[15%]' : ''}`}
-                />
-                <div className="absolute top-4 left-4 flex flex-col gap-1 items-start">
-                  {isModalOutOfStock ? (
-                    <span className="px-3 py-1 rounded-full bg-stone-900/90 backdrop-blur-md text-amber-300 border border-amber-400/30 text-[10px] font-bold tracking-widest uppercase shadow flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                      Out of stock
-                    </span>
-                  ) : (
-                    <span className="px-3 py-1 rounded-full bg-brand-primary text-white text-[10px] font-bold tracking-widest uppercase shadow">
-                      {selectedProduct.tag || selectedProduct.categoryName || 'BOTANICAL'}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Modal Content */}
-              <div className="md:w-1/2 p-6 sm:p-8 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-2 pr-8">
-                    <span className="text-[10px] font-bold text-brand-secondary tracking-widest uppercase truncate">
-                      {selectedProduct.categoryName || 'Formulation'}
-                    </span>
-                    {isModalOutOfStock ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-bold uppercase tracking-wider shrink-0 whitespace-nowrap">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                        Out of stock
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider shrink-0 whitespace-nowrap">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        In stock ({selectedProduct.stock_quantity ?? 'Available'})
-                      </span>
-                    )}
-                  </div>
-
-                  <h3 className="text-xl font-heading font-semibold text-stone-900 mb-2">
-                    {selectedProduct.name}
-                  </h3>
-
-                  {/* Price */}
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <span className="text-2xl font-bold text-stone-900 font-mono">
-                      LKR {selectedProduct.price.toLocaleString()}
-                    </span>
-                    {selectedProduct.originalPrice && selectedProduct.originalPrice > selectedProduct.price && (
-                      <span className="text-sm text-stone-400 line-through font-mono">
-                        LKR {selectedProduct.originalPrice.toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-
-                  {selectedProduct.short_description && (
-                    <p className="text-xs text-stone-600 leading-relaxed mb-4">
-                      {selectedProduct.short_description}
-                    </p>
-                  )}
-
-                  {selectedProduct.how_to_use && (
-                    <div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200/80 mb-3 text-xs">
-                      <span className="text-[10px] font-bold text-brand-secondary uppercase block mb-1">
-                        Ritual & Use
-                      </span>
-                      <p className="text-stone-700 leading-relaxed font-light">
-                        {selectedProduct.how_to_use}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Action */}
-                <div className="pt-4 border-t border-stone-200 flex items-center gap-3">
-                  {isModalOutOfStock ? (
-                    <button
-                      disabled
-                      className="flex-1 py-3 px-6 rounded-xl bg-stone-100 text-stone-400 font-semibold text-xs sm:text-sm border border-stone-200 cursor-not-allowed flex items-center justify-center gap-2 select-none"
-                    >
-                      <HiShoppingBag className="w-4 h-4" />
-                      <span>Out of stock</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        handleAddToCart(selectedProduct);
-                        setSelectedProduct(null);
-                      }}
-                      className="flex-1 py-3 px-6 rounded-xl bg-gradient-to-r from-brand-primary to-brand-secondary hover:brightness-105 text-white font-semibold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <HiShoppingBag className="w-4 h-4" />
-                      <span>Add to Shopping Bag</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      })()}
+      <ProductDetailModal
+        product={selectedProduct}
+        isOpen={Boolean(selectedProduct)}
+        onClose={() => setSelectedProduct(null)}
+        onAddedToCart={(name) => {
+          setNotification(`Added "${name}" to shopping bag!`);
+          setTimeout(() => setNotification(null), 3000);
+        }}
+      />
     </div>
   );
 }
