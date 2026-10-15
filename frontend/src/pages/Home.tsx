@@ -1136,43 +1136,78 @@ const filteredProducts = products.filter((prod) => {
             </h2>
             <div className="w-16 h-1 bg-gradient-to-r from-brand-primary to-brand-secondary rounded-full mx-auto mb-8 sm:mb-10" />
 
-            {/* Filter Pills */}
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 max-w-3xl mx-auto">
-              <button
-                onClick={() => setSelectedFilter('all')}
-                className={`px-4 sm:px-5 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-all duration-200 cursor-pointer border ${
-                  selectedFilter === 'all'
-                    ? 'bg-gray-950 border-gray-950 text-white shadow-md'
-                    : 'bg-white border-gray-200 text-gray-600 hover:border-gray-900 hover:text-gray-900'
-                }`}
-              >
-                All Products ({products.length})
-              </button>
-              {categories.map((cat) => (
+            {/* Filter Pills - Fully responsive horizontal swipe ribbon on mobile, wrapped flex on desktop */}
+            <div className="relative w-full max-w-4xl mx-auto mb-6 sm:mb-10">
+              {/* Subtle edge fade gradient on mobile */}
+              <div className="pointer-events-none sm:hidden absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-stone-50/90 to-transparent z-10" />
+              <div className="pointer-events-none sm:hidden absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-stone-50/90 to-transparent z-10" />
+
+              <div className="flex items-center overflow-x-auto no-scrollbar gap-2 sm:gap-2.5 px-4 sm:px-0 py-2 sm:py-0 sm:flex-wrap sm:justify-center scroll-smooth touch-pan-x">
                 <button
-                  key={cat.id}
-                  onClick={() => setSelectedFilter(cat.slug || cat.id)}
-                  className={`px-4 sm:px-5 py-2 rounded-full text-xs font-semibold tracking-wider uppercase transition-all duration-200 cursor-pointer border whitespace-nowrap ${
-                    selectedFilter === cat.id || selectedFilter === cat.slug
-                      ? 'bg-gray-950 border-gray-950 text-white shadow-md'
+                  onClick={(e) => {
+                    setSelectedFilter('all');
+                    e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                  }}
+                  className={`px-3.5 sm:px-5 py-2 rounded-full text-[11px] sm:text-xs font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer border whitespace-nowrap shrink-0 select-none ${
+                    selectedFilter === 'all'
+                      ? 'bg-gray-950 border-gray-950 text-white shadow-md scale-[1.02]'
                       : 'bg-white border-gray-200 text-gray-600 hover:border-gray-900 hover:text-gray-900'
                   }`}
                 >
-                  {cat.name}
+                  All Products ({products.length})
                 </button>
-              ))}
+                {categories.map((cat) => {
+                  const isSelected = selectedFilter === cat.id || selectedFilter === cat.slug;
+                  const count = products.filter(p => p.category_id === cat.id || p.category_slug === cat.slug).length;
+
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={(e) => {
+                        setSelectedFilter(cat.slug || cat.id);
+                        e.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                      }}
+                      className={`px-3.5 sm:px-5 py-2 rounded-full text-[11px] sm:text-xs font-bold tracking-wider uppercase transition-all duration-200 cursor-pointer border whitespace-nowrap shrink-0 select-none flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'bg-gray-950 border-gray-950 text-white shadow-md scale-[1.02]'
+                          : 'bg-white border-gray-200 text-gray-600 hover:border-gray-900 hover:text-gray-900'
+                      }`}
+                    >
+                      <span>{cat.name}</span>
+                      {count > 0 && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                          isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
           {/* Product Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
-            {filteredProducts.slice(0, 4).map((prod) => {
-              const imageSrc = prod.image || prod.primary_image || prod.image_url || 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop';
-              const priceDisplay = prod.sale_price
-                ? `LKR ${Number(prod.sale_price).toLocaleString()}`
-                : (prod.price || `LKR ${Number(prod.base_price).toLocaleString()}`);
+            {filteredProducts.length === 0 ? (
+              <div className="col-span-full py-12 text-center text-stone-500">
+                <p className="text-sm">No formulations available in this category at the moment.</p>
+                <button
+                  onClick={() => setSelectedFilter('all')}
+                  className="mt-3 text-xs font-bold text-brand-primary uppercase tracking-wider hover:underline cursor-pointer"
+                >
+                  View All Products
+                </button>
+              </div>
+            ) : (
+              filteredProducts.slice(0, 4).map((prod) => {
+                const imageSrc = prod.image || prod.primary_image || prod.image_url || 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop';
+                const priceDisplay = prod.sale_price
+                  ? `LKR ${Number(prod.sale_price).toLocaleString()}`
+                  : (prod.price || `LKR ${Number(prod.base_price).toLocaleString()}`);
 
-              const isOutOfStock = (prod.stock_quantity !== undefined && Number(prod.stock_quantity) <= 0) || prod.is_in_stock === false;
+                const isOutOfStock = (prod.stock_quantity !== undefined && Number(prod.stock_quantity) <= 0) || prod.is_in_stock === false;
 
               return (
                 <div
@@ -1298,7 +1333,7 @@ const filteredProducts = products.filter((prod) => {
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
 
           {/* Browse All Products CTA */}
