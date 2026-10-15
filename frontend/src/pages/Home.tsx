@@ -367,11 +367,11 @@ export default function Home() {
     };
   }, [isOverallModalOpen]);
 
-  const filteredProducts = products.filter((prod) => {
-    if (prod.display_on_home === false || prod.display_on_home === 0) return false;
-    if (selectedFilter === 'all') return true;
-    return prod.category_id === selectedFilter || prod.category_slug === selectedFilter;
-  });
+const filteredProducts = products.filter((prod) => {
+  if (selectedFilter === 'all') return true;
+  return prod.category_id === selectedFilter || prod.category_slug === selectedFilter;
+});
+
 
   // Most Loved Formulations (display_on_home = 1) & 5-Second Infinite Forward Autoscroll
   const bestsellerProducts = products.filter(
