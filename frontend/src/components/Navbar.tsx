@@ -26,6 +26,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileCategoryOpen, setIsMobileCategoryOpen] = useState(true);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
@@ -158,27 +159,33 @@ export default function Navbar() {
               <HiChevronDown className={`w-4 h-4 transition-transform duration-300 ${isCategoryDropdownOpen ? 'rotate-180 text-brand-primary' : ''}`} />
             </button>
 
-            {/* Dropdown Menu */}
+            {/* Dropdown Menu - Light Liquid Glass */}
             {isCategoryDropdownOpen && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 bg-gray-950/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/15 py-3 animate-fade-in z-50 text-white overflow-hidden">
-                <div className="px-4 py-2 text-[10px] font-bold tracking-widest text-brand-primary/90 uppercase border-b border-white/10 text-center">
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 bg-white/85 backdrop-blur-2xl rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12),inset_0_1px_1px_rgba(255,255,255,0.95)] border border-white/80 py-3 animate-fade-in z-50 text-stone-800 overflow-hidden">
+                <div className="px-4 py-2 text-[10px] font-bold tracking-widest text-brand-secondary uppercase border-b border-stone-200/50 text-center">
                   Product Categories
                 </div>
                 {categories.map((cat) => (
                   <Link
                     key={cat.id}
-                    to={`/products?category=${cat.id}`}
-                    className="block px-4 py-2 text-sm text-gray-200 hover:bg-brand-primary/20 hover:text-brand-primary font-medium transition-all duration-200 text-center"
-                    onClick={() => setIsCategoryDropdownOpen(false)}
+                    to={`/products?category=${cat.slug || cat.id}`}
+                    className="block px-4 py-2 text-sm text-stone-700 hover:bg-amber-500/10 hover:text-brand-secondary font-medium transition-all duration-200 text-center"
+                    onClick={() => {
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                      setIsCategoryDropdownOpen(false);
+                    }}
                   >
                     {cat.name}
                   </Link>
                 ))}
-                <div className="border-t border-white/10 mt-2 pt-2 px-4 text-center">
+                <div className="border-t border-stone-200/50 mt-2 pt-2 px-4 text-center">
                   <Link
                     to="/products"
-                    className="block text-xs text-brand-primary hover:text-white font-semibold uppercase tracking-wider py-1 transition-all inline-block hover:scale-105"
-                    onClick={() => setIsCategoryDropdownOpen(false)}
+                    className="block text-xs text-brand-secondary hover:text-brand-primary font-semibold uppercase tracking-wider py-1 transition-all inline-block hover:scale-105"
+                    onClick={() => {
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                      setIsCategoryDropdownOpen(false);
+                    }}
                   >
                     View All Products →
                   </Link>
@@ -314,67 +321,175 @@ export default function Navbar() {
             )}
           </button>
 
-          {/* Mobile/Tablet Menu Button (visible below lg) */}
+          {/* Mobile/Tablet Menu Button - Light Themed Liquid Glass Styled */}
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`lg:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-full backdrop-blur-md border flex items-center justify-center hover:scale-105 active:scale-95 transition-all ${
-              isLightPage 
-                ? 'bg-stone-200/70 border-stone-300 text-stone-700 hover:bg-stone-300/80 hover:text-stone-900' 
-                : 'bg-white/10 border-white/20 text-white hover:bg-white/20'
+            className={`lg:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-full backdrop-blur-2xl border flex items-center justify-center hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-[0_2px_12px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.95)] ${
+              isMobileMenuOpen 
+                ? 'bg-white text-stone-900 border-white shadow-md' 
+                : 'bg-white/80 hover:bg-white text-stone-800 border-white/80'
             }`}
             aria-label="Toggle navigation menu"
           >
-            {isMobileMenuOpen ? <HiOutlineXMark className="w-5 h-5" /> : <HiOutlineBars3 className="w-5 h-5" />}
+            {isMobileMenuOpen ? (
+              <HiOutlineXMark className="w-5 h-5 text-stone-900" />
+            ) : (
+              <HiOutlineBars3 className="w-5 h-5 text-stone-900" />
+            )}
           </button>
         </div>
 
-        {/* Mobile / Tablet Drawer Menu */}
+        {/* Mobile / Tablet Drawer Menu - Light Themed Liquid Glass */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 mt-3 bg-gray-950/95 backdrop-blur-2xl border border-white/15 px-6 py-6 rounded-3xl shadow-2xl z-50 animate-fade-in text-white space-y-4">
-            <div className="flex flex-col space-y-3 font-medium">
-              <Link to="/" className="text-white hover:text-brand-primary text-base py-1">Home</Link>
-              <Link to="/products" className="text-white hover:text-brand-primary text-base py-1">Shop All Products</Link>
-              <Link to="/about" className="text-white hover:text-brand-primary text-base py-1">Our Story & Philosophy</Link>
+          <div className="lg:hidden absolute top-full left-0 right-0 mt-3 bg-white/85 backdrop-blur-3xl backdrop-saturate-200 border border-white/80 px-5 py-5 rounded-3xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.18),0_10px_25px_-5px_rgba(232,127,45,0.1),inset_0_1px_1px_rgba(255,255,255,0.95)] z-50 animate-fade-in text-stone-800 space-y-4">
+            
+            {/* Primary Nav Links */}
+            <div className="flex flex-col space-y-1.5 font-medium">
+              <Link 
+                to="/" 
+                onClick={() => {
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                  setIsMobileMenuOpen(false);
+                }}
+                className="px-3.5 py-2 rounded-xl text-stone-800 hover:text-brand-secondary hover:bg-amber-500/10 transition-all text-sm font-semibold flex items-center justify-between"
+              >
+                <span>Home</span>
+                <span className="text-stone-400 text-xs">›</span>
+              </Link>
+              
+              <Link 
+                to="/products" 
+                onClick={() => {
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                  setIsMobileMenuOpen(false);
+                }}
+                className="px-3.5 py-2 rounded-xl text-stone-800 hover:text-brand-secondary hover:bg-amber-500/10 transition-all text-sm font-semibold flex items-center justify-between"
+              >
+                <span>Shop All Products</span>
+                <span className="text-stone-400 text-xs">›</span>
+              </Link>
+
+              <Link 
+                to="/about" 
+                onClick={() => {
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                  setIsMobileMenuOpen(false);
+                }}
+                className="px-3.5 py-2 rounded-xl text-stone-800 hover:text-brand-secondary hover:bg-amber-500/10 transition-all text-sm font-semibold flex items-center justify-between"
+              >
+                <span>Our Story & Philosophy</span>
+                <span className="text-stone-400 text-xs">›</span>
+              </Link>
             </div>
             
-            <div className="pt-4 border-t border-white/10">
-              <span className="block text-[10px] font-bold text-brand-primary uppercase tracking-widest mb-3">Shop By Category</span>
-              <div className="grid grid-cols-2 gap-2">
-                {categories.map((cat) => (
-                  <Link 
-                    key={cat.id} 
-                    to={`/products?category=${cat.id}`} 
-                    className="py-1 text-xs text-gray-300 hover:text-brand-primary transition-colors flex items-center gap-1.5"
-                  >
-                    <span className="text-brand-primary">›</span> {cat.name}
-                  </Link>
-                ))}
-              </div>
+            {/* Categories Accordion / Dropdown - Light Liquid Glass Styled */}
+            <div className="pt-3 border-t border-stone-200/60">
+              <button
+                type="button"
+                onClick={() => setIsMobileCategoryOpen(!isMobileCategoryOpen)}
+                className="flex items-center justify-between w-full px-3.5 py-2.5 rounded-2xl bg-white/70 hover:bg-white active:bg-amber-50/80 backdrop-blur-md border border-white/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9),0_2px_8px_rgba(0,0,0,0.03)] text-stone-900 transition-all duration-200 cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold tracking-wider uppercase text-brand-secondary">
+                    Product Categories
+                  </span>
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-brand-primary/15 text-brand-secondary border border-brand-primary/20">
+                    {categories.length}
+                  </span>
+                </div>
+                <HiChevronDown 
+                  className={`w-4 h-4 text-stone-600 transition-transform duration-300 ${
+                    isMobileCategoryOpen ? 'rotate-180 text-brand-primary' : ''
+                  }`} 
+                />
+              </button>
+
+              {/* Collapsible Category Menu - Light Liquid Glass */}
+              {isMobileCategoryOpen && (
+                <div className="mt-2.5 p-2 rounded-2xl bg-stone-50/60 backdrop-blur-md border border-white/70 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] space-y-1 animate-fade-in">
+                  <div className="grid grid-cols-1 gap-1">
+                    {categories.map((cat) => (
+                      <Link 
+                        key={cat.id} 
+                        to={`/products?category=${cat.slug || cat.id}`}
+                        onClick={() => {
+                          window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="px-3 py-2 rounded-xl text-xs font-medium text-stone-700 hover:text-brand-secondary hover:bg-white active:bg-amber-100/50 transition-all flex items-center justify-between border border-transparent hover:border-amber-200/50 shadow-2xs group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-brand-primary group-hover:scale-125 transition-transform" />
+                          <span>{cat.name}</span>
+                        </div>
+                        <span className="text-stone-400 group-hover:text-brand-primary group-hover:translate-x-1 transition-all text-xs">›</span>
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="pt-1.5 mt-1 border-t border-stone-200/50 text-center">
+                    <Link
+                      to="/products"
+                      onClick={() => {
+                        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="inline-block py-1 text-[11px] font-bold text-brand-secondary hover:text-brand-primary tracking-wider uppercase transition-colors"
+                    >
+                      View All Products →
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs text-gray-300">
+            {/* Quick Actions Footer (Search, Favourites, Account) */}
+            <div className="pt-3 border-t border-stone-200/60 flex items-center justify-between gap-2 text-xs">
               <button
                 onClick={() => {
                   setIsMobileMenuOpen(false);
                   setIsSearchModalOpen(true);
                 }}
-                className="flex items-center gap-1.5 hover:text-white py-1 cursor-pointer"
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/70 hover:bg-white text-stone-700 hover:text-stone-900 border border-white/80 shadow-2xs transition-all cursor-pointer font-medium"
               >
-                <HiOutlineMagnifyingGlass className="w-4 h-4 text-brand-primary" /> Search
+                <HiOutlineMagnifyingGlass className="w-4 h-4 text-brand-primary shrink-0" />
+                <span>Search</span>
               </button>
-              <Link to="/wishlist" className="flex items-center gap-1.5 hover:text-white py-1">
-                <HiOutlineHeart className="w-4 h-4 text-brand-primary" /> Favourites ({totalWishlistItems})
+
+              <Link 
+                to="/wishlist" 
+                onClick={() => {
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/70 hover:bg-white text-stone-700 hover:text-stone-900 border border-white/80 shadow-2xs transition-all font-medium"
+              >
+                <HiOutlineHeart className="w-4 h-4 text-brand-primary shrink-0" />
+                <span>Saved ({totalWishlistItems})</span>
               </Link>
+
               {isAuthenticated ? (
-                <div className="flex items-center gap-3">
-                  <Link to="/profile" className="flex items-center gap-1.5 hover:text-white py-1">
-                    <HiOutlineUser className="w-4 h-4 text-brand-primary" /> {customer?.name?.split(' ')[0] || 'Profile'}
+                <div className="flex items-center gap-1">
+                  <Link 
+                    to="/profile" 
+                    onClick={() => {
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-1 px-3 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-brand-secondary border border-amber-300/40 shadow-2xs font-semibold"
+                  >
+                    <HiOutlineUser className="w-4 h-4 text-brand-primary shrink-0" />
+                    <span className="truncate max-w-[60px]">{customer?.name?.split(' ')[0] || 'User'}</span>
                   </Link>
                   <button
-                    onClick={logout}
-                    className="text-red-400 text-xs hover:text-red-300 cursor-pointer"
+                    onClick={() => {
+                      logout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="p-2 rounded-xl bg-white/60 hover:bg-red-50 text-red-500 border border-white/80 shadow-2xs transition-all cursor-pointer"
+                    title="Sign Out"
+                    aria-label="Sign Out"
                   >
-                    Sign Out
+                    <HiOutlineArrowRightOnRectangle className="w-4 h-4" />
                   </button>
                 </div>
               ) : (
@@ -383,9 +498,10 @@ export default function Navbar() {
                     setIsMobileMenuOpen(false);
                     openAuthModal('signin');
                   }}
-                  className="flex items-center gap-1.5 text-brand-primary hover:text-white py-1 font-medium cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-brand-primary hover:bg-brand-secondary text-white border border-brand-primary shadow-sm font-semibold transition-all cursor-pointer"
                 >
-                  <HiOutlineUser className="w-4 h-4" /> Sign In / Join
+                  <HiOutlineUser className="w-4 h-4 shrink-0" />
+                  <span>Sign In</span>
                 </button>
               )}
             </div>

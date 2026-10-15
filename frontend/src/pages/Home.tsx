@@ -1064,7 +1064,7 @@ export default function Home() {
                   onClick={() => {
                     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
                   }}
-                  className={`category-card group relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer hover:-translate-y-1.5 active:scale-[0.98] bg-stone-950 flex flex-col justify-end border border-white/10 hover:border-amber-400/40 select-none ${
+                  className={`category-card group relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer hover:-translate-y-1.5 active:scale-[0.98] bg-stone-950 flex flex-col justify-end border-none select-none ${
                     isLastOdd
                       ? 'col-span-2 sm:col-span-1 aspect-[16/9] sm:aspect-[3/4]'
                       : 'col-span-1 aspect-[3/4]'

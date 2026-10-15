@@ -235,6 +235,8 @@
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   will-change: transform, box-shadow;
+  border: none !important;
+  outline: none !important;
 }
 
 .category-card .category-image {
