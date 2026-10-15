@@ -243,10 +243,11 @@ export default function ProductDetailModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center items-center bg-black/70 backdrop-blur-sm p-0 sm:p-4 md:p-6 animate-fade-in"
-      onClick={onClose}
-    >
+    <>
+      <div
+        className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center items-center bg-black/70 backdrop-blur-sm p-0 sm:p-4 md:p-6 animate-fade-in"
+        onClick={onClose}
+      >
       {/* Modal Card: Mobile Bottom Sheet + Desktop Centered Dialog */}
       <div
         className="bg-white w-full sm:max-w-4xl h-[94vh] max-h-[94vh] sm:h-auto sm:max-h-[88vh] rounded-t-[32px] sm:rounded-3xl shadow-2xl border border-stone-200/90 flex flex-col overflow-hidden relative animate-slide-up sm:animate-scale-up"
@@ -255,10 +256,11 @@ export default function ProductDetailModal({
         {/* Mobile Drag Indicator Bar */}
         <div className="w-12 h-1.5 bg-stone-300 rounded-full mx-auto mt-2.5 mb-1 sm:hidden shrink-0" />
 
-        {/* Floating Close Button */}
+        {/* Small & Frameless Close Button */}
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 w-9 h-9 rounded-full bg-white/95 sm:bg-stone-100 hover:bg-stone-200 text-stone-700 hover:text-stone-900 shadow-md sm:shadow-xs flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95"
+          className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 z-30 p-1 text-stone-400 hover:text-stone-900 transition-colors cursor-pointer"
           aria-label="Close product view"
         >
           <HiXMark className="w-5 h-5" />
@@ -768,23 +770,31 @@ export default function ProductDetailModal({
           )}
         </div>
       </div>
+    </div>
 
-      {/* ══════════════════════════════════════════
-          FULLSCREEN POPUP IMAGE LIGHTBOX
-      ══════════════════════════════════════════ */}
-      {isImageLightboxOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-md animate-fade-in"
-          onClick={() => setIsImageLightboxOpen(false)}
+    {/* ══════════════════════════════════════════
+        FULLSCREEN POPUP IMAGE LIGHTBOX
+    ══════════════════════════════════════════ */}
+    {isImageLightboxOpen && (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-black/90 backdrop-blur-md animate-fade-in"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsImageLightboxOpen(false);
+        }}
+      >
+        {/* Close button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsImageLightboxOpen(false);
+          }}
+          className="absolute top-4 right-4 z-[110] w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95"
+          aria-label="Close image popup"
         >
-          {/* Close button */}
-          <button
-            onClick={() => setIsImageLightboxOpen(false)}
-            className="absolute top-4 right-4 z-[110] w-10 h-10 rounded-full bg-white/15 hover:bg-white/30 text-white flex items-center justify-center transition-all cursor-pointer hover:scale-110 active:scale-95"
-            aria-label="Close image popup"
-          >
-            <HiXMark className="w-6 h-6" />
-          </button>
+          <HiXMark className="w-6 h-6" />
+        </button>
 
           {/* Previous Arrow (if multi-image) */}
           {allImages.length > 1 && (
@@ -858,6 +868,6 @@ export default function ProductDetailModal({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

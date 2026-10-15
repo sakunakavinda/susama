@@ -373,9 +373,9 @@ export default function Home() {
     return prod.category_id === selectedFilter || prod.category_slug === selectedFilter;
   });
 
-  // Bestsellers State & 3-Second Infinite Forward Autoscroll
+  // Most Loved Formulations (display_on_home = 1) & 5-Second Infinite Forward Autoscroll
   const bestsellerProducts = products.filter(
-    (p) => (p.display_on_home !== false && p.display_on_home !== 0) && p.tag?.toUpperCase() === 'BESTSELLER'
+    (p) => p.display_on_home === true || p.display_on_home === 1 || String(p.display_on_home) === '1'
   );
   // Slides array with clones at both ends for seamless forward wrapping: [last, ...items, first]
   const bestsellerSlides = bestsellerProducts.length > 1
@@ -433,7 +433,7 @@ export default function Home() {
     const interval = setInterval(() => {
       setIsTransitioning(true);
       setCurrentIndex((prev) => prev + 1);
-    }, 3000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [bestsellerProducts.length]);
@@ -797,7 +797,7 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════
-          BESTSELLERS AUTOSCROLL SHOWCASE (3s INTERVAL)
+          MOST LOVED FORMULATIONS AUTOSCROLL SHOWCASE (5s INTERVAL)
       ══════════════════════════════════════════ */}
       {bestsellerProducts.length > 0 && (
         <section className="w-full bg-[#FEFCFB] border-b border-amber-100/60 relative overflow-hidden">
@@ -809,7 +809,7 @@ export default function Home() {
           </div>
 
           {/* Full Screen Width Showcase Container (Edge-to-Edge) */}
-          <div className="relative w-full h-[520px] sm:h-[600px] md:h-[680px] overflow-hidden bg-black group">
+          <div className="relative w-full h-[540px] sm:h-[600px] md:h-[680px] overflow-hidden bg-black group">
             {/* Slider Track (1 image full screen width per slide with seamless forward loop) */}
             <div
               className="flex h-full"
@@ -849,16 +849,16 @@ export default function Home() {
                       }}
                     />
 
-                    {/* Top Badges: BESTSELLER Tag & Index counter */}
-                    <div className="absolute top-6 left-6 sm:top-8 sm:left-10 z-20">
-                      <span className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white text-xs sm:text-sm font-black tracking-widest uppercase shadow-xl flex items-center gap-2 border border-amber-300/40 backdrop-blur-md">
-                        <HiSparkles className="w-4 h-4 text-amber-200 animate-pulse" />
-                        BESTSELLER
+                    {/* Top Badges: Tag & Index counter */}
+                    <div className="absolute top-5 left-4 sm:top-8 sm:left-10 z-20">
+                      <span className="px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-white text-[11px] sm:text-sm font-black tracking-widest uppercase shadow-xl flex items-center gap-1.5 sm:gap-2 border border-amber-300/40 backdrop-blur-md">
+                        <HiSparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-200 animate-pulse" />
+                        {prod.tag ? prod.tag.toUpperCase() : 'MOST LOVED'}
                       </span>
                     </div>
 
-                    <div className="absolute top-6 right-6 sm:top-8 sm:right-10 z-20 flex items-center gap-2.5">
-                      <span className="px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white/90 text-xs sm:text-sm font-bold tracking-widest border border-white/20 shadow-md">
+                    <div className="absolute top-5 right-4 sm:top-8 sm:right-10 z-20 flex items-center gap-2">
+                      <span className="px-3 py-1.5 sm:px-3.5 sm:py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white/90 text-xs sm:text-sm font-bold tracking-widest border border-white/20 shadow-md">
                         0{activeBestsellerRealIndex + 1} / 0{bestsellerProducts.length}
                       </span>
                       <button
@@ -872,7 +872,7 @@ export default function Home() {
                             sale_price: prod.sale_price,
                             primary_image: prod.primary_image || prod.image_url || prod.image,
                             category_name: prod.category_name,
-                            tag: 'BESTSELLER',
+                            tag: prod.tag || 'MOST LOVED',
                             rating: prod.rating,
                             reviews: prod.reviews
                           });
@@ -894,28 +894,28 @@ export default function Home() {
                     </div>
 
                     {/* Bottom Gradient Overlay with Full Product Details */}
-                    <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/95 via-black/60 to-transparent p-6 sm:p-8 md:p-12 pb-10 sm:pb-12 pt-20 sm:pt-28 text-left">
-                      <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                    <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-black/95 via-black/65 to-transparent p-4 sm:p-8 md:p-12 pb-8 sm:pb-12 pt-16 sm:pt-28 text-left">
+                      <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6">
                         <div className="max-w-2xl">
-                          <div className="flex items-center gap-3 mb-2.5">
+                          <div className="flex items-center gap-2.5 mb-2">
                             <div className="flex items-center gap-1.5 text-amber-400">
                               <HiStar className="w-4 h-4 fill-current" />
-                              <span className="text-sm font-bold text-white">{prod.rating || 4.9}</span>
-                              <span className="text-xs text-white/70">({prod.reviews || 42} reviews)</span>
+                              <span className="text-xs sm:text-sm font-bold text-white">{prod.rating || 4.9}</span>
+                              <span className="text-[11px] sm:text-xs text-white/70">({prod.reviews || 42} reviews)</span>
                             </div>
                             {((prod.stock_quantity !== undefined && Number(prod.stock_quantity) <= 0) || prod.is_in_stock === false) ? (
-                              <span className="text-[10px] sm:text-xs font-bold text-rose-300 bg-rose-950/80 border border-rose-500/40 px-3 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1.5">
+                              <span className="text-[10px] sm:text-xs font-bold text-rose-300 bg-rose-950/80 border border-rose-500/40 px-2.5 sm:px-3 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
                                 Out of stock
                               </span>
                             ) : prod.category_name ? (
-                              <span className="text-[10px] sm:text-xs font-bold text-amber-300 bg-amber-500/25 border border-amber-400/40 px-3 py-0.5 rounded-full uppercase tracking-wider">
+                              <span className="text-[10px] sm:text-xs font-bold text-amber-300 bg-amber-500/25 border border-amber-400/40 px-2.5 sm:px-3 py-0.5 rounded-full uppercase tracking-wider">
                                 {prod.category_name}
                               </span>
                             ) : null}
                           </div>
 
-                          <h3 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl text-white leading-tight mb-2.5 group-hover:text-amber-200 transition-colors drop-shadow">
+                          <h3 className="font-heading font-bold text-xl sm:text-3xl md:text-4xl text-white leading-tight mb-2 group-hover:text-amber-200 transition-colors drop-shadow">
                             {prod.name}
                           </h3>
 
@@ -924,43 +924,46 @@ export default function Home() {
                           </p>
                         </div>
 
-                        <div className="flex items-center sm:flex-col sm:items-end justify-between sm:justify-end gap-3.5 shrink-0 pt-3 sm:pt-0 border-t border-white/15 sm:border-0">
-                          <div className="text-left sm:text-right">
+                        {/* Price & Responsive Buttons Container */}
+                        <div className="flex flex-col sm:items-end justify-between sm:justify-end gap-3 sm:gap-3.5 shrink-0 pt-3 sm:pt-0 border-t border-white/15 sm:border-0 w-full sm:w-auto">
+                          {/* Price */}
+                          <div className="flex items-baseline sm:flex-col justify-between sm:justify-end gap-2 text-left sm:text-right w-full sm:w-auto">
                             <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white leading-none drop-shadow">
                               {priceDisplay}
                             </span>
                             {prod.sale_price && prod.base_price && (
-                              <span className="block text-xs sm:text-sm text-white/60 line-through mt-1">
+                              <span className="text-xs sm:text-sm text-white/60 line-through">
                                 LKR {Number(prod.base_price).toLocaleString()}
                               </span>
                             )}
                           </div>
 
-                          <div className="flex items-center gap-2.5">
+                          {/* Action Buttons: Responsive Grid on Mobile, Flex on Desktop */}
+                          <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedProduct(prod);
                               }}
-                              className="px-4 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30 text-white text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95 shadow-md"
+                              className="w-full sm:w-auto px-3 sm:px-5 py-2.5 sm:py-3 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 backdrop-blur-md border border-white/30 text-white text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-200 hover:scale-105 shadow-md flex items-center justify-center text-center cursor-pointer select-none"
                             >
                               Quick View
                             </button>
                             {((prod.stock_quantity !== undefined && Number(prod.stock_quantity) <= 0) || prod.is_in_stock === false) ? (
                               <button
                                 disabled
-                                className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-stone-900/90 text-stone-400 border border-stone-700/80 text-xs sm:text-sm font-bold tracking-wider uppercase cursor-not-allowed flex items-center gap-2 select-none"
+                                className="w-full sm:w-auto px-3 sm:px-6 py-2.5 sm:py-3 rounded-full bg-stone-900/90 text-stone-400 border border-stone-700/80 text-xs sm:text-sm font-bold tracking-wider uppercase cursor-not-allowed flex items-center justify-center gap-1.5 sm:gap-2 select-none"
                               >
-                                <HiShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-stone-500" />
-                                <span>Out of stock</span>
+                                <HiShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-stone-500 shrink-0" />
+                                <span className="truncate">Out of stock</span>
                               </button>
                             ) : (
                               <button
                                 onClick={(e) => addToCart(prod, e)}
-                                className="px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-brand-primary hover:bg-brand-secondary text-white text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg flex items-center gap-2"
+                                className="w-full sm:w-auto px-3 sm:px-6 py-2.5 sm:py-3 rounded-full bg-brand-primary hover:bg-brand-secondary active:scale-95 text-white text-xs sm:text-sm font-bold tracking-wider uppercase transition-all duration-200 hover:scale-105 shadow-lg flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer select-none"
                               >
-                                <HiShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
-                                <span>Add to Bag</span>
+                                <HiShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+                                <span className="truncate">Add to Bag</span>
                               </button>
                             )}
                           </div>
@@ -997,7 +1000,7 @@ export default function Home() {
             </button>
 
             {/* Clickable Pagination Dots */}
-            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
+            <div className="absolute bottom-4 sm:bottom-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
               {bestsellerProducts.map((_, dotIdx) => (
                 <button
                   key={dotIdx}
@@ -1005,7 +1008,7 @@ export default function Home() {
                     e.stopPropagation();
                     goToBestsellerSlide(dotIdx);
                   }}
-                  aria-label={`Go to bestseller ${dotIdx + 1}`}
+                  aria-label={`Go to slide ${dotIdx + 1}`}
                   className={`transition-all duration-300 rounded-full ${
                     activeBestsellerRealIndex === dotIdx
                       ? 'w-8 h-2 bg-gradient-to-r from-amber-400 to-brand-primary shadow-sm'
@@ -1015,13 +1018,13 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Bottom 3s Auto-scroll Progress Indicator Line */}
+            {/* Bottom 5s Auto-scroll Progress Indicator Line */}
             <div className="absolute bottom-0 inset-x-0 z-30 h-1 bg-white/20">
               <div
                 key={activeBestsellerRealIndex}
-                className="h-full bg-gradient-to-r from-brand-primary to-amber-400 animate-[bestsellerProgress_3s_linear]"
+                className="h-full bg-gradient-to-r from-brand-primary to-amber-400 animate-[bestsellerProgress_5s_linear]"
                 style={{
-                  animationDuration: '3000ms',
+                  animationDuration: '5000ms',
                   animationIterationCount: '1',
                   animationFillMode: 'forwards'
                 }}
