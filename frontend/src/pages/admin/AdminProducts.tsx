@@ -505,14 +505,23 @@ export default function AdminProducts() {
 
                     {/* Stock Inventory */}
                     <td className="py-4 px-6 font-mono">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] ${
-                        p.stock_quantity <= 5
-                          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${
+                        Number(p.stock_quantity) <= 0 || !p.is_in_stock
+                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          : p.stock_quantity <= 5
+                          ? 'bg-rose-500/10 text-rose-300 border border-rose-500/20'
                           : p.stock_quantity <= 15
                           ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                           : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                       }`}>
-                        {p.stock_quantity} in stock
+                        {Number(p.stock_quantity) <= 0 || !p.is_in_stock ? (
+                          <>
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                            Out of stock
+                          </>
+                        ) : (
+                          `${p.stock_quantity} in stock`
+                        )}
                       </span>
                     </td>
 

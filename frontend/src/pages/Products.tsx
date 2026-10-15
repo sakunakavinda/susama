@@ -252,6 +252,8 @@ export default function Products() {
 
   const addToCart = (product: Product, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
+    const isOutOfStock = (product.stock_quantity !== undefined && Number(product.stock_quantity) <= 0) || product.is_in_stock === false;
+    if (isOutOfStock) return;
     addItem(product, 1);
   };
 
@@ -394,6 +396,7 @@ export default function Products() {
                 ? `LKR ${Number(prod.sale_price).toLocaleString()}`
                 : `LKR ${Number(prod.base_price).toLocaleString()}`;
               const basePriceDisplay = prod.sale_price ? `LKR ${Number(prod.base_price).toLocaleString()}` : null;
+              const isOutOfStock = (prod.stock_quantity !== undefined && Number(prod.stock_quantity) <= 0) || prod.is_in_stock === false;
 
               return (
                 <div
@@ -406,15 +409,26 @@ export default function Products() {
                     <img 
                       src={imageSrc} 
                       alt={prod.name} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${
+                        isOutOfStock ? 'opacity-85 grayscale-[15%]' : ''
+                      }`}
                       loading="lazy"
                     />
                     
                     {/* Top Badges */}
                     <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between z-10">
-                      <span className="px-3 py-1 rounded-full bg-brand-primary/95 backdrop-blur-md text-white text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow">
-                        {prod.tag || 'HAIR CARE'}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {isOutOfStock ? (
+                          <span className="px-3 py-1 rounded-full bg-stone-900/90 backdrop-blur-md text-amber-300 border border-amber-400/30 text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow-md flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                            Out of stock
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-full bg-brand-primary/95 backdrop-blur-md text-white text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow">
+                            {prod.tag || 'HAIR CARE'}
+                          </span>
+                        )}
+                      </div>
                       
                       <button 
                         onClick={(e) => {
@@ -432,7 +446,9 @@ export default function Products() {
                             reviews: prod.reviews,
                             short_description: prod.short_description,
                             ingredients: prod.ingredients,
-                            how_to_use: prod.how_to_use
+                            how_to_use: prod.how_to_use,
+                            stock_quantity: prod.stock_quantity,
+                            is_in_stock: prod.is_in_stock
                           });
                         }}
                         className={`w-8 h-8 rounded-full backdrop-blur-md flex items-center justify-center transition-all shadow cursor-pointer hover:scale-110 ${
@@ -498,14 +514,23 @@ export default function Products() {
                         )}
                       </div>
 
-                      <button
-                        onClick={(e) => addToCart(prod, e)}
-                        className="p-2.5 sm:p-3 rounded-full bg-brand-primary/10 text-brand-primary hover:bg-brand-primary hover:text-white transition-all duration-200 cursor-pointer shadow-sm hover:scale-110 active:scale-95 flex items-center justify-center"
-                        title="Add to Cart"
-                        aria-label={`Add ${prod.name} to cart`}
-                      >
-                        <HiShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
-                      </button>
+                      {isOutOfStock ? (
+                        <span 
+                          className="px-3 py-1.5 rounded-full bg-stone-100 text-stone-500 text-xs font-semibold cursor-not-allowed border border-stone-200 flex items-center gap-1 shadow-2xs select-none"
+                          title="Out of stock"
+                        >
+                          Out of stock
+                        </span>
+                      ) : (
+                        <button
+                          onClick={(e) => addToCart(prod, e)}
+                          className="p-2.5 sm:p-3 rounded-full bg-brand-primary/10 text-brand-primary hover:bg-brand-primary hover:text-white transition-all duration-200 cursor-pointer shadow-sm hover:scale-110 active:scale-95 flex items-center justify-center"
+                          title="Add to Cart"
+                          aria-label={`Add ${prod.name} to cart`}
+                        >
+                          <HiShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -516,7 +541,10 @@ export default function Products() {
       </section>
 
       {/* Quick View Product Modal */}
-      {selectedProduct && (
+      {selectedProduct && (() => {
+        const isModalOutOfStock = (selectedProduct.stock_quantity !== undefined && Number(selectedProduct.stock_quantity) <= 0) || selectedProduct.is_in_stock === false;
+
+        return (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
           onClick={() => setSelectedProduct(null)}
@@ -539,19 +567,41 @@ export default function Products() {
               <img 
                 src={selectedProduct.primary_image || selectedProduct.image_url || 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=800&auto=format&fit=crop'} 
                 alt={selectedProduct.name}
-                className="w-full h-full object-cover"
+                className={`w-full h-full object-cover ${isModalOutOfStock ? 'opacity-85 grayscale-[15%]' : ''}`}
               />
-              <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-brand-primary text-white text-[10px] font-bold tracking-widest uppercase shadow">
-                {selectedProduct.tag || 'PREMIUM HAIRCARE'}
-              </span>
+              <div className="absolute top-4 left-4 flex flex-col gap-1.5 items-start">
+                {isModalOutOfStock ? (
+                  <span className="px-3 py-1 rounded-full bg-stone-900/90 backdrop-blur-md text-amber-300 border border-amber-400/30 text-[10px] font-bold tracking-widest uppercase shadow flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                    Out of stock
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 rounded-full bg-brand-primary text-white text-[10px] font-bold tracking-widest uppercase shadow">
+                    {selectedProduct.tag || 'PREMIUM HAIRCARE'}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Modal Details */}
             <div className="md:w-1/2 p-6 sm:p-8 overflow-y-auto flex flex-col justify-between max-h-[60vh] md:max-h-[500px]">
               <div>
-                <span className="text-[10px] font-extrabold text-brand-secondary tracking-widest uppercase block mb-1">
-                  {selectedProduct.category_name || 'Hair Care'}
-                </span>
+                <div className="flex items-center justify-between gap-2 mb-1 pr-8">
+                  <span className="text-[10px] font-extrabold text-brand-secondary tracking-widest uppercase truncate">
+                    {selectedProduct.category_name || 'Hair Care'}
+                  </span>
+                  {isModalOutOfStock ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-bold uppercase tracking-wider shrink-0 whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                      Out of stock
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider shrink-0 whitespace-nowrap">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      In stock ({selectedProduct.stock_quantity ?? 'Available'})
+                    </span>
+                  )}
+                </div>
 
                 <h2 className="text-xl sm:text-2xl font-heading font-extrabold text-gray-900 mb-2 leading-snug">
                   {selectedProduct.name}
@@ -804,22 +854,33 @@ export default function Products() {
                   )}
                 </button>
 
-                <button
-                  onClick={() => {
-                    addToCart(selectedProduct);
-                    setSelectedProduct(null);
-                  }}
-                  className="flex-1 btn-primary py-3.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all cursor-pointer"
-                >
-                  <HiShoppingBag className="w-4 h-4" />
-                  Add to Bag
-                </button>
+                {isModalOutOfStock ? (
+                  <button
+                    disabled
+                    className="flex-1 py-3.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 bg-stone-100 text-stone-400 border border-stone-200 cursor-not-allowed select-none shadow-none"
+                  >
+                    <HiShoppingBag className="w-4 h-4" />
+                    Out of stock
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      addToCart(selectedProduct);
+                      setSelectedProduct(null);
+                    }}
+                    className="flex-1 btn-primary py-3.5 rounded-full text-xs sm:text-sm font-bold tracking-wider uppercase flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all cursor-pointer"
+                  >
+                    <HiShoppingBag className="w-4 h-4" />
+                    Add to Bag
+                  </button>
+                )}
               </div>
 
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
     </div>
   );

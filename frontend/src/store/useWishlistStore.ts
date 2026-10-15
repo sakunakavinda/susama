@@ -14,6 +14,8 @@ export interface WishlistItem {
   short_description?: string;
   ingredients?: string;
   how_to_use?: string;
+  stock_quantity?: number;
+  is_in_stock?: boolean | number;
 }
 
 interface WishlistState {
@@ -37,6 +39,8 @@ interface WishlistState {
     short_description?: string;
     ingredients?: string;
     how_to_use?: string;
+    stock_quantity?: number;
+    is_in_stock?: boolean | number;
   }) => void;
   
   removeItem: (id: string) => void;
@@ -57,6 +61,8 @@ interface WishlistState {
     short_description?: string;
     ingredients?: string;
     how_to_use?: string;
+    stock_quantity?: number;
+    is_in_stock?: boolean | number;
   }) => boolean; // returns true if added, false if removed
   
   isInWishlist: (id: string) => boolean;
@@ -118,7 +124,9 @@ export const useWishlistStore = create<WishlistState>((set, get) => ({
         reviews: product.reviews,
         short_description: product.short_description,
         ingredients: product.ingredients,
-        how_to_use: product.how_to_use
+        how_to_use: product.how_to_use,
+        stock_quantity: product.stock_quantity !== undefined ? Number(product.stock_quantity) : undefined,
+        is_in_stock: product.is_in_stock
       };
 
       const updated = [newItem, ...state.items];

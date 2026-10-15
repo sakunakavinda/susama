@@ -117,6 +117,14 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   addItem: (product, quantity = 1) => {
+    // Guard: Do not add items that are out of stock (0 stock or is_in_stock is false)
+    if (
+      ((product as any).stock_quantity !== undefined && Number((product as any).stock_quantity) <= 0) ||
+      (product as any).is_in_stock === false
+    ) {
+      return;
+    }
+
     let effectivePrice = 0;
     let originalPrice: number | null = null;
 
