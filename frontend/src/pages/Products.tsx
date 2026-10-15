@@ -72,13 +72,14 @@ export default function Products() {
   const { toggleWishlist, isInWishlist } = useWishlistStore();
 
 
-  // Sync category & search params from URL
+  // Sync category & search params from URL and ensure page opens at top
   useEffect(() => {
     if (categoryParam) {
       setSelectedCategory(categoryParam);
     } else {
       setSelectedCategory('all');
     }
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [categoryParam]);
 
   useEffect(() => {

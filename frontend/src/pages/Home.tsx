@@ -1051,42 +1051,66 @@ export default function Home() {
             <div className="w-16 h-1 bg-gradient-to-r from-brand-primary to-brand-secondary rounded-full mx-auto" />
           </div>
 
-          {/* Categories Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-5">
+          {/* Categories Grid - Modern 2-column mobile structure with featured banner & unique zoom animation when pointed */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-5">
             {categories.map((category, idx) => {
               const displayImage = category.image_url || category.image;
+              const isLastOdd = idx === categories.length - 1 && categories.length % 2 !== 0;
 
               return (
                 <Link
                   key={category.id || idx}
                   to={`/products?category=${category.slug || category.id}`}
-                  className="group relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer hover:-translate-y-2 bg-gray-950 aspect-[3/4] flex flex-col justify-end"
+                  onClick={() => {
+                    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+                  }}
+                  className={`category-card group relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer hover:-translate-y-1.5 active:scale-[0.98] bg-stone-950 flex flex-col justify-end border border-white/10 hover:border-amber-400/40 select-none ${
+                    isLastOdd
+                      ? 'col-span-2 sm:col-span-1 aspect-[16/9] sm:aspect-[3/4]'
+                      : 'col-span-1 aspect-[3/4]'
+                  }`}
                 >
-                  {/* Category Image */}
+                  {/* Category Image with Unique Smooth Zoom & 3D Shift when pointed */}
                   {displayImage && (
                     <img
                       src={displayImage}
                       alt={category.name}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="category-image absolute inset-0 w-full h-full object-cover transform-gpu group-hover:scale-125 group-hover:rotate-1 group-active:scale-115 filter group-hover:brightness-105"
                       loading="lazy"
                     />
                   )}
 
-                  {/* High-contrast gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/60 to-transparent z-10" />
+                  {/* Ambient Radial Glow Zoom effect when pointed */}
+                  <div className="category-glow absolute inset-0 bg-radial from-amber-400/30 via-brand-primary/10 to-transparent pointer-events-none z-10" />
 
-                  {/* Bottom Content */}
-                  <div className="relative z-20 p-5 sm:p-6 text-left">
-                    <h3 className="text-base sm:text-lg font-heading font-bold text-white mb-1.5 leading-tight group-hover:text-brand-primary transition-colors duration-200">
+                  {/* Light Sweep Shimmer Ray */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-10 overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
+                  </div>
+
+                  {/* High-contrast gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/50 to-transparent z-10 transition-colors duration-500 group-hover:from-black group-hover:via-black/40" />
+
+                  {/* Top Right: Zooming Interactive Action Arrow Circle */}
+                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20">
+                    <span className="category-arrow w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/15 backdrop-blur-md border border-white/30 text-white flex items-center justify-center shadow-sm">
+                      <HiArrowRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+
+                  {/* Bottom Content with Micro Elevation */}
+                  <div className="relative z-20 p-4 sm:p-6 text-left transform-gpu transition-transform duration-500 group-hover:translate-y-[-2px]">
+                    <h3 className="text-sm sm:text-lg font-heading font-bold text-white mb-1 leading-snug group-hover:text-amber-200 transition-colors duration-300 drop-shadow">
                       {category.name}
                     </h3>
                     {category.description && (
-                      <p className="text-[11px] text-white/80 line-clamp-2 mb-3.5 leading-relaxed font-light">
+                      <p className="text-[11px] sm:text-xs text-white/80 line-clamp-1 sm:line-clamp-2 mb-2 sm:mb-3 font-light leading-relaxed">
                         {category.description}
                       </p>
                     )}
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-white/95 tracking-wider uppercase group-hover:text-brand-primary transition-colors duration-200">
-                      Explore Category <HiArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-amber-300/90 tracking-wider uppercase group-hover:text-amber-200 transition-colors duration-300">
+                      <span>Explore</span>
+                      <HiArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1.5" />
                     </span>
                   </div>
                 </Link>

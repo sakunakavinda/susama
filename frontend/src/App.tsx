@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Outlet, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -11,6 +11,17 @@ import Wishlist from './pages/Wishlist';
 import AuthModal from './components/AuthModal';
 import CartDrawer from './components/CartDrawer';
 import { useAuthStore } from './store/useAuthStore';
+
+// Scroll to top automatically whenever the route path or search params change
+const ScrollToTop = () => {
+  const { pathname, search } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname, search]);
+
+  return null;
+};
 
 // Admin Imports
 import AdminLayout from './components/admin/AdminLayout';
@@ -58,6 +69,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         {/* Isolated Executive Admin Portal */}
         <Route path="/admin/login" element={<AdminLogin />} />
