@@ -55,6 +55,7 @@ interface ProductItem {
   ingredients?: string;
   how_to_use?: string;
   sku?: string;
+  display_on_home?: boolean | number;
 }
 
 interface ReviewItem {
@@ -277,7 +278,8 @@ export default function Home() {
             image: item.primary_image || item.image_url || '',
             tag: item.tag || (item.is_new_arrival ? 'NEW ARRIVAL' : (item.is_featured ? 'BESTSELLER' : undefined)),
             rating: item.rating ? Number(item.rating) : 5.0,
-            reviews: item.reviews ? Number(item.reviews) : 0
+            reviews: item.reviews ? Number(item.reviews) : 0,
+            display_on_home: item.display_on_home !== undefined ? Boolean(item.display_on_home) : true
           }));
           setProducts(mapped);
         }
@@ -445,13 +447,14 @@ export default function Home() {
   };
 
   const filteredProducts = products.filter((prod) => {
+    if (prod.display_on_home === false || prod.display_on_home === 0) return false;
     if (selectedFilter === 'all') return true;
     return prod.category_id === selectedFilter || prod.category_slug === selectedFilter;
   });
 
   // Bestsellers State & 3-Second Infinite Forward Autoscroll
   const bestsellerProducts = products.filter(
-    (p) => p.tag?.toUpperCase() === 'BESTSELLER'
+    (p) => (p.display_on_home !== false && p.display_on_home !== 0) && p.tag?.toUpperCase() === 'BESTSELLER'
   );
   // Slides array with clones at both ends for seamless forward wrapping: [last, ...items, first]
   const bestsellerSlides = bestsellerProducts.length > 1

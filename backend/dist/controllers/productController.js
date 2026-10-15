@@ -26,6 +26,7 @@ const getProducts = async (req, res) => {
         p.is_in_stock,
         p.is_featured,
         p.is_new_arrival,
+        p.display_on_home,
         p.tag,
         p.rating,
         p.reviews,
@@ -139,11 +140,54 @@ exports.getProductByIdOrSlug = getProductByIdOrSlug;
 const createProduct = async (req, res) => {
     const connection = await db_1.pool.getConnection();
     try {
-        const { category_id, name, slug, sku, short_description, full_description, ingredients, how_to_use, base_price, sale_price, stock_quantity, is_in_stock = true, is_featured = false, is_new_arrival = false, tag = null, rating = 5.0, reviews = 0, images = [] } = req.body;
+        const { category_id, name, slug, sku, short_description, full_description, ingredients, how_to_use, base_price, sale_price, stock_quantity, is_in_stock = true, is_featured = false, is_new_arrival = false, display_on_home = true, tag = null, rating = 5.0, reviews = 0, images = [] } = req.body;
         if (!category_id || !name || !slug || base_price === undefined) {
             return res.status(400).json({
                 success: false,
-                message: 'category_id, name, slug, and base_price are required fields'
+                message: 'Category, Product Name, URL Slug, and Base Price are required.'
+            });
+        }
+        const basePriceNum = Number(base_price);
+        if (isNaN(basePriceNum) || basePriceNum <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide a valid Base Price greater than 0.'
+            });
+        }
+        // 1. Validation: Sale price cannot be higher than base price
+        let cleanSalePrice = null;
+        if (sale_price !== null && sale_price !== undefined && String(sale_price).trim() !== '') {
+            cleanSalePrice = Number(sale_price);
+            if (isNaN(cleanSalePrice) || cleanSalePrice < 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Sale price must be a valid number.'
+                });
+            }
+            if (cleanSalePrice > basePriceNum) {
+                return res.status(400).json({
+                    success: false,
+                    message: `Sale price (LKR ${cleanSalePrice}) cannot be set higher than the base price (LKR ${basePriceNum}).`
+                });
+            }
+        }
+        // 2. Validation: Short description, Full description, and Ingredients are compulsory
+        if (!short_description || typeof short_description !== 'string' || !short_description.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Short description is compulsory.'
+            });
+        }
+        if (!full_description || typeof full_description !== 'string' || !full_description.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Full description is compulsory.'
+            });
+        }
+        if (!ingredients || typeof ingredients !== 'string' || !ingredients.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ingredients list is compulsory.'
             });
         }
         const productId = (0, crypto_1.randomUUID)();
@@ -151,26 +195,27 @@ const createProduct = async (req, res) => {
         await connection.execute(`INSERT INTO products (
         id, category_id, name, slug, sku, short_description, full_description, 
         ingredients, how_to_use, base_price, sale_price, stock_quantity, 
-        is_in_stock, is_featured, is_new_arrival, tag, rating, reviews, is_active
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`, [
+        is_in_stock, is_featured, is_new_arrival, display_on_home, tag, rating, reviews, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`, [
             productId,
             category_id,
-            name,
-            slug,
-            sku || null,
-            short_description || null,
-            full_description || null,
-            ingredients || null,
-            how_to_use || null,
-            base_price,
-            sale_price || null,
-            stock_quantity || 0,
-            is_in_stock,
-            is_featured,
-            is_new_arrival,
-            tag || null,
-            rating || 5.0,
-            reviews || 0
+            name.trim(),
+            slug.trim(),
+            sku ? sku.trim() : null,
+            short_description.trim(),
+            full_description.trim(),
+            ingredients.trim(),
+            how_to_use ? how_to_use.trim() : null,
+            basePriceNum,
+            cleanSalePrice,
+            Number(stock_quantity) || 0,
+            Boolean(is_in_stock),
+            Boolean(is_featured),
+            Boolean(is_new_arrival),
+            Boolean(display_on_home),
+            tag ? tag.trim() : null,
+            Number(rating) || 5.0,
+            Number(reviews) || 0
         ]);
         // Insert images if provided
         if (Array.isArray(images) && images.length > 0) {
@@ -208,12 +253,49 @@ const updateProduct = async (req, res) => {
     const connection = await db_1.pool.getConnection();
     try {
         const { id } = req.params;
-        const { category_id, name, slug, sku, short_description, full_description, ingredients, how_to_use, base_price, sale_price, stock_quantity, is_in_stock, is_featured, is_new_arrival, tag, rating, reviews, is_active, images } = req.body;
-        const [existing] = await connection.query('SELECT id FROM products WHERE id = ?', [id]);
+        const { category_id, name, slug, sku, short_description, full_description, ingredients, how_to_use, base_price, sale_price, stock_quantity, is_in_stock, is_featured, is_new_arrival, display_on_home, tag, rating, reviews, is_active, images } = req.body;
+        const [existing] = await connection.query('SELECT * FROM products WHERE id = ?', [id]);
         if (existing.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Product not found'
+            });
+        }
+        const currentProd = existing[0];
+        // Determine effective prices and validate sale_price <= base_price
+        const effectiveBase = base_price !== undefined ? Number(base_price) : Number(currentProd.base_price);
+        let effectiveSale = currentProd.sale_price !== null ? Number(currentProd.sale_price) : null;
+        if (sale_price !== undefined) {
+            if (sale_price === null || sale_price === '' || sale_price === 0) {
+                effectiveSale = null;
+            }
+            else {
+                effectiveSale = Number(sale_price);
+            }
+        }
+        if (effectiveSale !== null && effectiveSale > effectiveBase) {
+            return res.status(400).json({
+                success: false,
+                message: `Sale price (LKR ${effectiveSale}) cannot be set higher than the base price (LKR ${effectiveBase}).`
+            });
+        }
+        // Compulsory field validations if updating them
+        if (short_description !== undefined && (!short_description || !String(short_description).trim())) {
+            return res.status(400).json({
+                success: false,
+                message: 'Short description is compulsory.'
+            });
+        }
+        if (full_description !== undefined && (!full_description || !String(full_description).trim())) {
+            return res.status(400).json({
+                success: false,
+                message: 'Full description is compulsory.'
+            });
+        }
+        if (ingredients !== undefined && (!ingredients || !String(ingredients).trim())) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ingredients list is compulsory.'
             });
         }
         await connection.beginTransaction();
@@ -227,11 +309,12 @@ const updateProduct = async (req, res) => {
            ingredients = COALESCE(?, ingredients),
            how_to_use = COALESCE(?, how_to_use),
            base_price = COALESCE(?, base_price),
-           sale_price = COALESCE(?, sale_price),
+           sale_price = ?,
            stock_quantity = COALESCE(?, stock_quantity),
            is_in_stock = COALESCE(?, is_in_stock),
            is_featured = COALESCE(?, is_featured),
            is_new_arrival = COALESCE(?, is_new_arrival),
+           display_on_home = COALESCE(?, display_on_home),
            tag = COALESCE(?, tag),
            rating = COALESCE(?, rating),
            reviews = COALESCE(?, reviews),
@@ -239,23 +322,24 @@ const updateProduct = async (req, res) => {
            updated_at = NOW()
        WHERE id = ?`, [
             category_id,
-            name,
-            slug,
-            sku,
-            short_description,
-            full_description,
-            ingredients,
-            how_to_use,
-            base_price,
-            sale_price,
-            stock_quantity,
-            is_in_stock,
-            is_featured,
-            is_new_arrival,
-            tag,
-            rating,
-            reviews,
-            is_active,
+            name ? String(name).trim() : null,
+            slug ? String(slug).trim() : null,
+            sku !== undefined ? (sku ? String(sku).trim() : null) : null,
+            short_description ? String(short_description).trim() : null,
+            full_description ? String(full_description).trim() : null,
+            ingredients ? String(ingredients).trim() : null,
+            how_to_use !== undefined ? (how_to_use ? String(how_to_use).trim() : null) : null,
+            base_price !== undefined ? Number(base_price) : null,
+            effectiveSale,
+            stock_quantity !== undefined ? Number(stock_quantity) : null,
+            is_in_stock !== undefined ? Boolean(is_in_stock) : null,
+            is_featured !== undefined ? Boolean(is_featured) : null,
+            is_new_arrival !== undefined ? Boolean(is_new_arrival) : null,
+            display_on_home !== undefined ? Boolean(display_on_home) : null,
+            tag !== undefined ? (tag ? String(tag).trim() : null) : null,
+            rating !== undefined ? Number(rating) : null,
+            reviews !== undefined ? Number(reviews) : null,
+            is_active !== undefined ? Boolean(is_active) : null,
             id
         ]);
         // Update product_images if images array provided
