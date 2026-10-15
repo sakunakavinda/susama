@@ -36,6 +36,10 @@ export default function AdminProducts() {
     displayOnHome?: boolean;
   } | null>(null);
 
+  // Delete Confirmation Modal State
+  const [productToDelete, setProductToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Auto-dismiss banner after 7 seconds
   useEffect(() => {
     if (!successBanner) return;
@@ -296,11 +300,11 @@ export default function AdminProducts() {
     }
   };
 
-  // Soft delete / archive product
-  const handleDeleteProduct = async (id: string, name: string) => {
-    if (!window.confirm(`Are you sure you want to deactivate or remove "${name}" from the store catalog?`)) {
-      return;
-    }
+  // Permanently delete product
+  const confirmDeleteProduct = async () => {
+    if (!productToDelete) return;
+    setIsDeleting(true);
+    const { id, name } = productToDelete;
 
     try {
       const res = await fetch(`http://localhost:5001/api/products/${id}`, {
@@ -309,15 +313,23 @@ export default function AdminProducts() {
       });
       const data = await res.json();
       if (data.success) {
+        setProducts(prev => prev.filter(p => p.id !== id));
+        setProductToDelete(null);
         setSuccessBanner({
-          title: 'Product Archived',
-          message: `"${name}" has been successfully removed/archived from the active storefront.`,
+          title: 'Product Deleted Successfully',
+          message: `"${name}" has been permanently removed from the product catalog.`,
           productName: name
         });
         fetchProducts();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        alert(data.message || 'Failed to delete product');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to delete product:', err);
+      alert(err.message || 'Failed to delete product. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -561,8 +573,8 @@ export default function AdminProducts() {
                         <HiOutlinePencilSquare className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDeleteProduct(p.id, p.name)}
-                        title="Deactivate / Delete"
+                        onClick={() => setProductToDelete({ id: p.id, name: p.name })}
+                        title="Delete Product"
                         className="p-2 text-stone-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
                       >
                         <HiOutlineTrash className="w-4 h-4" />
@@ -956,6 +968,58 @@ export default function AdminProducts() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {productToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-[#141820] border border-rose-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center flex-shrink-0">
+                <HiOutlineTrash className="w-5 h-5 stroke-[2]" />
+              </div>
+              <div>
+                <h3 className="font-heading text-lg font-light text-stone-100">
+                  Delete Product Formulation
+                </h3>
+                <span className="text-[11px] font-mono uppercase text-rose-400/90">
+                  Permanent Database Action
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-stone-300 leading-relaxed font-sans">
+              Are you sure you want to permanently delete <strong className="text-white font-medium">"{productToDelete.name}"</strong>? 
+              This will completely remove the product, all formulation images, and customer reviews from the database.
+            </p>
+
+            <div className="pt-2 flex justify-end gap-3 font-mono text-xs uppercase">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setProductToDelete(null)}
+                className="px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={confirmDeleteProduct}
+                className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl transition-all shadow-md shadow-rose-950/50 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Permanently Delete</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

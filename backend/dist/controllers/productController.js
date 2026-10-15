@@ -375,23 +375,44 @@ const updateProduct = async (req, res) => {
     }
 };
 exports.updateProduct = updateProduct;
-// DELETE /api/products/:id - Soft delete product
+// DELETE /api/products/:id - Permanently delete product
 const deleteProduct = async (req, res) => {
+    const connection = await db_1.pool.getConnection();
     try {
         const { id } = req.params;
-        await db_1.pool.execute('UPDATE products SET is_active = FALSE WHERE id = ?', [id]);
+        // Check if product exists
+        const [existing] = await connection.query('SELECT id, name FROM products WHERE id = ?', [id]);
+        if (existing.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+        const prodName = existing[0].name;
+        await connection.beginTransaction();
+        // 1. Delete associated product images
+        await connection.execute('DELETE FROM product_images WHERE product_id = ?', [id]);
+        // 2. Delete associated reviews
+        await connection.execute('DELETE FROM reviews WHERE product_id = ?', [id]);
+        // 3. Delete the product itself
+        await connection.execute('DELETE FROM products WHERE id = ?', [id]);
+        await connection.commit();
         res.json({
             success: true,
-            message: 'Product deleted successfully'
+            message: `Product "${prodName}" deleted successfully`
         });
     }
     catch (error) {
+        await connection.rollback();
         console.error('Error deleting product:', error);
         res.status(500).json({
             success: false,
             message: 'Failed to delete product',
             error: error.message
         });
+    }
+    finally {
+        connection.release();
     }
 };
 exports.deleteProduct = deleteProduct;
