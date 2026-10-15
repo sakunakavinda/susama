@@ -3,10 +3,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.getCategoryByIdOrSlug = exports.getCategories = void 0;
 const db_1 = require("../config/db");
 const crypto_1 = require("crypto");
-// GET /api/categories - Get all active categories
+// GET /api/categories - Get all active categories with product counts
 const getCategories = async (req, res) => {
     try {
-        const [rows] = await db_1.pool.query('SELECT id, name, slug, description, image_url, sort_order FROM categories WHERE is_active = TRUE ORDER BY sort_order ASC, created_at DESC');
+        const [rows] = await db_1.pool.query(`SELECT 
+        c.id, 
+        c.name, 
+        c.slug, 
+        c.description, 
+        c.image_url, 
+        c.sort_order,
+        CAST(COALESCE(SUM(CASE WHEN p.is_active = TRUE THEN 1 ELSE 0 END), 0) AS UNSIGNED) AS active_products_count,
+        CAST(COALESCE(COUNT(p.id), 0) AS UNSIGNED) AS total_products_count
+       FROM categories c
+       LEFT JOIN products p ON p.category_id = c.id
+       WHERE c.is_active = TRUE 
+       GROUP BY c.id
+       ORDER BY c.sort_order ASC, c.created_at DESC`);
         res.json({
             success: true,
             data: rows
@@ -112,14 +125,43 @@ const updateCategory = async (req, res) => {
     }
 };
 exports.updateCategory = updateCategory;
-// DELETE /api/categories/:id - Soft delete category
+// DELETE /api/categories/:id - Delete category (blocked if active products exist)
 const deleteCategory = async (req, res) => {
     try {
         const { id } = req.params;
-        await db_1.pool.execute('UPDATE categories SET is_active = FALSE WHERE id = ?', [id]);
+        // 1. Check if category exists
+        const [categoryRows] = await db_1.pool.query('SELECT id, name FROM categories WHERE id = ?', [id]);
+        if (categoryRows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Category not found.'
+            });
+        }
+        const categoryName = categoryRows[0].name;
+        // 2. Check for active products belonging to this category
+        const [productCountRows] = await db_1.pool.query('SELECT COUNT(*) AS active_count FROM products WHERE category_id = ? AND is_active = TRUE', [id]);
+        const activeCount = Number(productCountRows[0]?.active_count || 0);
+        if (activeCount > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `Deleting category "${categoryName}" is not allowed because it contains ${activeCount} active product(s). Please reassign or delete these products first.`,
+                active_products_count: activeCount
+            });
+        }
+        // 3. If zero active products, check total products (including archived)
+        const [totalCountRows] = await db_1.pool.query('SELECT COUNT(*) AS total_count FROM products WHERE category_id = ?', [id]);
+        const totalCount = Number(totalCountRows[0]?.total_count || 0);
+        if (totalCount === 0) {
+            // Safe to permanently delete from database
+            await db_1.pool.execute('DELETE FROM categories WHERE id = ?', [id]);
+        }
+        else {
+            // Soft-delete if legacy inactive products still reference it
+            await db_1.pool.execute('UPDATE categories SET is_active = FALSE WHERE id = ?', [id]);
+        }
         res.json({
             success: true,
-            message: 'Category deleted successfully'
+            message: `Category "${categoryName}" deleted successfully.`
         });
     }
     catch (error) {

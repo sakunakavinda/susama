@@ -7,13 +7,32 @@ import {
   HiOutlineXMark,
   HiOutlineCheckCircle,
   HiOutlineTag,
-  HiOutlineArrowUpTray
+  HiOutlineArrowUpTray,
+  HiOutlineExclamationTriangle
 } from 'react-icons/hi2';
 
 export default function AdminCategories() {
   const { getAuthHeaders } = useAdminStore();
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Top Notification Banner State
+  const [banner, setBanner] = useState<{ type: 'success' | 'error'; title: string; message: string } | null>(null);
+
+  // Delete Confirmation Modal State
+  const [categoryToDelete, setCategoryToDelete] = useState<{
+    id: string;
+    name: string;
+    active_products_count: number;
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Auto-dismiss banner after 8 seconds
+  useEffect(() => {
+    if (!banner) return;
+    const timer = setTimeout(() => setBanner(null), 8000);
+    return () => clearTimeout(timer);
+  }, [banner]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -137,8 +156,21 @@ export default function AdminCategories() {
     }
   };
 
-  const handleDelete = async (id: string, catName: string) => {
-    if (!window.confirm(`Are you sure you want to delete category "${catName}"?`)) return;
+  const confirmDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+
+    if (categoryToDelete.active_products_count > 0) {
+      setBanner({
+        type: 'error',
+        title: 'Deletion Prohibited',
+        message: `Deleting category "${categoryToDelete.name}" is not allowed because it contains ${categoryToDelete.active_products_count} active product(s). Please reassign or delete these products first.`
+      });
+      setCategoryToDelete(null);
+      return;
+    }
+
+    setIsDeleting(true);
+    const { id, name } = categoryToDelete;
 
     try {
       const res = await fetch(`http://localhost:5001/api/categories/${id}`, {
@@ -147,10 +179,33 @@ export default function AdminCategories() {
       });
       const data = await res.json();
       if (data.success) {
+        setCategories(prev => prev.filter(c => c.id !== id));
+        setCategoryToDelete(null);
+        setBanner({
+          type: 'success',
+          title: 'Category Deleted Successfully',
+          message: `Category "${name}" has been permanently removed.`
+        });
         fetchCategories();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        setCategoryToDelete(null);
+        setBanner({
+          type: 'error',
+          title: 'Deletion Blocked',
+          message: data.message || 'Failed to delete category.'
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
-    } catch (err) {
-      console.error('Failed to delete category:', err);
+    } catch (err: any) {
+      setCategoryToDelete(null);
+      setBanner({
+        type: 'error',
+        title: 'Server Error',
+        message: err.message || 'Failed to delete category. Please try again.'
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -179,6 +234,59 @@ export default function AdminCategories() {
         </button>
       </div>
 
+      {/* Top Notification Banner */}
+      {banner && (
+        <div 
+          role="alert"
+          className={`relative overflow-hidden rounded-2xl border p-5 shadow-2xl backdrop-blur-xl animate-fadeIn ${
+            banner.type === 'success'
+              ? 'bg-gradient-to-r from-emerald-950/70 via-stone-900 to-[#141820] border-emerald-500/40'
+              : 'bg-gradient-to-r from-rose-950/70 via-stone-900 to-[#141820] border-rose-500/40'
+          }`}
+        >
+          <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-4">
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg ${
+                banner.type === 'success'
+                  ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 shadow-emerald-950/60'
+                  : 'bg-rose-500/20 border border-rose-500/40 text-rose-400 shadow-rose-950/60'
+              }`}>
+                {banner.type === 'success' ? (
+                  <HiOutlineCheckCircle className="w-6 h-6 stroke-[2]" />
+                ) : (
+                  <HiOutlineExclamationTriangle className="w-6 h-6 stroke-[2]" />
+                )}
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-heading text-base font-medium text-stone-100">
+                    {banner.title}
+                  </h3>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase border ${
+                    banner.type === 'success'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                      : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                  }`}>
+                    {banner.type === 'success' ? '✓ Success' : '⚠️ Action Blocked'}
+                  </span>
+                </div>
+                <p className="text-xs text-stone-300 font-sans">
+                  {banner.message}
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setBanner(null)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-stone-400 hover:text-stone-100 bg-stone-800/60 hover:bg-stone-800 border border-stone-700/60 rounded-xl transition-all text-xs font-mono cursor-pointer self-end sm:self-center"
+            >
+              <span>Dismiss</span>
+              <HiOutlineXMark className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Categories Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {loading ? (
@@ -202,7 +310,10 @@ export default function AdminCategories() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-stone-800 text-[#F3C082] border border-stone-700">
+                      {c.active_products_count ?? 0} Products
+                    </span>
                     <button
                       onClick={() => handleOpenEdit(c)}
                       className="p-2 text-stone-400 hover:text-[#F3C082] hover:bg-stone-800 rounded-lg transition-colors cursor-pointer"
@@ -211,9 +322,13 @@ export default function AdminCategories() {
                       <HiOutlinePencilSquare className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => handleDelete(c.id, c.name)}
-                      className="p-2 text-stone-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
-                      title="Delete Category"
+                      onClick={() => setCategoryToDelete({ id: c.id, name: c.name, active_products_count: Number(c.active_products_count || 0) })}
+                      className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                        Number(c.active_products_count || 0) > 0 
+                          ? 'text-stone-500 hover:text-amber-400 hover:bg-amber-500/10' 
+                          : 'text-stone-400 hover:text-rose-400 hover:bg-rose-500/10'
+                      }`}
+                      title={Number(c.active_products_count || 0) > 0 ? `Cannot Delete: Has ${c.active_products_count} active product(s)` : "Delete Category"}
                     >
                       <HiOutlineTrash className="w-4 h-4" />
                     </button>
@@ -227,9 +342,19 @@ export default function AdminCategories() {
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-stone-800/80 flex items-center justify-between text-xs font-mono text-stone-300">
-                <span>Active in storefront</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <div className="mt-4 pt-3 border-t border-stone-800/80 flex items-center justify-between text-xs font-mono">
+                {Number(c.active_products_count || 0) > 0 ? (
+                  <span className="text-[11px] text-amber-400/90 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                    {c.active_products_count} active product(s) linked
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-stone-400 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-stone-500"></span>
+                    0 products (Deletable)
+                  </span>
+                )}
+                <span className="w-2 h-2 rounded-full bg-emerald-400" title="Active in storefront"></span>
               </div>
             </div>
           ))
@@ -361,6 +486,87 @@ export default function AdminCategories() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation / Restriction Modal */}
+      {categoryToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className={`bg-[#141820] border rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 ${
+            categoryToDelete.active_products_count > 0 ? 'border-amber-500/40' : 'border-rose-500/40'
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                categoryToDelete.active_products_count > 0 
+                  ? 'bg-amber-500/15 border border-amber-500/30 text-amber-400' 
+                  : 'bg-rose-500/15 border border-rose-500/30 text-rose-400'
+              }`}>
+                {categoryToDelete.active_products_count > 0 ? (
+                  <HiOutlineExclamationTriangle className="w-6 h-6 stroke-[2]" />
+                ) : (
+                  <HiOutlineTrash className="w-6 h-6 stroke-[2]" />
+                )}
+              </div>
+              <div>
+                <h3 className="font-heading text-lg font-light text-stone-100">
+                  {categoryToDelete.active_products_count > 0 ? 'Cannot Delete Category' : 'Delete Category Taxonomy'}
+                </h3>
+                <span className={`text-[11px] font-mono uppercase ${
+                  categoryToDelete.active_products_count > 0 ? 'text-amber-400' : 'text-rose-400'
+                }`}>
+                  {categoryToDelete.active_products_count > 0 ? 'Protected by Active Products' : 'Permanent Database Action'}
+                </span>
+              </div>
+            </div>
+
+            {categoryToDelete.active_products_count > 0 ? (
+              <div className="space-y-3">
+                <p className="text-xs text-stone-300 leading-relaxed font-sans">
+                  Deleting category <strong className="text-white font-medium">"{categoryToDelete.name}"</strong> is <span className="text-amber-400 font-semibold">not allowed</span> because it currently contains <strong className="text-amber-300">{categoryToDelete.active_products_count} active product(s)</strong>.
+                </p>
+                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300/90 text-xs font-mono space-y-1">
+                  <p className="font-bold">Required Actions:</p>
+                  <p>1. Open the Product Catalog.</p>
+                  <p>2. Reassign the products to another category, or delete them.</p>
+                  <p>3. Once empty, this category can be safely deleted.</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-xs text-stone-300 leading-relaxed font-sans">
+                Are you sure you want to permanently delete category <strong className="text-white font-medium">"{categoryToDelete.name}"</strong>? 
+                This category contains 0 active products and can be safely removed from the system.
+              </p>
+            )}
+
+            <div className="pt-2 flex justify-end gap-3 font-mono text-xs uppercase">
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setCategoryToDelete(null)}
+                className="px-4 py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded-xl transition-colors cursor-pointer"
+              >
+                {categoryToDelete.active_products_count > 0 ? 'Understood' : 'Cancel'}
+              </button>
+
+              {categoryToDelete.active_products_count === 0 && (
+                <button
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={confirmDeleteCategory}
+                  className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl transition-all shadow-md shadow-rose-950/50 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <span>Permanently Delete</span>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
